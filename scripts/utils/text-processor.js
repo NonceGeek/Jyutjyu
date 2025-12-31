@@ -1,0 +1,247 @@
+/**
+ * 文本处理工具
+ * 繁简转换、关键词生成等
+ */
+
+import * as OpenCC from 'opencc-js'
+
+// 初始化 OpenCC 转换器（繁体到简体）
+const converter = OpenCC.Converter({ from: 'hk', to: 'cn' })
+
+/**
+ * 繁体转简体
+ * @param {string} text - 繁体文本
+ * @returns {string} 简体文本
+ */
+export function toSimplified(text) {
+  if (!text) return ''
+  return converter(text)
+}
+
+/**
+ * 去除粤拼声调（用于模糊搜索）
+ * @param {string} jyutping - 带声调的粤拼
+ * @returns {string} 无声调粤拼
+ */
+export function removeTones(jyutping) {
+  return jyutping.replace(/[1-6]/g, '')
+}
+
+/**
+ * 生成搜索关键词
+ * @param {Object} entry - 词条对象
+ * @returns {Array<string>} 关键词数组
+ */
+export function generateKeywords(entry) {
+  const keywords = new Set()
+  
+  // 1. 词头相关
+  if (entry.headword) {
+    keywords.add(entry.headword.display)
+    keywords.add(entry.headword.normalized)
+    if (entry.headword.search) {
+      keywords.add(entry.headword.search)
+    }
+    
+    // 简体版本
+    keywords.add(toSimplified(entry.headword.normalized))
+  }
+  
+  // 2. 粤拼相关
+  if (entry.phonetic && entry.phonetic.jyutping) {
+    entry.phonetic.jyutping.forEach(jp => {
+      keywords.add(jp)                        // aa3 soe4
+      keywords.add(jp.replace(/\s/g, ''))    // aa3sir1
+      keywords.add(removeTones(jp))           // aa sir
+      keywords.add(removeTones(jp).replace(/\s/g, '')) // aasir
+    })
+  }
+  
+  // 3. 拆字
+  const chars = entry.headword?.normalized?.match(/[\u4e00-\u9fa5]/g)
+  if (chars) {
+    chars.forEach(c => keywords.add(c))
+  }
+  
+  // 4. 原书注音
+  if (entry.phonetic?.original) {
+    keywords.add(entry.phonetic.original)
+  }
+  
+  return Array.from(keywords).filter(k => k && k.length > 0)
+}
+
+/**
+ * 提取括号内的异体字变体
+ * 例如: "阿（亚）SIR" → ["阿SIR", "亚SIR"]
+ * @param {string} text - 原文
+ * @returns {Array<string>} 变体数组
+ */
+export function extractVariants(text) {
+  const variants = new Set()
+  
+  // 添加原文（去除括号）
+  const cleaned = text.replace(/[（()）]/g, '')
+  variants.add(cleaned)
+  
+  // 提取括号内容
+  const regex = /([^（(]*)[（(]([^）)]+)[）)]([^（(]*)/g
+  let match
+  
+  while ((match = regex.exec(text)) !== null) {
+    const [, before, inside, after] = match
+    // 外部版本
+    variants.add(before + after)
+    // 内部版本
+    variants.add(before + inside + after)
+  }
+  
+  return Array.from(variants)
+}
+
+/**
+ * 清理词头（去除特殊标记）
+ * @param {string} word - 词头
+ * @returns {Object} { display, normalized, hasMarker, marker }
+ */
+export function cleanHeadword(word) {
+  const result = {
+    display: word,
+    normalized: word,
+    hasMarker: false,
+    marker: null
+  }
+  
+  // 检测星号标记 (如 *哋1)
+  if (word.startsWith('*')) {
+    result.hasMarker = true
+    result.marker = '*'
+    result.normalized = word.substring(1)
+  }
+  
+  // 去除末尾数字标记 (如 哋1 → 哋)
+  result.normalized = result.normalized.replace(/\d+$/, '')
+  
+  // 检测开天窗字 □
+  result.isPlaceholder = result.normalized.includes('□')
+  
+  return result
+}
+
+/**
+ * 解析例句（从释义中提取）
+ * 格式: "释义。例句1。（翻译1。）│例句2。（翻译2。）"
+ * @param {string} meanings - 释义字段
+ * @returns {Object} { definition, examples }
+ */
+export function parseExamples(meanings) {
+  if (!meanings) return { definition: '', examples: [] }
+  
+  const result = {
+    definition: '',
+    examples: []
+  }
+  
+  // 清理开头的句号（某些词条的 meanings 字段以句号开头）
+  let cleanedMeanings = meanings.replace(/^[。\s]+/, '')
+  
+  // 先按 │ 分割各个例句组
+  const segments = cleanedMeanings.split('│')
+  
+  if (segments.length === 0) return result
+  
+  // 处理第一段（包含释义和可能的第一个例句）
+  const firstSegment = segments[0]
+  
+  // 寻找第一个 。 作为释义结束（但要排除括号内的句号）
+  // 注意：只有句号 。 才是定义结束标志，分号 ； 是定义内部的分隔符
+  let definitionEnd = -1
+  let inParentheses = 0
+  
+  for (let i = 0; i < firstSegment.length; i++) {
+    const char = firstSegment[i]
+    if (char === '（' || char === '(') {
+      inParentheses++
+    } else if (char === '）' || char === ')') {
+      inParentheses--
+    } else if (char === '。' && inParentheses === 0 && definitionEnd === -1) {
+      definitionEnd = i
+      break
+    }
+  }
+  
+  if (definitionEnd === -1) {
+    // 没有找到释义分隔符，整段都是释义
+    result.definition = firstSegment.trim()
+  } else {
+    // 提取释义
+    result.definition = firstSegment.substring(0, definitionEnd).trim()
+    
+    // 第一段剩余部分可能包含例句
+    const firstExample = firstSegment.substring(definitionEnd + 1).trim()
+    if (firstExample) {
+      const example = parseExamplePair(firstExample)
+      if (example.text) {
+        result.examples.push(example)
+      }
+    }
+  }
+  
+  // 处理后续段落（每段是一个完整的例句+翻译对）
+  for (let i = 1; i < segments.length; i++) {
+    const segment = segments[i].trim()
+    if (segment) {
+      const example = parseExamplePair(segment)
+      if (example.text) {
+        result.examples.push(example)
+      }
+    }
+  }
+  
+  return result
+}
+
+/**
+ * 解析单个例句对（例句+翻译）
+ * 格式: "例句。（翻译。）"
+ * @param {string} text - 包含例句和翻译的文本
+ * @returns {Object} { text, translation }
+ */
+function parseExamplePair(text) {
+  if (!text) return { text: '', translation: null }
+  
+  // 提取括号内容作为翻译
+  const translationMatch = text.match(/[（(]([^）)]+)[）)]/g)
+  let translation = null
+  
+  if (translationMatch) {
+    // 提取所有括号内容并合并
+    translation = translationMatch
+      .map(m => m.replace(/[（()）]/g, ''))
+      .join('')
+      .replace(/[。！？]+$/, '') // 去除末尾标点
+      .trim()
+  }
+  
+  // 移除括号部分，得到纯例句
+  const exampleText = text
+    .replace(/[（(][^）)]+[）)]/g, '')
+    .replace(/[。！？]+$/, '') // 去除末尾标点
+    .trim()
+  
+  return {
+    text: exampleText || text.trim(),
+    translation: translation || null
+  }
+}
+
+/**
+ * 解析备注（去除方括号）
+ * @param {string} note - 备注字段
+ * @returns {string} 清理后的备注
+ */
+export function parseNote(note) {
+  if (!note) return ''
+  return note.replace(/^\[/, '').replace(/\]$/, '').trim()
+}
+

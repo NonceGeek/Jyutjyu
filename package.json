@@ -1,0 +1,50 @@
+{
+  "name": "jyutjyu",
+  "version": "0.1.0",
+  "description": "粤语辞丛 - 开放的粤语词典聚合平台",
+  "author": "jyutjyucom",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "build:data": "node scripts/csv-to-json.js",
+    "build:data:gz": "node scripts/csv-to-json.js --dict gz-practical-classified --input data/processed/gz-practical-sample.csv",
+    "validate": "node scripts/validate.js",
+    "validate:gz": "node scripts/validate.js data/processed/gz-practical-sample.csv",
+    "typecheck": "nuxt typecheck"
+  },
+  "dependencies": {
+    "@nuxt/content": "^2.13.2",
+    "nuxt": "^3.13.2",
+    "vue": "^3.5.12"
+  },
+  "devDependencies": {
+    "@nuxtjs/tailwindcss": "^6.12.1",
+    "@types/node": "^22.9.0",
+    "eslint": "^9.14.0",
+    "minisearch": "^7.1.0",
+    "opencc-js": "^1.0.5",
+    "papaparse": "^5.4.1",
+    "typescript": "^5.6.3",
+    "vue-tsc": "^3.2.1"
+  },
+  "keywords": [
+    "cantonese",
+    "dictionary",
+    "jyutping",
+    "粤语",
+    "词典",
+    "粤拼"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jyutjyucom/jyutjyu.git"
+  },
+  "homepage": "https://jyutjyu.com"
+}

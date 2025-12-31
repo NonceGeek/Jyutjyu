@@ -1,0 +1,37 @@
+# Nuxt
+.nuxt
+.output
+dist
+
+# Node
+node_modules
+*.log*
+.DS_Store
+
+# Local env files
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea
+
+# Testing
+coverage
+*.lcov
+.nyc_output
+
+# Temporary files
+*.tmp
+*.temp
+~*
+
+# Build outputs
+public/search-index.json
+
+# OS
+Thumbs.db
+

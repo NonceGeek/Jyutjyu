@@ -1,0 +1,30 @@
+{
+  "dictionaries": [
+    {
+      "id": "gz-practical-classified",
+      "name": "实用广州话分类词典",
+      "dialect": "广州话",
+      "entries_count": 7530,
+      "author": "麦耘、谭步云",
+      "publisher": "广东人民出版社",
+      "year": 1997,
+      "file": "gz-practical-classified.json",
+      "version": "1.0.0",
+      "description": "按主题分类的实用广州话词典，收录日常生活各领域词汇"
+    },
+    {
+      "id": "gz-colloquialisms",
+      "name": "广州话俗语词典",
+      "dialect": "广州话",
+      "entries_count": 0,
+      "author": "欧阳觉亚、周无忌、饶秉才",
+      "publisher": "广东人民出版社",
+      "year": 2010,
+      "file": "gz-colloquialisms.json",
+      "version": "1.0.0",
+      "description": "收录广州话常用俗语、谚语及其典故，并附有注音、释义和例句"
+    }
+  ],
+  "last_updated": "2025-12-30T19:57:53.796Z",
+  "schema_version": "1.0.0"
+}
