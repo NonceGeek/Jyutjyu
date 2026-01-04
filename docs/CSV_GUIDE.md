@@ -93,7 +93,7 @@
 
 #### 格式要求
 
-- **音节用空格分隔**: `aa3 soe4` ✅，`aa3sir1` ❌
+- **音节用空格分隔**: `aa3 soe4` ✅，`aa3soe4` ❌
 - **声调必须标注**: `aa3` ✅，`aa` ❌
 - **多音字用逗号**: 如果一个词有多种读音，在不同行记录（见多义项处理）
 
@@ -320,7 +320,7 @@ pnpm run validate -- data/processed/your-file.csv
 
 ### 错误 3: 粤拼验证失败
 
-**现象**: `Invalid jyutping: aa sir1`  
+**现象**: `Invalid jyutping: aa soe4`  
 **原因**: 缺少声调数字  
 **解决**: `aa3 soe4` ✅
 

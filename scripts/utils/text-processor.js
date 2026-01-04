@@ -51,7 +51,7 @@ export function generateKeywords(entry) {
   if (entry.phonetic && entry.phonetic.jyutping) {
     entry.phonetic.jyutping.forEach(jp => {
       keywords.add(jp)                        // aa3 soe4
-      keywords.add(jp.replace(/\s/g, ''))    // aa3sir1
+      keywords.add(jp.replace(/\s/g, ''))    // aa3soe4
       keywords.add(removeTones(jp))           // aa sir
       keywords.add(removeTones(jp).replace(/\s/g, '')) // aasir
     })

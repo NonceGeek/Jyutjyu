@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+  <div class="min-h-screen bg-gradient-to-b from-blue-50 to-white" style="color-scheme: light; background-color: #ffffff;">
     <!-- Hero Section -->
     <div class="container mx-auto px-4 py-16 md:py-24">
       <!-- Logo & Title -->

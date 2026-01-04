@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: false, // 禁用暗夜模式
   content: [
     './components/**/*.{js,vue,ts}',
     './layouts/**/*.vue',

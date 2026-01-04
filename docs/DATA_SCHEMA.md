@@ -178,7 +178,7 @@ interface DictionaryEntry {
     }
   ],
   "keywords": [
-    "阿Sir", "阿sir", "aa3sir1", "aa3 soe4", "aasir1",
+    "阿Sir", "阿sir", "aa3soe4", "aa3 soe4", "aasoe4",
     "阿", "sir", "警察", "jing2 caat3"
   ],
   "meta": {
@@ -463,7 +463,7 @@ function generateKeywords(entry) {
   // 3. 粤拼变体
   entry.phonetic.jyutping.forEach(jp => {
     keywords.add(jp);                      // "aa3 soe4"
-    keywords.add(jp.replace(/\s/g, ''));  // "aa3sir1"
+    keywords.add(jp.replace(/\s/g, ''));  // "aa3soe4"
     keywords.add(removeTones(jp));         // "aa sir"
   });
   

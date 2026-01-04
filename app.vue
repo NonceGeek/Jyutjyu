@@ -8,7 +8,8 @@
 // 全局配置
 useHead({
   htmlAttrs: {
-    lang: 'zh-HK'
+    lang: 'zh-HK',
+    style: 'color-scheme: light;'
   }
 })
 </script>
@@ -21,10 +22,19 @@ useHead({
   box-sizing: border-box;
 }
 
+html {
+  /* 强制浅色模式，不跟随系统暗夜模式 */
+  color-scheme: light only;
+  background-color: #ffffff;
+}
+
 body {
   font-family: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color-scheme: light only;
+  background-color: #ffffff;
+  color: #000000;
 }
 </style>
 
