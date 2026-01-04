@@ -2,10 +2,10 @@
   <div class="dict-card bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
     <!-- 头部：词头 + 粤拼 -->
     <div class="card-header px-6 py-4 border-b border-gray-100">
-      <div class="flex justify-between items-start gap-4">
+      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-4">
         <!-- 词头 -->
-        <div class="flex-1">
-          <h3 class="text-2xl font-bold text-gray-900 mb-1">
+        <div class="flex-1 min-w-0">
+          <h3 class="text-2xl font-bold text-gray-900 mb-1 break-words">
             {{ entry.headword.display }}
             <!-- 开天窗字标记 -->
             <span
@@ -19,18 +19,18 @@
           <!-- 如果显示词和标准词不同，显示标准词 -->
           <p
             v-if="entry.headword.display !== entry.headword.normalized"
-            class="text-sm text-gray-500"
+            class="text-sm text-gray-500 break-words"
           >
             参考标准写法: {{ entry.headword.normalized }}
           </p>
         </div>
 
         <!-- 粤拼 -->
-        <div class="text-right">
+        <div class="sm:text-right flex-shrink-0">
           <div
             v-for="(jp, idx) in entry.phonetic.jyutping"
             :key="idx"
-            class="font-mono text-lg text-blue-600 font-semibold"
+            class="font-mono text-lg text-blue-600 font-semibold whitespace-nowrap"
           >
             {{ jp }}
           </div>

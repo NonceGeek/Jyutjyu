@@ -12,10 +12,16 @@
               v-model="searchQuery"
               type="text"
               placeholder="搜索词语或粤拼..."
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+              class="w-full px-4 py-2 pr-20 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
               @keyup.enter="handleSearch"
               @input="handleInput"
             >
+            <button
+              class="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
+              @click="handleSearch"
+            >
+              搜索
+            </button>
             <!-- 搜索建议 -->
             <div
               v-if="suggestions.length > 0 && showSuggestions"
@@ -44,9 +50,9 @@
       </div>
 
       <!-- Results Info -->
-      <div v-else-if="searchQuery" class="mb-6">
+      <div v-else-if="actualSearchQuery" class="mb-6">
         <h2 class="text-2xl font-semibold text-gray-900">
-          搜索结果: "{{ searchQuery }}"
+          搜索结果: "{{ actualSearchQuery }}"
         </h2>
         <p class="text-gray-600 mt-2">
           找到 <span class="font-semibold">{{ results.length }}</span> 个结果
@@ -57,7 +63,7 @@
       </div>
 
       <!-- No Results -->
-      <div v-if="!loading && searchQuery && results.length === 0" class="text-center py-16">
+      <div v-if="!loading && actualSearchQuery && results.length === 0" class="text-center py-16">
         <div class="text-6xl mb-4">🔍</div>
         <h3 class="text-2xl font-semibold text-gray-900 mb-2">
           没有找到相关结果
@@ -211,7 +217,8 @@ const router = useRouter()
 const { searchBasic, getSuggestions } = useDictionary()
 
 // 状态
-const searchQuery = ref(route.query.q as string || '')
+const searchQuery = ref(route.query.q as string || '') // 输入框中的查询词
+const actualSearchQuery = ref(route.query.q as string || '') // 实际已搜索的查询词
 const results = ref<DictionaryEntry[]>([])
 const loading = ref(false)
 const searchTime = ref(0)
@@ -227,9 +234,13 @@ const exampleSearches = ['我哋', '你哋', '佢', 'dei6', 'ngo5 dei6']
 const performSearch = async (query: string) => {
   if (!query || query.trim() === '') {
     results.value = []
+    actualSearchQuery.value = ''
     return
   }
 
+  // 更新实际搜索的查询词
+  actualSearchQuery.value = query.trim()
+  
   loading.value = true
   searchTime.value = 0
   const startTime = Date.now()
@@ -312,8 +323,8 @@ onMounted(() => {
 
 // SEO
 useHead({
-  title: computed(() => searchQuery.value 
-    ? `${searchQuery.value} - 搜索结果 | 粤语辞丛` 
+  title: computed(() => actualSearchQuery.value 
+    ? `${actualSearchQuery.value} - 搜索结果 | 粤语辞丛` 
     : '搜索 | 粤语辞丛'
   )
 })
@@ -323,6 +334,7 @@ useHead({
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }

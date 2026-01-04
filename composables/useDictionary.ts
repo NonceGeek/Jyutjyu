@@ -67,7 +67,7 @@ export const useDictionary = () => {
   /**
    * 基础搜索（精确匹配）
    * @param query 搜索关键词
-   * @returns 匹配的词条数组
+   * @returns 匹配的词条数组，按相关度排序
    */
   const searchBasic = async (query: string): Promise<DictionaryEntry[]> => {
     if (!query || query.trim() === '') {
@@ -79,42 +79,79 @@ export const useDictionary = () => {
     try {
       const entries = await getAllEntries()
       
-      // 精确匹配：词头、粤拼、关键词
-      return entries.filter(entry => {
-        // 1. 匹配词头
-        if (entry.headword.normalized?.toLowerCase().includes(normalizedQuery)) {
-          return true
-        }
-        if (entry.headword.display?.toLowerCase().includes(normalizedQuery)) {
-          return true
-        }
-        
-        // 2. 匹配粤拼
-        if (entry.phonetic?.jyutping) {
-          const jyutpingMatch = entry.phonetic.jyutping.some(jp =>
-            jp.toLowerCase().includes(normalizedQuery)
-          )
-          if (jyutpingMatch) return true
-        }
-        
-        // 3. 匹配关键词
-        if (entry.keywords) {
-          const keywordMatch = entry.keywords.some(kw =>
-            kw.toLowerCase().includes(normalizedQuery)
-          )
-          if (keywordMatch) return true
-        }
-        
-        // 4. 匹配释义（权重较低）
-        if (entry.senses) {
-          const definitionMatch = entry.senses.some(sense =>
-            sense.definition?.toLowerCase().includes(normalizedQuery)
-          )
-          if (definitionMatch) return true
-        }
-        
-        return false
-      })
+      // 带优先级的过滤和评分
+      const resultsWithPriority = entries
+        .map(entry => {
+          let priority = 0
+          
+          const normalizedHeadword = entry.headword.normalized?.toLowerCase() || ''
+          const displayHeadword = entry.headword.display?.toLowerCase() || ''
+          
+          // 1. 完全匹配词头 - 最高优先级
+          if (normalizedHeadword === normalizedQuery || displayHeadword === normalizedQuery) {
+            priority = 100
+          }
+          // 2. 词头以搜索词开头
+          else if (normalizedHeadword.startsWith(normalizedQuery) || displayHeadword.startsWith(normalizedQuery)) {
+            priority = 90
+          }
+          // 3. 词头包含搜索词
+          else if (normalizedHeadword.includes(normalizedQuery) || displayHeadword.includes(normalizedQuery)) {
+            priority = 80
+          }
+          // 4. 粤拼完全匹配
+          else if (entry.phonetic?.jyutping) {
+            const exactJyutpingMatch = entry.phonetic.jyutping.some(jp =>
+              jp.toLowerCase() === normalizedQuery
+            )
+            if (exactJyutpingMatch) {
+              priority = 70
+            }
+            // 5. 粤拼包含搜索词
+            else {
+              const partialJyutpingMatch = entry.phonetic.jyutping.some(jp =>
+                jp.toLowerCase().includes(normalizedQuery)
+              )
+              if (partialJyutpingMatch) {
+                priority = 60
+              }
+            }
+          }
+          
+          // 6. 关键词匹配
+          if (priority === 0 && entry.keywords) {
+            const keywordMatch = entry.keywords.some(kw =>
+              kw.toLowerCase().includes(normalizedQuery)
+            )
+            if (keywordMatch) {
+              priority = 50
+            }
+          }
+          
+          // 7. 释义匹配 - 最低优先级
+          if (priority === 0 && entry.senses) {
+            const definitionMatch = entry.senses.some(sense =>
+              sense.definition?.toLowerCase().includes(normalizedQuery)
+            )
+            if (definitionMatch) {
+              priority = 40
+            }
+          }
+          
+          return { entry, priority }
+        })
+        .filter(item => item.priority > 0)
+        .sort((a, b) => {
+          // 先按优先级降序排序
+          if (a.priority !== b.priority) {
+            return b.priority - a.priority
+          }
+          // 优先级相同时，按ID排序（保持原始顺序）
+          return a.entry.id.localeCompare(b.entry.id)
+        })
+        .map(item => item.entry)
+      
+      return resultsWithPriority
     } catch (error) {
       console.error('搜索失败:', error)
       return []
