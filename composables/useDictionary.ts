@@ -102,6 +102,59 @@ export const useDictionary = () => {
     try {
       const entries = await getAllEntries()
       
+      /**
+       * 计算次要排序分数（在相同优先级内使用）
+       * 用于在两个词典的结果中进行更细致的排序
+       */
+      const calculateSecondaryScore = (entry: DictionaryEntry): number => {
+        let score = 0
+        
+        // 1. 词条长度匹配度 (0-30分)
+        // 越接近查询词长度的词条越相关
+        const headwordLength = entry.headword.display.length
+        const queryLength = normalizedQuery.length
+        if (headwordLength === queryLength) {
+          score += 30 // 长度完全匹配
+        } else {
+          // 长度差距越小，得分越高
+          const lengthDiff = Math.abs(headwordLength - queryLength)
+          score += Math.max(0, 30 - lengthDiff * 3)
+        }
+        
+        // 2. 释义详细程度 (0-20分)
+        // 释义越详细说明词条质量越高
+        if (entry.senses && entry.senses.length > 0) {
+          const firstSense = entry.senses[0]
+          const definitionLength = firstSense.definition?.length || 0
+          
+          // 根据释义长度给分
+          if (definitionLength > 50) {
+            score += 20
+          } else if (definitionLength > 20) {
+            score += 15
+          } else if (definitionLength > 0) {
+            score += 10
+          }
+          
+          // 有例句加分
+          if (firstSense.examples && firstSense.examples.length > 0) {
+            score += 5
+          }
+        }
+        
+        // 3. 词典来源权重 (0-10分)
+        // 根据词典特点调整权重
+        if (entry.source_book === '广州话俗语词典') {
+          // 俗语词典收录的多为成语、俗语，通常更具特色
+          score += 8
+        } else if (entry.source_book === '实用广州话分类词典') {
+          // 实用词典收录的词条更基础、更常用
+          score += 10
+        }
+        
+        return score
+      }
+      
       // 带优先级的过滤和评分
       const resultsWithPriority = entries
         .map(entry => {
@@ -197,12 +250,20 @@ export const useDictionary = () => {
           return { entry, priority }
         })
         .filter(item => item.priority > 0)
+        .map(item => ({
+          ...item,
+          secondaryScore: calculateSecondaryScore(item.entry)
+        }))
         .sort((a, b) => {
-          // 先按优先级降序排序
+          // 先按主优先级降序排序
           if (a.priority !== b.priority) {
             return b.priority - a.priority
           }
-          // 优先级相同时，按ID排序（保持原始顺序）
+          // 优先级相同时，按次要分数排序
+          if (a.secondaryScore !== b.secondaryScore) {
+            return b.secondaryScore - a.secondaryScore
+          }
+          // 次要分数也相同时，按ID排序（保持稳定排序）
           return a.entry.id.localeCompare(b.entry.id)
         })
         .map(item => item.entry)
