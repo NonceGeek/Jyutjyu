@@ -11,40 +11,21 @@ import type { DictionaryEntry, SearchOptions, SearchResult } from '~/types/dicti
 export const useDictionary = () => {
   /**
    * 获取所有词条
+   * 注意：搜索功能只在客户端运行，不需要 SSR
    */
   const getAllEntries = async (): Promise<DictionaryEntry[]> => {
+    // 只在客户端运行
+    if (!process.client) {
+      return []
+    }
+    
     try {
-      // 直接读取 JSON 文件（因为 Nuxt Content 对数组的处理可能有问题）
-      // 在浏览器端，我们使用 fetch API
-      if (process.client) {
-        const response = await fetch('/dictionaries/gz-practical-classified.json')
-        if (response.ok) {
-          const data = await response.json()
-          return Array.isArray(data) ? data : []
-        }
-        return []
+      const response = await fetch('/dictionaries/gz-practical-classified.json')
+      if (response.ok) {
+        const data = await response.json()
+        return Array.isArray(data) ? data : []
       }
-      
-      // 在服务端，使用 Nuxt Content
-      const files = await queryContent('dictionaries')
-        .where({ _extension: 'json', _path: { $ne: '/dictionaries/index' } })
-        .find()
-      
-      // 读取每个 JSON 文件的内容
-      const allEntries: DictionaryEntry[] = []
-      for (const file of files) {
-        try {
-          // 使用 $fetch 读取文件内容
-          const content = await $fetch(file._path + '.json')
-          if (Array.isArray(content)) {
-            allEntries.push(...content)
-          }
-        } catch (err) {
-          console.warn(`读取文件失败: ${file._path}`, err)
-        }
-      }
-      
-      return allEntries
+      return []
     } catch (error) {
       console.error('获取词条失败:', error)
       return []
