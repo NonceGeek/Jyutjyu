@@ -88,10 +88,11 @@ export const REQUIRED_FIELDS = ['id', 'word', 'pronunciation', 'definition']
 
 ```javascript
 import {
-  toSimplified,
   generateKeywords,
   cleanHeadword
 } from '../utils/text-processor.js'
+
+// 注意：简繁体转换已移至运行时处理，无需在适配器中处理
 
 export function transformRow(row) {
   // 1. 处理词头
@@ -281,13 +282,14 @@ const headwordInfo = cleanHeadword('□嘢')
 
 | 函数 | 用途 |
 |------|------|
-| `toSimplified(text)` | 繁体转简体 |
 | `removeTones(jyutping)` | 去除粤拼声调 |
-| `generateKeywords(entry)` | 生成搜索关键词 |
+| `generateKeywords(entry)` | 生成搜索关键词（不含简繁体） |
 | `extractVariants(text)` | 提取异体字 |
 | `cleanHeadword(word)` | 清理词头标记 |
 | `parseExamples(meanings)` | 解析例句 |
 | `parseNote(note)` | 解析备注 |
+
+**注意**：简繁体转换已移至运行时处理（`composables/useChineseConverter.ts`），无需在适配器中处理。所有词典的数据只需保持原始形式即可，搜索时会自动支持简繁体。
 
 ---
 
@@ -297,8 +299,7 @@ const headwordInfo = cleanHeadword('□嘢')
 
 - [ ] 所有必填字段正确映射
 - [ ] 粤拼格式正确（空格分隔音节）
-- [ ] 繁简转换正常
-- [ ] 搜索关键词完整
+- [ ] 搜索关键词完整（无需包含简繁体）
 - [ ] 特殊字符处理正确
 - [ ] 分类/备注等元数据正确
 - [ ] 运行 `validate.js` 无错误

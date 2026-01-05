@@ -6,7 +6,6 @@
  */
 
 import {
-  toSimplified,
   generateKeywords,
   cleanHeadword,
   parseExamples,

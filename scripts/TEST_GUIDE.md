@@ -258,23 +258,13 @@ echo "index,words,jyutping,meanings
 node scripts/validate.js /tmp/test-invalid.csv
 ```
 
-### 测试 5: 繁简转换
+### 测试 5: 繁简转换（已移至运行时）
 
-**测试命令**:
-```bash
-node -e "
-import('./scripts/utils/text-processor.js').then(m => {
-  console.log('繁体:', '實用廣州話分類詞典');
-  console.log('简体:', m.toSimplified('實用廣州話分類詞典'));
-});
-"
-```
+**注意**：简繁体转换功能已从预处理脚本移至运行时处理（`composables/useChineseConverter.ts`）。
 
-**预期输出**:
-```
-繁体: 實用廣州話分類詞典
-简体: 实用广州话分类词典
-```
+适配器无需再处理简繁转换，所有词典的数据保持原始形式即可。搜索功能会自动支持简繁体互搜。
+
+如需测试转换功能，请在前端进行测试。
 
 ---
 

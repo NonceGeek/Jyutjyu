@@ -1,22 +1,10 @@
 /**
  * 文本处理工具
- * 繁简转换、关键词生成等
+ * 关键词生成、文本清理等
+ * 
+ * 注意：简繁体转换已移至运行时处理（composables/useChineseConverter.ts）
+ * 这样可以确保所有词典适配器的行为一致，无需在预处理时考虑简繁转换
  */
-
-import * as OpenCC from 'opencc-js'
-
-// 初始化 OpenCC 转换器（繁体到简体）
-const converter = OpenCC.Converter({ from: 'hk', to: 'cn' })
-
-/**
- * 繁体转简体
- * @param {string} text - 繁体文本
- * @returns {string} 简体文本
- */
-export function toSimplified(text) {
-  if (!text) return ''
-  return converter(text)
-}
 
 /**
  * 去除粤拼声调（用于模糊搜索）
@@ -31,6 +19,8 @@ export function removeTones(jyutping) {
  * 生成搜索关键词
  * @param {Object} entry - 词条对象
  * @returns {Array<string>} 关键词数组
+ * 
+ * 注意：不再预生成简繁体变体，由运行时搜索处理
  */
 export function generateKeywords(entry) {
   const keywords = new Set()
@@ -42,9 +32,6 @@ export function generateKeywords(entry) {
     if (entry.headword.search) {
       keywords.add(entry.headword.search)
     }
-    
-    // 简体版本
-    keywords.add(toSimplified(entry.headword.normalized))
   }
   
   // 2. 粤拼相关
@@ -57,7 +44,7 @@ export function generateKeywords(entry) {
     })
   }
   
-  // 3. 拆字
+  // 3. 拆字（单字）
   const chars = entry.headword?.normalized?.match(/[\u4e00-\u9fa5]/g)
   if (chars) {
     chars.forEach(c => keywords.add(c))

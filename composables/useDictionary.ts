@@ -65,7 +65,7 @@ export const useDictionary = () => {
   }
 
   /**
-   * 基础搜索（精确匹配）
+   * 基础搜索（精确匹配，支持简繁体）
    * @param query 搜索关键词
    * @returns 匹配的词条数组，按相关度排序
    */
@@ -75,6 +75,17 @@ export const useDictionary = () => {
     }
 
     const normalizedQuery = query.trim().toLowerCase()
+    
+    // 获取简繁体转换器并确保已初始化
+    const { toSimplified, toTraditional, ensureInitialized } = useChineseConverter()
+    await ensureInitialized()
+    
+    // 生成搜索词的所有变体（原文、简体、繁体）
+    const queryVariants = [
+      normalizedQuery,
+      toSimplified(normalizedQuery).toLowerCase(),
+      toTraditional(normalizedQuery).toLowerCase()
+    ].filter((v, i, arr) => arr.indexOf(v) === i) // 去重
 
     try {
       const entries = await getAllEntries()
@@ -87,22 +98,46 @@ export const useDictionary = () => {
           const normalizedHeadword = entry.headword.normalized?.toLowerCase() || ''
           const displayHeadword = entry.headword.display?.toLowerCase() || ''
           
+          // 生成词条的所有变体（用于词头匹配）
+          const headwordVariants = [
+            normalizedHeadword,
+            displayHeadword,
+            toSimplified(normalizedHeadword).toLowerCase(),
+            toSimplified(displayHeadword).toLowerCase(),
+            toTraditional(normalizedHeadword).toLowerCase(),
+            toTraditional(displayHeadword).toLowerCase()
+          ].filter((v, i, arr) => arr.indexOf(v) === i) // 去重
+          
           // 1. 完全匹配词头 - 最高优先级
-          if (normalizedHeadword === normalizedQuery || displayHeadword === normalizedQuery) {
+          const exactMatch = queryVariants.some(qv => 
+            headwordVariants.some(hv => hv === qv)
+          )
+          if (exactMatch) {
             priority = 100
           }
           // 2. 词头以搜索词开头
-          else if (normalizedHeadword.startsWith(normalizedQuery) || displayHeadword.startsWith(normalizedQuery)) {
-            priority = 90
+          else {
+            const startsWithMatch = queryVariants.some(qv =>
+              headwordVariants.some(hv => hv.startsWith(qv))
+            )
+            if (startsWithMatch) {
+              priority = 90
+            }
+            // 3. 词头包含搜索词
+            else {
+              const includesMatch = queryVariants.some(qv =>
+                headwordVariants.some(hv => hv.includes(qv))
+              )
+              if (includesMatch) {
+                priority = 80
+              }
+            }
           }
-          // 3. 词头包含搜索词
-          else if (normalizedHeadword.includes(normalizedQuery) || displayHeadword.includes(normalizedQuery)) {
-            priority = 80
-          }
+          
           // 4. 粤拼完全匹配
-          else if (entry.phonetic?.jyutping) {
+          if (priority === 0 && entry.phonetic?.jyutping) {
             const exactJyutpingMatch = entry.phonetic.jyutping.some(jp =>
-              jp.toLowerCase() === normalizedQuery
+              queryVariants.includes(jp.toLowerCase())
             )
             if (exactJyutpingMatch) {
               priority = 70
@@ -110,7 +145,7 @@ export const useDictionary = () => {
             // 5. 粤拼包含搜索词
             else {
               const partialJyutpingMatch = entry.phonetic.jyutping.some(jp =>
-                jp.toLowerCase().includes(normalizedQuery)
+                queryVariants.some(qv => jp.toLowerCase().includes(qv))
               )
               if (partialJyutpingMatch) {
                 priority = 60
@@ -118,21 +153,30 @@ export const useDictionary = () => {
             }
           }
           
-          // 6. 关键词匹配
+          // 6. 关键词匹配（支持简繁体）
           if (priority === 0 && entry.keywords) {
-            const keywordMatch = entry.keywords.some(kw =>
-              kw.toLowerCase().includes(normalizedQuery)
-            )
+            const keywordMatch = entry.keywords.some(kw => {
+              const kwLower = kw.toLowerCase()
+              return queryVariants.some(qv => kwLower.includes(qv))
+            })
             if (keywordMatch) {
               priority = 50
             }
           }
           
-          // 7. 释义匹配 - 最低优先级
+          // 7. 释义匹配（支持简繁体） - 最低优先级
           if (priority === 0 && entry.senses) {
-            const definitionMatch = entry.senses.some(sense =>
-              sense.definition?.toLowerCase().includes(normalizedQuery)
-            )
+            const definitionMatch = entry.senses.some(sense => {
+              if (!sense.definition) return false
+              const defVariants = [
+                sense.definition.toLowerCase(),
+                toSimplified(sense.definition).toLowerCase(),
+                toTraditional(sense.definition).toLowerCase()
+              ]
+              return queryVariants.some(qv =>
+                defVariants.some(dv => dv.includes(qv))
+              )
+            })
             if (definitionMatch) {
               priority = 40
             }
