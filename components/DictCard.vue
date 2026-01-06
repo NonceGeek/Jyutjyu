@@ -50,7 +50,7 @@
           </div>
           <!-- 原书注音（如果不同） -->
           <div
-            v-if="entry.phonetic.original && entry.phonetic.original !== entry.phonetic.jyutping[0]"
+            v-if="shouldShowOriginalPhonetic(entry)"
             class="text-xs text-gray-400 mt-1 break-words"
           >
             原书: {{ entry.phonetic.original }}
@@ -310,6 +310,32 @@ const formatDefinitionWithLinks = (definition: string): string => {
     const searchUrl = `/search?q=${encodeURIComponent(word)}`
     return `<a href="${searchUrl}" class="text-blue-600 hover:text-blue-800 hover:underline font-medium" onclick="event.stopPropagation()">${match}</a>`
   })
+}
+
+/**
+ * 判断是否应该显示"原书:"标签
+ * 对于包含冒号分隔的多个读音变体的情况（如 hk-cantowords），
+ * 如果这些读音都已在 jyutping 数组中，则不显示原书标签
+ */
+const shouldShowOriginalPhonetic = (entry: any): boolean => {
+  if (!entry.phonetic.original) return false
+  
+  // 如果 original 等于 jyutping[0]，不显示
+  if (entry.phonetic.original === entry.phonetic.jyutping[0]) return false
+  
+  // 检查是否是冒号分隔的多读音格式
+  if (entry.phonetic.original.includes(':')) {
+    const originalParts = entry.phonetic.original.split(':').map((p: string) => p.trim())
+    const jyutpingSet = new Set(entry.phonetic.jyutping)
+    
+    // 如果所有原始读音部分都在 jyutping 数组中，说明已经正确拆分显示，不需要再显示原书
+    if (originalParts.every((part: string) => jyutpingSet.has(part))) {
+      return false
+    }
+  }
+  
+  // 其他情况显示原书标签（如耶鲁拼音等不同的注音系统）
+  return true
 }
 </script>
 

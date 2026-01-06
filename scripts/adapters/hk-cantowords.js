@@ -110,21 +110,23 @@ function parseHeadwordsWithJyutping(headwordsStr) {
       const jyutpingStr = part.substring(colonIndex + 1).trim()
       
       if (headword && jyutpingStr) {
-        // 检查是否有多个读音（用冒号分隔，且每个部分都是单个音节）
-        // 例如: "ang2:ngang2" → ["ang2", "ngang2"]
-        // 但: "siu2 ji3 si1" → ["siu2 ji3 si1"] (包含空格的是完整读音)
+        // 检查是否有多个读音（用冒号分隔）
+        // 例如: "ang2:ngang2" → ["ang2", "ngang2"] (单音节多读音)
+        // 例如: "daa2 kaau1 caa1:daa2 gaau1 caa1" → ["daa2 kaau1 caa1", "daa2 gaau1 caa1"] (多音节多读音)
         const jyutpingParts = jyutpingStr.split(':').map(p => p.trim()).filter(p => p)
         
-        // 如果有多个部分，且每个部分都不包含空格（单音节），则分开处理
-        if (jyutpingParts.length > 1 && jyutpingParts.every(p => !p.includes(' '))) {
+        // 如果有多个部分，说明有多个读音变体，分开存储
+        if (jyutpingParts.length > 1) {
           variants.push({ 
-            headword, 
+            headword,
+            original: jyutpingStr, // 保留原始完整字符串
             jyutping: jyutpingParts 
           })
         } else {
-          // 否则作为单个完整的读音
+          // 只有一个读音
           variants.push({ 
-            headword, 
+            headword,
+            original: jyutpingStr,
             jyutping: [jyutpingStr] 
           })
         }
@@ -335,9 +337,7 @@ export function transformRow(row) {
     },
     
     phonetic: {
-      original: Array.isArray(primaryVariant.jyutping) 
-        ? primaryVariant.jyutping[0] 
-        : primaryVariant.jyutping,
+      original: primaryVariant.original || primaryVariant.jyutping[0],
       jyutping: uniqueJyutping
     },
     
