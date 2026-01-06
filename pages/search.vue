@@ -281,7 +281,7 @@ const viewMode = ref<'card' | 'list'>('card')
 const expandedRow = ref<string | null>(null)
 
 // 分页配置
-const PAGE_SIZE = 20 // 每页显示20条
+const PAGE_SIZE = 10 // 每页显示10条
 const currentPage = ref(1)
 
 // 示例搜索
