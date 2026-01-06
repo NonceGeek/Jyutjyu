@@ -186,9 +186,19 @@ function parseSingleSense(text) {
     // 第一段剩余部分可能包含例句
     const firstExample = firstSegment.substring(definitionEnd + 1).trim()
     if (firstExample) {
-      const example = parseExamplePair(firstExample)
-      if (example.text) {
-        result.examples.push(example)
+      // 检查剩余部分是否只是括号注释（补充说明），而不是真正的例句
+      // 如果整个剩余部分是括号包裹的内容，则应该作为definition的一部分
+      const isOnlyParenthetical = /^[（(][^）)]+[）)]$/.test(firstExample)
+      
+      if (isOnlyParenthetical) {
+        // 这是释义的补充说明，应该包含在definition中
+        result.definition = firstSegment.substring(0, definitionEnd + 1).trim() + firstExample
+      } else {
+        // 这是真正的例句
+        const example = parseExamplePair(firstExample)
+        if (example.text) {
+          result.examples.push(example)
+        }
       }
     }
   }
