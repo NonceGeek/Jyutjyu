@@ -33,6 +33,27 @@
 - ✅ 广州话俗语词典（2,524 词条，含歇后语）
 - 🔜 更多词典陆续上架...
 
+## 📜 内容授权说明
+
+本平台收录的词典内容根据来源实施分类授权管理：
+
+### 📖 出版词典
+
+如《实用广州话分类词典》《广州话俗语词典》等，内容受著作权法保护，数据来源于互联网公开扫描资源。
+
+- **当前状态**: 仅限于技术原型演示和学术研究
+- **使用限制**: 不构成商业使用或再分发行为
+- **版权尊重**: 我们鼓励用户支持正版出版物
+- **权利声明**: 如您是权利人并希望修改或下架相关内容，请通过 [GitHub Issues](https://github.com/jyutjyucom/jyutjyu/issues) 联系我们
+
+### ✍️ 社区原创词表
+
+由个人爱好者、研究者等贡献的原创内容，建议采用 [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/deed.zh-hans) 国际许可协议发布，详见[贡献指南](./CONTRIBUTING.md#内容授权政策)。
+
+- ✅ 允许非商业性使用、复制和改编
+- ✅ 必须保留作者署名
+- ❌ 禁止用于商业目的
+
 ## 技术栈
 
 - **框架**: [Nuxt 3](https://nuxt.com/) - Vue 3 全栈框架，支持 SSR
@@ -108,8 +129,10 @@ jyutjyu/
 
 我们欢迎社区贡献！如果你有粤语词典资源或校对能力，请查看：
 
+- [贡献指南](./CONTRIBUTING.md) - 贡献流程与授权政策
 - [CSV录入规范](./docs/CSV_GUIDE.md) - 数据格式标准
-- [贡献指南](./CONTRIBUTING.md) - 贡献流程
+
+> ⚠️ **重要提醒**: 提交原创词表前，请了解默认的 [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/deed.zh-hans) 授权协议。详见[贡献指南](./CONTRIBUTING.md#内容授权政策)。
 
 ### 数据流程
 
@@ -131,15 +154,16 @@ jyutjyu/
 
 ## 文档
 
+- [贡献指南](./CONTRIBUTING.md) - 如何参与贡献（含授权政策）
 - [CSV录入规范](./docs/CSV_GUIDE.md) - 如何整理和录入数据
 - [数据结构设计](./docs/DATA_SCHEMA.md) - TypeScript 类型和 JSON 格式
-- [贡献指南](./CONTRIBUTING.md) - 如何参与贡献
 - [适配器开发](./scripts/adapters/README.md) - 如何为新词典创建适配器
 - [测试指南](./scripts/TEST_GUIDE.md) - 如何测试数据处理脚本
 
 ## 许可证
 
-MIT License - 详见 [LICENSE](./LICENSE) 文件
+- **项目代码**: [MIT License](./LICENSE) - 允许商业使用
+- **词典数据**: 遵循各自的授权协议（见[内容授权说明](#内容授权说明)）
 
 ## 致谢
 
