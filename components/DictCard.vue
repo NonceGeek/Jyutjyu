@@ -13,8 +13,15 @@
               class="ml-2 text-xs text-orange-600 font-normal"
               title="有音无字"
             >
-              □
+              有音无字
             </span>
+            <!-- 同形异义标记 -->
+            <sup
+              v-if="entry.meta.variant_number"
+              class="ml-1 text-sm text-gray-500"
+            >
+              {{ entry.meta.variant_number }}
+            </sup>
           </h3>
           <!-- 异体字 -->
           <p
@@ -113,7 +120,15 @@
             </span>
 
             <!-- 释义 -->
-            <p class="text-gray-800 text-base leading-relaxed mb-2">
+            <p
+              v-if="isCantoDict"
+              class="text-gray-800 text-base leading-relaxed mb-2"
+              v-html="formatDefinitionWithLinks(sense.definition)"
+            ></p>
+            <p
+              v-else
+              class="text-gray-800 text-base leading-relaxed mb-2"
+            >
               {{ sense.definition }}
             </p>
 
@@ -272,6 +287,30 @@ const hasExtraInfo = computed(() => {
     props.entry.meta.register
   )
 })
+
+// 判断是否为粤典
+const isCantoDict = computed(() => {
+  return props.entry.source_book === '粵典 (words.hk)' || 
+         props.entry.source_book === '粵典'
+})
+
+/**
+ * 将释义中以#开头的词组转换为可点击的搜索链接
+ * 仅用于粤典词条
+ */
+const formatDefinitionWithLinks = (definition: string): string => {
+  if (!definition) return ''
+  
+  // 匹配以#开头的词组（中文字符、数字、字母）
+  // 支持#后面跟中文、数字、字母、下划线等
+  const regex = /#([^\s，。！？；：、）】」』]+)/g
+  
+  return definition.replace(regex, (match, word) => {
+    // 生成搜索链接
+    const searchUrl = `/search?q=${encodeURIComponent(word)}`
+    return `<a href="${searchUrl}" class="text-blue-600 hover:text-blue-800 hover:underline font-medium" onclick="event.stopPropagation()">${match}</a>`
+  })
+}
 </script>
 
 <style scoped>
