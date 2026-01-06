@@ -34,28 +34,209 @@ export const DICTIONARY_INFO = {
 export const REQUIRED_FIELDS = ['index', 'words', 'jyutping', 'meanings']
 
 /**
+ * 解析词头的特殊标记并生成异体字组合
+ * @param {string} words - 原始词头字符串
+ * @returns {Object} { 
+ *   mainWord: 主词头,
+ *   variants: 异体字完整组合数组,
+ *   hasCrossReference: 是否为重见词条,
+ *   variantNumber: 同形异义标记数字
+ * }
+ */
+function parseHeadwordMarkers(words) {
+  if (!words) return { mainWord: '', variants: [], hasCrossReference: false, variantNumber: null }
+  
+  let text = words.trim()
+  const result = {
+    mainWord: '',
+    variants: [],
+    hasCrossReference: false,
+    variantNumber: null
+  }
+  
+  // 1. 检查是否有星号（重见标记）
+  if (text.startsWith('*')) {
+    result.hasCrossReference = true
+    text = text.substring(1).trim()
+  }
+  
+  // 2. 解析括号内的异体字并生成所有组合
+  // 例如: "阿（亞）崩阿（亞）狗" → ["亞崩阿狗", "阿崩亞狗", "亞崩亞狗"]
+  const variants = generateHeadwordVariants(text)
+  
+  // 3. 主词头是移除所有括号内容后的结果
+  result.mainWord = text.replace(/[（(][^）)]+[）)]/g, '').trim()
+  
+  // 4. 异体字是除了主词头之外的所有组合
+  result.variants = variants.filter(v => v !== result.mainWord)
+  
+  // 5. 检查是否有数字后缀标记（同形异义）
+  const numberMatch = result.mainWord.match(/^(.+?)(\d+)$/)
+  if (numberMatch) {
+    result.mainWord = numberMatch[1]
+    result.variantNumber = parseInt(numberMatch[2])
+  }
+  
+  return result
+}
+
+/**
+ * 生成词头的所有异体字组合
+ * @param {string} text - 包含括号标记的词头
+ * @returns {Array<string>} 所有可能的组合（包括原始词头）
+ * 
+ * 例如:
+ * - "牛百頁（葉）" → ["牛百頁", "牛百葉"]
+ * - "阿（亞）崩阿（亞）狗" → ["阿崩阿狗", "亞崩阿狗", "阿崩亞狗", "亞崩亞狗"]
+ */
+function generateHeadwordVariants(text) {
+  if (!text) return []
+  
+  // 查找所有括号及其位置
+  const parts = []
+  let currentPos = 0
+  const regex = /([^（(]*)[（(]([^）)]+)[）)]/g
+  let match
+  
+  while ((match = regex.exec(text)) !== null) {
+    const beforeBracket = match[1]
+    const insideBracket = match[2]
+    
+    parts.push({
+      before: beforeBracket,
+      options: [
+        beforeBracket.slice(-1), // 括号前的最后一个字（外部字）
+        insideBracket             // 括号内的字（异体字）
+      ],
+      position: match.index
+    })
+  }
+  
+  // 如果没有括号，直接返回原文
+  if (parts.length === 0) {
+    return [text]
+  }
+  
+  // 重新解析，按字符分段
+  const segments = []
+  let lastIndex = 0
+  
+  const bracketRegex = /[（(]([^）)]+)[）)]/g
+  let bracketMatch
+  
+  while ((bracketMatch = bracketRegex.exec(text)) !== null) {
+    // 添加括号前的文本
+    const beforeText = text.substring(lastIndex, bracketMatch.index)
+    if (beforeText) {
+      // 括号前的内容，最后一个字是可替换的
+      if (beforeText.length > 1) {
+        segments.push({ type: 'fixed', text: beforeText.slice(0, -1) })
+      }
+      segments.push({ 
+        type: 'variant', 
+        options: [
+          beforeText.slice(-1),      // 外部字
+          bracketMatch[1]             // 括号内的字
+        ]
+      })
+    }
+    
+    lastIndex = bracketRegex.lastIndex
+  }
+  
+  // 添加最后剩余的文本
+  if (lastIndex < text.length) {
+    segments.push({ type: 'fixed', text: text.substring(lastIndex) })
+  }
+  
+  // 生成所有组合
+  const combinations = []
+  
+  function generateCombinations(index, current) {
+    if (index >= segments.length) {
+      combinations.push(current)
+      return
+    }
+    
+    const segment = segments[index]
+    if (segment.type === 'fixed') {
+      generateCombinations(index + 1, current + segment.text)
+    } else {
+      // variant
+      segment.options.forEach(option => {
+        generateCombinations(index + 1, current + option)
+      })
+    }
+  }
+  
+  generateCombinations(0, '')
+  
+  // 去重并返回
+  return [...new Set(combinations)]
+}
+
+/**
+ * 解析备注中的重见信息
+ * @param {string} note - 备注字符串
+ * @returns {Object} { crossReferences: 重见类项数组, cleanedNote: 清理后的备注 }
+ */
+function parseCrossReferences(note) {
+  if (!note) return { crossReferences: [], cleanedNote: null }
+  
+  const crossReferences = []
+  let cleanedNote = note
+  
+  // 匹配 [重見XXX] 或 [重见XXX] 格式
+  const matches = note.match(/\[重[見见]([^\]]+)\]/g)
+  if (matches) {
+    matches.forEach(match => {
+      // 提取重见的类项
+      const ref = match.replace(/\[重[見见]([^\]]+)\]/, '$1').trim()
+      if (ref) {
+        crossReferences.push(ref)
+      }
+    })
+    // 移除重见标记，得到清理后的备注
+    cleanedNote = note.replace(/\[重[見见][^\]]+\]/g, '').trim()
+    if (!cleanedNote) cleanedNote = null
+  }
+  
+  return { crossReferences, cleanedNote }
+}
+
+/**
  * 转换单个 CSV 行为标准 DictionaryEntry
  * @param {Object} row - CSV 行数据
  * @returns {Object} DictionaryEntry 对象
  */
 export function transformRow(row) {
-  // 1. 清理词头
-  const headwordInfo = cleanHeadword(row.words)
+  // 1. 解析词头的特殊标记（必须在 cleanHeadword 之前）
+  const headwordMarkers = parseHeadwordMarkers(row.words)
   
-  // 2. 解析释义和例句（现在返回数组）
+  // 2. 清理词头（cleanHeadword 会移除数字，但我们已经在 parseHeadwordMarkers 中提取了）
+  // 注意：不要传入原始 row.words，而是传入处理后的 mainWord
+  const headwordInfo = {
+    normalized: headwordMarkers.mainWord,
+    isPlaceholder: headwordMarkers.mainWord.includes('□')
+  }
+  
+  // 3. 解析释义和例句（现在返回数组）
   const sensesArray = parseExamples(row.meanings)
   
-  // 3. 处理粤拼
+  // 4. 处理粤拼
   const jyutpingArray = row.jyutping
     ? row.jyutping.split(/[,;]/).map(j => j.trim()).filter(j => j)
     : []
   
-  // 4. 构建分类路径
+  // 5. 构建分类路径
   const categories = [row.category_1, row.category_2, row.category_3]
     .filter(c => c && c.trim())
   const categoryPath = categories.join(' > ')
   
-  // 5. 构建标准词条
+  // 6. 解析备注中的重见信息
+  const { crossReferences, cleanedNote } = parseCrossReferences(row.note)
+  
+  // 7. 构建标准词条
   const entry = {
     id: `${DICTIONARY_INFO.id}_${String(row.index).padStart(6, '0')}`,
     source_book: DICTIONARY_INFO.source_book,
@@ -64,7 +245,7 @@ export function transformRow(row) {
     dialect: DICTIONARY_INFO.dialect,
     
     headword: {
-      display: row.words,
+      display: headwordMarkers.mainWord,
       search: headwordInfo.normalized,
       normalized: headwordInfo.normalized,
       is_placeholder: headwordInfo.isPlaceholder || false
@@ -88,14 +269,34 @@ export function transformRow(row) {
     meta: {
       category: categoryPath,
       subcategories: categories,
-      notes: parseNote(row.note)
+      notes: cleanedNote || parseNote(row.note),
+      
+      // 异体字
+      headword_variants: headwordMarkers.variants.length > 0 
+        ? headwordMarkers.variants 
+        : null,
+      
+      // 重见标记
+      has_cross_reference: headwordMarkers.hasCrossReference || crossReferences.length > 0,
+      cross_references: crossReferences.length > 0 ? crossReferences : null,
+      
+      // 同形异义标记
+      variant_number: headwordMarkers.variantNumber
     },
     
     created_at: new Date().toISOString()
   }
   
-  // 6. 生成搜索关键词
+  // 8. 生成搜索关键词
   entry.keywords = generateKeywords(entry)
+  
+  // 9. 添加异体字到关键词
+  if (headwordMarkers.variants.length > 0) {
+    headwordMarkers.variants.forEach(variant => {
+      entry.keywords.push(variant)
+    })
+    entry.keywords = [...new Set(entry.keywords)]
+  }
   
   return entry
 }

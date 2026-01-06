@@ -150,6 +150,9 @@ export const useDictionary = () => {
         } else if (entry.source_book === '实用广州话分类词典') {
           // 实用词典收录的词条更基础、更常用
           score += 10
+        } else if (entry.source_book === '粵典 (words.hk)' || entry.source_book === '粵典') {
+          // 粵典词条数量庞大，需要降低权重
+          score += 4
         }
         
         return score
