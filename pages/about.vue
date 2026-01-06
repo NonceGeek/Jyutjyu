@@ -66,7 +66,7 @@
             <div class="bg-white rounded-lg p-4 mb-4">
               <h4 class="font-semibold text-gray-900 mb-2">⚠️ 版权状态</h4>
               <p class="text-sm text-gray-700 mb-3">
-                这些词典内容受中华人民共和国著作权法保护，**未经出版方或作者授权**。本项目收录的数据来源于互联网上的公开扫描资源。
+                这些词典内容受中华人民共和国著作权法保护，数据来源于互联网上的公开扫描资源。
               </p>
               
               <h4 class="font-semibold text-gray-900 mb-2">🎯 当前用途</h4>
