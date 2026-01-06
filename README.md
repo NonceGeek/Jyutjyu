@@ -31,6 +31,7 @@
 
 - ✅ 实用广州话分类词典（7,530 词条）
 - ✅ 广州话俗语词典（2,524 词条，含歇后语）
+- ✅ 粵典 words.hk（42万+ 词条，社区协作）
 - 🔜 更多词典陆续上架...
 
 ## 📜 内容授权说明
@@ -45,6 +46,16 @@
 - **使用限制**: 不构成商业使用或再分发行为
 - **版权尊重**: 我们鼓励用户支持正版出版物
 - **权利声明**: 如您是权利人并希望修改或下架相关内容，请通过 [GitHub Issues](https://github.com/jyutjyucom/jyutjyu/issues) 联系我们
+
+### ✍️ 社区协作词典
+
+**粵典 (words.hk)** - 采用 [Non-Commercial Open Data License 1.0](https://words.hk/base/hoifong/)（非商业开放资料授权协议）
+
+- **版权持有人**: Hong Kong Lexicography Limited（香港辞书有限公司）
+- ✅ 允许非商业使用、复制、修改、发布
+- ✅ 必须保留署名和版权告示
+- ⚠️ 商业使用需获授权（收入低于地区中位数 3 倍的小型个人业务可豁免）
+- 📄 详见：https://words.hk/base/hoifong/
 
 ### ✍️ 社区原创词表
 
@@ -91,8 +102,14 @@ npm run dev
 # 验证 CSV 数据
 npm run validate -- data/processed/your-file.csv
 
-# 转换为 JSON
+# 转换为 JSON（通用）
 npm run build:data -- --dict dictionary-id --input data/processed/your-file.csv
+
+# 转换粵典数据
+npm run build:data:hk
+
+# 转换广州话分类词典
+npm run build:data:gz
 ```
 
 ## 项目结构

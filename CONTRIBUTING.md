@@ -63,6 +63,28 @@
 - **版权尊重**：我们鼓励用户支持正版出版物
 - **权利声明**：如您是权利人并希望修改或下架相关内容，请通过 [GitHub Issues](https://github.com/jyutjyucom/jyutjyu/issues) 联系我们
 
+#### 🔹 社区协作词典（粵典 words.hk）
+
+📖 **粵典数据**采用《非商业开放资料授权协议 1.0》（Non-Commercial Open Data License 1.0）
+
+- **版权持有人**：Hong Kong Lexicography Limited（香港辞书有限公司）
+- **授权协议**：https://words.hk/base/hoifong/
+- **主要限制**：
+  - ✅ 允许非商业使用、复制、修改、发布
+  - ✅ 必须保留署名和版权告示
+  - ⚠️ 商业使用需获授权（小型个人业务可豁免）
+  - ⚠️ 不可再授权
+- **署名要求**：
+  ```
+  粵典 (words.hk) / Hong Kong Lexicography Limited
+  Licensed under the Non-Commercial Open Data License 1.0
+  ```
+
+⚠️ **贡献者注意**：
+- 不要直接修改粵典数据，如发现错误请向 words.hk 反馈
+- 本项目仅用于技术演示和学习研究
+- 如需商业使用，请直接联系 words.hk (info@words.hk)
+
 #### 🔹 社区原创词表授权政策
 
 💡 **默认协议**：所有个人原创词表的贡献者，默认同意将其内容以 **[CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/)** 协议发布。

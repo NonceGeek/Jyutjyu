@@ -17,17 +17,17 @@ pnpm install
 
 ```bash
 # 方式 1: 使用 npm 脚本
-pnpm validate:gz
+pnpm validate:gzpc
 
 # 方式 2: 直接运行
-node scripts/validate.js data/processed/gz-practical-sample.csv
+node scripts/validate.js data/processed/gz-practical-classified.csv
 ```
 
 **预期输出**:
 ```
 🔍 开始验证...
 
-📄 文件: data/processed/gz-practical-sample.csv
+📄 文件: data/processed/gz-practical-classified.csv
 
 ⏳ 检查文件编码...
 ✅ UTF-8 编码正确
@@ -66,12 +66,12 @@ node scripts/validate.js data/processed/gz-practical-sample.csv
 
 ```bash
 # 方式 1: 使用 npm 脚本
-pnpm build:data:gz
+pnpm build:data:gzpc
 
 # 方式 2: 直接运行
 node scripts/csv-to-json.js \
   --dict gz-practical-classified \
-  --input data/processed/gz-practical-sample.csv
+  --input data/processed/gz-practical-classified.csv
 ```
 
 **预期输出**:
@@ -79,7 +79,7 @@ node scripts/csv-to-json.js \
 🚀 开始转换...
 
 📖 词典: gz-practical-classified
-📄 输入: data/processed/gz-practical-sample.csv
+📄 输入: data/processed/gz-practical-classified.csv
 
 ⏳ 加载适配器...
 ✅ 适配器加载成功: 实用广州话分类词典
@@ -187,7 +187,7 @@ code content/dictionaries/gz-practical-classified.json
 
 **测试命令**:
 ```bash
-node scripts/validate.js data/processed/gz-practical-sample.csv | grep "特殊标记"
+node scripts/validate.js data/processed/gz-practical-classified.csv | grep "特殊标记"
 ```
 
 ### 测试 2: 例句解析
@@ -326,7 +326,7 @@ node scripts/validate.js /path/not/exist.csv
 ```bash
 node scripts/csv-to-json.js \
   --dict unknown-dict \
-  --input data/processed/gz-practical-sample.csv
+  --input data/processed/gz-practical-classified.csv
 # 预期: ❌ 未找到词典适配器
 ```
 

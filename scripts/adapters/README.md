@@ -241,7 +241,128 @@ node scripts/csv-to-json.js \
    }
    ```
 
-## 示例 2：广州话俗语词典
+## 示例 2：粵典 (words.hk)
+
+参考 `hk-cantowords.js`，它展示了如何处理：
+
+### CSV 格式特点
+
+粵典 CSV 格式特殊，第一行是版权声明（被当作表头），需要预处理：
+
+```javascript
+export function preprocessRows(rows) {
+  return rows.map(row => {
+    const keys = Object.keys(row)
+    const longKey = keys.find(k => k.length > 100) || keys[2]
+    
+    return {
+      id: row[''] || '',
+      headwords_jyutping: row['_1'] || '',
+      content: row[longKey] || '',
+      review_status: row['__parsed_extra']?.[1] || '',
+      publish_status: row['__parsed_extra']?.[2] || ''
+    }
+  })
+}
+```
+
+### 核心功能实现
+
+1. **复杂的结构化内容**（包含多种标记）
+   
+   内容格式：`(pos:xxx)` `<explanation>` `<eg>` `yue:` `eng:` `----`
+   
+   ```javascript
+   function parseContent(content) {
+     // 按 ---- 分割多个义项
+     const senseParts = content.split(/\n?----\n?/).filter(p => p.trim())
+     
+     senseParts.forEach(sensePart => {
+       // 提取词性：(pos:語句)
+       const posMatch = sensePart.match(/\(pos:([^)]+)\)/)
+       
+       // 分割释义和例句部分
+       const parts = sensePart.split(/<eg>/i)
+       const explanationPart = parts[0]
+       const examplePart = parts[1]
+       
+       // 提取 yue: 和 eng: 内容
+       const yueMatch = explanationPart.match(/yue:(.+?)(?=\neng:|$)/s)
+       const engMatch = explanationPart.match(/eng:(.+?)$/s)
+     })
+   }
+   ```
+
+2. **多个词头变体**（用冒号和逗号分隔）
+   
+   格式：`小意思:siu2 ji3 si1,小小意思:siu2 siu2 ji3 si1`
+   
+   ```javascript
+   function parseHeadwordsWithJyutping(headwordsStr) {
+     const variants = []
+     const parts = headwordsStr.split(',').map(p => p.trim()).filter(p => p)
+     
+     parts.forEach(part => {
+       const colonIndex = part.indexOf(':')
+       if (colonIndex > 0) {
+         variants.push({
+           headword: part.substring(0, colonIndex).trim(),
+           jyutping: part.substring(colonIndex + 1).trim()
+         })
+       }
+     })
+     return variants
+   }
+   ```
+
+3. **审核和公开状态**
+   ```javascript
+   meta: {
+     review_status: reviewStatus,
+     is_reviewed: !reviewStatus.includes('UNREVIEWED'),
+     publish_status: publishStatus,
+     is_public: !publishStatus.includes('未公開')
+   }
+   ```
+
+4. **多语言释义和例句**（粤语和英语）
+   ```javascript
+   // 从 yue: 和 eng: 标记中提取
+   const yueMatch = text.match(/yue:(.+?)(?=\neng:|$)/s)
+   const engMatch = text.match(/eng:(.+?)$/s)
+   
+   if (yueMatch) {
+     sense.definition = yueMatch[1].trim()
+     if (engMatch) {
+       sense.definition += ` (${engMatch[1].trim()})`
+     }
+   }
+   ```
+
+### 使用说明
+
+```bash
+# 转换粵典数据
+npm run build:data:hk
+
+# 或完整命令
+node scripts/csv-to-json.js \
+  --dict hk-cantowords \
+  --input data/processed/hk-cantowords.csv
+
+# 测试小数据集
+head -n 1000 data/processed/hk-cantowords.csv > /tmp/test.csv
+node scripts/csv-to-json.js --dict hk-cantowords --input /tmp/test.csv
+```
+
+### 注意事项
+
+⚠️ **重要**：粵典数据采用《非商业开放资料授权协议 1.0》
+- 版权持有人：Hong Kong Lexicography Limited
+- 允许非商业使用，商业使用需授权
+- 详见：https://words.hk/base/hoifong/
+
+## 示例 3：广州话俗语词典
 
 参考 `gz-colloquialisms.js`，它展示了如何处理：
 
