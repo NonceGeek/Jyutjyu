@@ -4,17 +4,11 @@
       "id": "gz-practical-classified",
       "name": "实用广州话分类词典",
       "dialect": "广州话",
-      "entries_count": 7530,
+      "entries_count": 7549,
       "author": "麦耘、谭步云",
       "publisher": "广东人民出版社",
       "year": 1997,
-      "file": "gz-practical-classified.json",
-      "version": "1.0.0",
-      "description": "按主题分类的实用广州话词典，收录日常生活各领域词汇",
-      "source": "scanned_from_internet",
-      "license": "Copyrighted. For technical demonstration only.",
-      "usage_restriction": "此词表内容受版权保护，来源于互联网公开扫描资源，仅用于本项目原型验证和技术演示，不得用于商业用途或二次分发。",
-      "attribution": "《实用广州话分类词典》，麦耘、谭步云编，广东人民出版社，1997年版"
+      "file": "gz-practical-classified.json"
     },
     {
       "id": "gz-colloquialisms",
@@ -69,6 +63,6 @@
       "chunk_dir": "wiktionary"
     }
   ],
-  "last_updated": "2026-01-07T08:36:15.170Z",
+  "last_updated": "2026-01-07T17:54:51.905Z",
   "schema_version": "1.0.0"
 }
