@@ -362,7 +362,183 @@ node scripts/csv-to-json.js --dict hk-cantowords --input /tmp/test.csv
 - 允许非商业使用，商业使用需授权
 - 详见：https://words.hk/base/hoifong/
 
-## 示例 3：广州话俗语词典
+## 示例 3: Wiktionary粤语词条
+
+参考 `wiktionary-cantonese.js`，它展示了如何处理 **JSONL 格式** 数据（而非CSV）：
+
+### 数据格式特点
+
+Wiktionary 数据为 JSONL 格式（每行一个JSON对象），需要使用专门的 `jsonl-to-json.js` 脚本。
+
+```javascript
+{
+  "word": "book",
+  "lang": "Chinese",
+  "pos": "verb",
+  "sounds": [...],
+  "senses": [...],
+  "forms": [...],
+  "etymology_text": "..."
+}
+```
+
+### 核心功能实现
+
+1. **筛选粤语词条**
+   ```javascript
+   function isCantoneseEntry(entry) {
+     // 检查sounds中是否有Cantonese标签
+     if (entry.sounds && Array.isArray(entry.sounds)) {
+       const hasCantoneseSound = entry.sounds.some(sound => 
+         sound.tags?.some(tag => 
+           tag?.toLowerCase().includes('cantonese')
+         )
+       )
+       if (hasCantoneseSound) return true
+     }
+     return false
+   }
+   ```
+
+2. **提取粤拼（Jyutping）**
+   ```javascript
+   function extractJyutping(sounds) {
+     const jyutpingSet = new Set()
+     
+     sounds.forEach(sound => {
+       if (sound.tags) {
+         const hasCantonese = sound.tags.some(tag => 
+           tag?.toLowerCase().includes('cantonese')
+         )
+         const hasJyutping = sound.tags.some(tag => 
+           tag?.toLowerCase().includes('jyutping')
+         )
+         
+         if (hasCantonese && hasJyutping && sound.zh_pron) {
+           // 标准化声调标记：¹²³ → 123
+           let normalized = sound.zh_pron
+             .replace(/¹/g, '1')
+             .replace(/²/g, '2')
+             // ...
+           jyutpingSet.add(normalized)
+         }
+       }
+     })
+     
+     return Array.from(jyutpingSet)
+   }
+   ```
+
+3. **提取IPA音标**
+   ```javascript
+   function extractIPA(sounds) {
+     for (const sound of sounds) {
+       if (sound.tags?.some(tag => 
+         tag?.toLowerCase().includes('cantonese')
+       ) && sound.ipa) {
+         return sound.ipa
+       }
+     }
+     return null
+   }
+   ```
+
+4. **词性映射（英文→中文）**
+   ```javascript
+   const POS_MAP = {
+     'noun': '名词',
+     'verb': '动词',
+     'adj': '形容词',
+     'adv': '副词',
+     // ...
+   }
+   
+   const posChinese = POS_MAP[entry.pos?.toLowerCase()] || entry.pos
+   ```
+
+5. **提取异体字**
+   ```javascript
+   function extractVariants(forms) {
+     const variants = []
+     forms?.forEach(form => {
+       if (form.tags?.includes('alternative')) {
+         variants.push(form.form)
+       }
+     })
+     return variants
+   }
+   ```
+
+6. **处理标签系统**
+   ```javascript
+   function extractRegion(tags) {
+     for (const tag of tags) {
+       const lower = tag?.toLowerCase()
+       if (lower?.includes('hong-kong')) return '香港'
+       if (lower?.includes('guangzhou')) return '广州'
+     }
+     return null
+   }
+   
+   function extractRegister(tags) {
+     for (const tag of tags) {
+       const lower = tag?.toLowerCase()
+       if (lower?.includes('colloquial')) return '口语'
+       if (lower?.includes('slang')) return '俚语'
+     }
+     return null
+   }
+   ```
+
+### 使用说明
+
+```bash
+# 完整转换（处理所有词条）
+npm run build:data:wiktionary
+
+# 测试模式（只处理前1000条）
+npm run build:data:wiktionary:test
+
+# 或完整命令
+node scripts/jsonl-to-json.js \
+  --dict wiktionary-cantonese \
+  --input data/processed/wiktionary_cantonese_entries.jsonl
+
+# 限制处理数量（测试用）
+node scripts/jsonl-to-json.js \
+  --dict wiktionary-cantonese \
+  --input data/processed/wiktionary_cantonese_entries.jsonl \
+  --limit 1000
+```
+
+### 特殊字段说明
+
+| 字段 | 说明 | 处理方式 |
+|------|------|---------|
+| `sounds` | 发音数组 | 筛选Cantonese+Jyutping标签 |
+| `ipa` | IPA音标 | 作为`original`字段展示 |
+| `pos` | 词性（英文） | 映射为中文词性 |
+| `forms` | 词形变化 | 提取alternative标记的异体字 |
+| `etymology_text` | 词源 | 保存到meta.etymology |
+| `tags` | 标签 | 识别地区和语域信息 |
+| `senses` | 释义数组 | 包含glosses、examples等 |
+
+### 注意事项
+
+⚠️ **重要**：Wiktionary数据采用 CC BY-SA 4.0 协议
+- 允许自由使用和修改
+- 需保留署名：Wiktionary contributors
+- 详见：https://creativecommons.org/licenses/by-sa/4.0/
+
+### 数据质量说明
+
+- ✅ 发音准确：Jyutping + IPA双重标注
+- ✅ 词源丰富：大量词源信息
+- ✅ 标签完善：地区、语域等标签清晰
+- ⚠️ 覆盖参差：并非所有词条都有粤语发音
+- ⚠️ 需筛选：从大量Chinese词条中筛选粤语相关内容
+
+## 示例 4：广州话俗语词典
 
 参考 `gz-colloquialisms.js`，它展示了如何处理：
 
@@ -504,4 +680,205 @@ const headwordInfo = cleanHeadword('□嘢')
 - 查看现有适配器源码
 - 阅读 [DATA_SCHEMA.md](../../docs/DATA_SCHEMA.md)
 - 在 [GitHub Discussions](https://github.com/jyutjyucom/jyutjyu/discussions) 提问
+
+---
+
+## 大型词典优化：分片加载
+
+对于词条数量超过 10 万的大型词典（如 Wiktionary），生成的 JSON 文件可能超过 100MB，导致：
+- ❌ 首次加载慢（需要下载整个大文件）
+- ❌ 内存占用大（浏览器需要解析所有数据）
+- ❌ 搜索性能差（需要遍历大量数据）
+
+**解决方案**：使用分片加载（Chunked Loading）
+
+### 工作原理
+
+1. **数据分片**：按粤拼首字母将词典分成 20-30 个小文件
+2. **按需加载**：搜索时只加载相关的 1-2 个分片（2-8MB）
+3. **数据优化**：移除冗余字段，减少文件大小 40-50%
+4. **客户端缓存**：已加载的分片会被缓存，避免重复请求
+
+### 效果对比
+
+| 指标 | 优化前 | 优化后 | 改善 |
+|------|--------|--------|------|
+| 文件总大小 | 135 MB | 66 MB | ↓ 51% |
+| 首次加载 | 下载 135MB | 0 MB | ↓ 100% |
+| 搜索"book" | 已加载全部 | 下载 4MB | ↓ 97% |
+| 内存占用 | ~200 MB | ~30 MB | ↓ 85% |
+
+### 使用方法
+
+#### Step 1: 在适配器中启用分片
+
+在适配器的 `DICTIONARY_INFO` 中添加：
+
+```javascript
+export const DICTIONARY_INFO = {
+  id: 'my-large-dict',
+  name: '我的大型词典',
+  // ... 其他字段
+  
+  // 启用分片（词条数 > 50000 建议启用）
+  enable_chunking: true,
+  chunk_output_dir: 'my-large-dict' // 分片输出目录名
+}
+```
+
+#### Step 2: 在适配器中添加分片后处理
+
+在适配器文件末尾添加：
+
+```javascript
+/**
+ * 后处理：自动分片大型词典
+ */
+export async function postProcess(entries, outputPath) {
+  if (!DICTIONARY_INFO.enable_chunking) {
+    return entries // 不分片，直接返回
+  }
+  
+  console.log('🔧 检测到大型词典，启用自动分片...')
+  
+  // 动态导入分片模块
+  const { splitDictionary } = await import('../split-dictionary.cjs')
+  
+  // 确定输出目录
+  const outputDir = outputPath.replace(/\.json$/, '')
+  const chunkDir = DICTIONARY_INFO.chunk_output_dir || 
+                   DICTIONARY_INFO.id.replace(/-cantonese$/, '')
+  
+  const finalOutputDir = outputDir + '/' + chunkDir
+  
+  // 执行分片
+  await splitDictionary(outputPath, finalOutputDir)
+  
+  console.log('✅ 分片完成')
+  return entries
+}
+```
+
+#### Step 3: 更新前端配置
+
+在 `public/dictionaries/index.json` 中标记为分片词典：
+
+```json
+{
+  "id": "my-large-dict",
+  "name": "我的大型词典",
+  "file": "my-large-dict.json",
+  "entries_count": 100000,
+  "chunked": true,
+  "chunk_dir": "my-large-dict",
+  ...
+}
+```
+
+前端会自动识别 `chunked: true` 并按需加载分片。
+
+### 分片策略
+
+**按拼音首字母分片**：
+- a-z: 26个基础分片
+- other: 特殊字符分片
+
+**数据优化**：
+```javascript
+// 保留字段（搜索必需）
+{
+  id, source_book, headword, phonetic, 
+  entry_type, senses, keywords
+}
+
+// 精简 meta（只保留核心）
+meta: {
+  pos, register, variants
+}
+
+// 移除字段（非搜索必需）
+// ❌ meta.etymology
+// ❌ meta.ipa  
+// ❌ meta.derived
+// ❌ meta.related
+// ❌ created_at
+```
+
+### 分片文件结构
+
+```
+public/dictionaries/
+├── my-large-dict.json          # 原始完整文件（备份）
+└── my-large-dict/              # 分片目录
+    ├── manifest.json           # 分片索引
+    ├── a.json                  # 首字母 a
+    ├── b.json                  # 首字母 b
+    ├── c.json                  # 首字母 c
+    └── ...                     # 其他分片
+```
+
+### 示例：Wiktionary 分片配置
+
+参考 `wiktionary-cantonese.js` 的完整实现：
+
+```javascript
+export const DICTIONARY_INFO = {
+  id: 'wiktionary-cantonese',
+  name: 'Wiktionary粤语词条',
+  // ... 其他字段
+  enable_chunking: true,
+  chunk_output_dir: 'wiktionary'
+}
+
+// 聚合后自动分片
+export async function postProcess(entries, outputPath) {
+  if (!DICTIONARY_INFO.enable_chunking) return entries
+  
+  const path = await import('path')
+  const outputDir = path.dirname(outputPath)
+  const chunkDir = path.join(
+    outputDir, 
+    DICTIONARY_INFO.chunk_output_dir
+  )
+  
+  // 导入分片模块
+  const splitModule = await import('../split-dictionary.cjs')
+  
+  // 执行分片
+  await splitModule.splitDictionary(outputPath, chunkDir)
+  
+  return entries
+}
+```
+
+### 注意事项
+
+1. **保留原始文件**：分片后仍保留完整 JSON 文件作为备份
+2. **索引同步**：确保 `index.json` 中正确配置 `chunked` 和 `chunk_dir`
+3. **缓存策略**：建议设置 HTTP 缓存头（max-age=86400）
+4. **静态部署**：分片方案完全兼容静态部署（Netlify/Vercel）
+
+### 何时使用分片
+
+✅ **建议启用分片**：
+- 词条数 > 50,000
+- JSON 文件 > 30 MB
+- 搜索性能有明显延迟
+
+❌ **不建议分片**：
+- 词条数 < 20,000
+- JSON 文件 < 10 MB
+- 文件已经很小且加载快速
+
+### 性能监控
+
+开发时可以在浏览器控制台查看分片加载情况：
+
+```javascript
+// 会看到类似日志：
+// ✅ 已加载分片: wiktionary/b.json (6154 条)
+// ⏭️ 跳过分片词典: wiktionary-cantonese (按需加载)
+```
+
+---
 

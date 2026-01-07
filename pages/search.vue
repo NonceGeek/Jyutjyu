@@ -382,14 +382,17 @@ const searchExample = (query: string) => {
   handleSearch()
 }
 
-// 监听 URL 变化
+// 监听 URL 变化（只在客户端执行搜索）
 watch(() => route.query.q, (newQuery) => {
   searchQuery.value = newQuery as string || ''
-  if (newQuery) {
-    performSearch(newQuery as string)
-  } else {
-    allResults.value = []
-    displayedResults.value = []
+  // 只在客户端执行搜索
+  if (process.client) {
+    if (newQuery) {
+      performSearch(newQuery as string)
+    } else {
+      allResults.value = []
+      displayedResults.value = []
+    }
   }
 }, { immediate: true })
 

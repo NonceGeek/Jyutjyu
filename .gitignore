@@ -35,3 +35,5 @@ public/search-index.json
 # OS
 Thumbs.db
 
+data/processed/wiktionary_cantonese_entries.jsonl
+data/processed/structure_analysis.txt

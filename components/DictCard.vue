@@ -62,7 +62,7 @@
       <div class="flex flex-wrap gap-2 mt-3">
         <!-- 来源词典: ID -->
         <span class="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm">
-          {{ entry.source_book }}: {{ entry.source_id }}
+          {{ entry.source_book }}<template v-if="entry.source_id">: {{ entry.source_id }}</template>
         </span>
 
         <!-- 方言 -->
@@ -73,6 +73,14 @@
         <!-- 词条类型 -->
         <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
           {{ entryTypeLabel }}
+        </span>
+
+        <!-- 语域标签（口语、书面、俚语等） -->
+        <span
+          v-if="entry.meta.register"
+          class="px-3 py-1 bg-orange-50 text-orange-700 rounded-full text-sm"
+        >
+          {{ entry.meta.register }}
         </span>
 
         <!-- 分类（如果有） -->
@@ -174,6 +182,15 @@
         {{ entry.meta.notes }}
       </div>
 
+      <!-- 词源 -->
+      <div
+        v-if="entry.meta.etymology"
+        class="mt-4 p-3 border-l-4 bg-purple-50 border-purple-400 text-sm text-gray-700"
+      >
+        <span class="font-semibold text-purple-700">词源：</span>
+        {{ entry.meta.etymology }}
+      </div>
+
       <!-- 参见 -->
       <div
         v-if="entry.refs && entry.refs.length > 0"
@@ -233,14 +250,8 @@
         v-show="detailsExpanded"
         class="mt-3 text-sm text-gray-600 space-y-1"
       >
-        <p v-if="entry.meta.etymology">
-          <span class="font-semibold">词源:</span> {{ entry.meta.etymology }}
-        </p>
         <p v-if="entry.meta.usage">
           <span class="font-semibold">用法:</span> {{ entry.meta.usage }}
-        </p>
-        <p v-if="entry.meta.register">
-          <span class="font-semibold">语域:</span> {{ entry.meta.register }}
         </p>
       </div>
     </div>
@@ -271,12 +282,10 @@ const entryTypeLabel = computed(() => {
   return labels[props.entry.entry_type] || props.entry.entry_type
 })
 
-// 是否有额外信息
+// 是否有额外信息（不包括词源和语域，因为它们已在顶部展示）
 const hasExtraInfo = computed(() => {
   return !!(
-    props.entry.meta.etymology ||
-    props.entry.meta.usage ||
-    props.entry.meta.register
+    props.entry.meta.usage
   )
 })
 

@@ -31,7 +31,7 @@ export const DICTIONARY_INFO = {
   source_book: '粵典 (words.hk)',
   author: 'words.hk contributors',
   publisher: 'Hong Kong Lexicography Limited',
-  year: 2024,
+  year: 2026,
   source: 'community_contributed',
   license: 'Non-Commercial Open Data License 1.0',
   license_url: 'https://words.hk/base/hoifong/',

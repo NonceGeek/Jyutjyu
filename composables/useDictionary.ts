@@ -9,10 +9,139 @@ import type { DictionaryEntry, SearchOptions, SearchResult } from '~/types/dicti
 let cachedEntries: DictionaryEntry[] | null = null
 let cachePromise: Promise<DictionaryEntry[]> | null = null
 
+// 分片缓存（用于大型词典）
+interface ChunkCache {
+  [initial: string]: DictionaryEntry[]
+}
+const chunkCache: ChunkCache = {}
+let chunkManifest: any = null
+
 /**
  * 词典数据管理
  */
 export const useDictionary = () => {
+  /**
+   * 加载分片 manifest
+   */
+  const loadChunkManifest = async (dictId: string): Promise<any> => {
+    // 只在客户端运行
+    if (!process.client) {
+      return null
+    }
+    
+    try {
+      const response = await fetch(`/dictionaries/${dictId}/manifest.json`)
+      if (response.ok) {
+        return await response.json()
+      }
+    } catch (error) {
+      console.error(`加载 ${dictId} manifest 失败:`, error)
+    }
+    return null
+  }
+
+  /**
+   * 根据查询词确定需要加载的分片
+   * 
+   * 策略说明：
+   * - 分片按粤拼首字母存储（如 GDP 的粤拼 zi1，存在 z.json）
+   * - 但用户可能按词头搜索（如搜索 "GDP"，首字母是 G）
+   * - 因此需要智能加载多个可能的分片
+   */
+  const getRequiredChunks = (query: string, manifest: any): string[] => {
+    if (!manifest || !manifest.chunks) return []
+    
+    const chunks = new Set<string>()
+    const normalizedQuery = query.toLowerCase().trim()
+    
+    if (!normalizedQuery) return []
+    
+    const firstChar = normalizedQuery[0]
+    const isLongQuery = normalizedQuery.length > 4
+    
+    // 检查是否为汉字
+    const hasChineseChar = /[\u4e00-\u9fa5]/.test(normalizedQuery)
+    
+    // 策略1: 非常短的查询（1-2字符）或英文/数字查询 → 加载所有分片
+    // 原因：不确定是按词头还是按拼音匹配，且数据量小
+    if (normalizedQuery.length <= 2 || (!hasChineseChar && normalizedQuery.length <= 4)) {
+      // 对于很短的查询，加载所有分片以确保找到结果
+      Object.keys(manifest.chunks).forEach(initial => {
+        chunks.add(initial)
+      })
+      return Array.from(chunks)
+    }
+    
+    // 策略2: 中等长度的查询（3-4字符）→ 加载首字母相关的多个分片
+    if (!isLongQuery) {
+      // 添加查询词首字母对应的分片
+      if (manifest.chunks[firstChar]) {
+        chunks.add(firstChar)
+      }
+      
+      // 如果是汉字查询，也尝试加载其他常见拼音首字母
+      // （因为不同输入法可能有不同拼音）
+      if (hasChineseChar) {
+        // 加载一些常见的相关分片
+        // 这是一个启发式策略，可以根据实际情况调整
+        const relatedInitials = [firstChar]
+        relatedInitials.forEach(initial => {
+          if (manifest.chunks[initial]) {
+            chunks.add(initial)
+          }
+        })
+      }
+      
+      return Array.from(chunks)
+    }
+    
+    // 策略3: 长查询（5+字符）→ 只加载首字母分片
+    // 原因：长查询通常能精确匹配，不需要加载所有分片
+    if (manifest.chunks[firstChar]) {
+      chunks.add(firstChar)
+    }
+    
+    return Array.from(chunks)
+  }
+
+  /**
+   * 加载指定的分片
+   */
+  const loadChunks = async (dictId: string, chunks: string[]): Promise<DictionaryEntry[]> => {
+    // 只在客户端运行
+    if (!process.client) {
+      return []
+    }
+    
+    const entries: DictionaryEntry[] = []
+    
+    await Promise.all(
+      chunks.map(async (chunk) => {
+        // 检查缓存
+        if (chunkCache[`${dictId}_${chunk}`]) {
+          entries.push(...chunkCache[`${dictId}_${chunk}`])
+          return
+        }
+        
+        // 加载分片
+        try {
+          const response = await fetch(`/dictionaries/${dictId}/${chunk}.json`)
+          if (response.ok) {
+            const data = await response.json()
+            if (Array.isArray(data)) {
+              chunkCache[`${dictId}_${chunk}`] = data
+              entries.push(...data)
+            }
+          }
+        } catch (error) {
+          console.error(`加载分片失败 ${dictId}/${chunk}.json:`, error)
+        }
+      })
+    )
+    
+    return entries
+  }
+
   /**
    * 获取所有词条（带缓存）
    * 注意：搜索功能只在客户端运行，不需要 SSR
@@ -57,6 +186,14 @@ export const useDictionary = () => {
         await Promise.all(
           dictionaries.map(async (dict: any) => {
             try {
+              // 检查是否为分片词典（wiktionary）
+              if (dict.id === 'wiktionary-cantonese') {
+                // 分片词典：不在这里加载，而是在搜索时按需加载
+                console.log(`⏭️ 跳过分片词典: ${dict.id} (按需加载)`)
+                return
+              }
+              
+              // 普通词典：全量加载
               const response = await fetch(`/dictionaries/${dict.file}`)
               if (response.ok) {
                 const data = await response.json()
@@ -107,6 +244,12 @@ export const useDictionary = () => {
    * @returns 匹配的词条数组，按相关度排序
    */
   const searchBasic = async (query: string, limit: number = 100): Promise<DictionaryEntry[]> => {
+    // 只在客户端运行
+    if (!process.client) {
+      console.log('⏭️  服务器端跳过搜索')
+      return []
+    }
+    
     if (!query || query.trim() === '') {
       return []
     }
@@ -125,7 +268,26 @@ export const useDictionary = () => {
     ].filter((v, i, arr) => arr.indexOf(v) === i) // 去重
 
     try {
-      const entries = await getAllEntries()
+      // 1. 获取基础词典数据（已缓存，不包含 wiktionary）
+      const baseEntries = await getAllEntries()
+      // 创建新数组，避免修改缓存
+      const entries = [...baseEntries]
+      
+      // 2. 加载 wiktionary 分片数据
+      if (!chunkManifest) {
+        chunkManifest = await loadChunkManifest('wiktionary')
+      }
+      
+      if (chunkManifest) {
+        // 确定需要加载的分片
+        const requiredChunks = getRequiredChunks(normalizedQuery, chunkManifest)
+        
+        if (requiredChunks.length > 0) {
+          // 加载分片数据
+          const wiktionaryEntries = await loadChunks('wiktionary', requiredChunks)
+          entries.push(...wiktionaryEntries)
+        }
+      }
       
       /**
        * 计算次要排序分数（在相同优先级内使用）
