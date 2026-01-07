@@ -142,7 +142,15 @@
                 :key="exIdx"
                 class="pl-4 border-l-2 border-gray-200"
               >
-                <p class="text-gray-700 text-base">
+                <p
+                  v-if="isCantoDict"
+                  class="text-gray-700 text-base"
+                  v-html="formatDefinitionWithLinks(example.text)"
+                ></p>
+                <p
+                  v-else
+                  class="text-gray-700 text-base"
+                >
                   {{ example.text }}
                 </p>
                 <!-- 例句粤拼 -->
