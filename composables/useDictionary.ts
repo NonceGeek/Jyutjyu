@@ -16,6 +16,38 @@ interface ChunkCache {
 const chunkCache: ChunkCache = {}
 let chunkManifest: any = null
 
+// 搜索索引结构
+interface SearchIndex {
+  // 词头索引: key -> entry IDs
+  headwordIndex: Map<string, Set<string>>
+  // 粤拼索引: jyutping -> entry IDs  
+  jyutpingIndex: Map<string, Set<string>>
+  // ID -> entry 映射
+  entryMap: Map<string, DictionaryEntry>
+  // 是否已初始化
+  initialized: boolean
+}
+
+// 全局搜索索引
+const searchIndex: SearchIndex = {
+  headwordIndex: new Map(),
+  jyutpingIndex: new Map(),
+  entryMap: new Map(),
+  initialized: false
+}
+
+/**
+ * 基础搜索选项
+ */
+export interface BasicSearchOptions {
+  /** 是否搜索释义（反查），默认 false */
+  searchDefinition?: boolean
+  /** 返回结果数量限制 */
+  limit?: number
+  /** 流式结果回调，每批结果调用一次 */
+  onResults?: (entries: DictionaryEntry[], isComplete: boolean) => void
+}
+
 /**
  * 词典数据管理
  */
@@ -102,44 +134,6 @@ export const useDictionary = () => {
     }
     
     return Array.from(chunks)
-  }
-
-  /**
-   * 加载指定的分片
-   */
-  const loadChunks = async (dictId: string, chunks: string[]): Promise<DictionaryEntry[]> => {
-    // 只在客户端运行
-    if (!process.client) {
-      return []
-    }
-    
-    const entries: DictionaryEntry[] = []
-    
-    await Promise.all(
-      chunks.map(async (chunk) => {
-        // 检查缓存
-        if (chunkCache[`${dictId}_${chunk}`]) {
-          entries.push(...chunkCache[`${dictId}_${chunk}`])
-          return
-        }
-        
-        // 加载分片
-        try {
-          const response = await fetch(`/dictionaries/${dictId}/${chunk}.json`)
-          if (response.ok) {
-            const data = await response.json()
-            if (Array.isArray(data)) {
-              chunkCache[`${dictId}_${chunk}`] = data
-              entries.push(...data)
-            }
-          }
-        } catch (error) {
-          console.error(`加载分片失败 ${dictId}/${chunk}.json:`, error)
-        }
-      })
-    )
-    
-    return entries
   }
 
   /**
@@ -238,12 +232,133 @@ export const useDictionary = () => {
   }
 
   /**
+   * 构建搜索索引（词头和粤拼）
+   */
+  const buildSearchIndex = (entries: DictionaryEntry[]): void => {
+    const { toSimplified, toTraditional } = useChineseConverter()
+    
+    for (const entry of entries) {
+      // 跳过已索引的
+      if (searchIndex.entryMap.has(entry.id)) continue
+      
+      searchIndex.entryMap.set(entry.id, entry)
+      
+      // 索引词头（normalized 和 display 的各种变体）
+      const headwords = [
+        entry.headword.normalized?.toLowerCase(),
+        entry.headword.display?.toLowerCase(),
+        toSimplified(entry.headword.normalized || '').toLowerCase(),
+        toSimplified(entry.headword.display || '').toLowerCase(),
+        toTraditional(entry.headword.normalized || '').toLowerCase(),
+        toTraditional(entry.headword.display || '').toLowerCase()
+      ].filter(h => h)
+      
+      for (const hw of headwords) {
+        if (!searchIndex.headwordIndex.has(hw)) {
+          searchIndex.headwordIndex.set(hw, new Set())
+        }
+        searchIndex.headwordIndex.get(hw)!.add(entry.id)
+        
+        // 也索引每个字符前缀，支持前缀搜索
+        for (let i = 1; i <= hw.length; i++) {
+          const prefix = hw.slice(0, i)
+          const prefixKey = `prefix:${prefix}`
+          if (!searchIndex.headwordIndex.has(prefixKey)) {
+            searchIndex.headwordIndex.set(prefixKey, new Set())
+          }
+          searchIndex.headwordIndex.get(prefixKey)!.add(entry.id)
+        }
+      }
+      
+      // 索引粤拼
+      if (entry.phonetic?.jyutping) {
+        for (const jp of entry.phonetic.jyutping) {
+          const jpLower = jp.toLowerCase()
+          if (!searchIndex.jyutpingIndex.has(jpLower)) {
+            searchIndex.jyutpingIndex.set(jpLower, new Set())
+          }
+          searchIndex.jyutpingIndex.get(jpLower)!.add(entry.id)
+          
+          // 索引粤拼前缀
+          for (let i = 1; i <= jpLower.length; i++) {
+            const prefix = jpLower.slice(0, i)
+            const prefixKey = `prefix:${prefix}`
+            if (!searchIndex.jyutpingIndex.has(prefixKey)) {
+              searchIndex.jyutpingIndex.set(prefixKey, new Set())
+            }
+            searchIndex.jyutpingIndex.get(prefixKey)!.add(entry.id)
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * 计算次要排序分数（在相同优先级内使用）
+   */
+  const calculateSecondaryScore = (entry: DictionaryEntry, queryLength: number): number => {
+    let score = 0
+    
+    // 1. 词条长度匹配度 (0-30分)
+    const headwordLength = entry.headword.display.length
+    if (headwordLength === queryLength) {
+      score += 30
+    } else {
+      const lengthDiff = Math.abs(headwordLength - queryLength)
+      score += Math.max(0, 30 - lengthDiff * 3)
+    }
+    
+    // 2. 释义详细程度 (0-20分)
+    if (entry.senses && entry.senses.length > 0) {
+      const firstSense = entry.senses[0]
+      const definitionLength = firstSense.definition?.length || 0
+      
+      if (definitionLength > 50) {
+        score += 20
+      } else if (definitionLength > 20) {
+        score += 15
+      } else if (definitionLength > 0) {
+        score += 10
+      }
+      
+      if (firstSense.examples && firstSense.examples.length > 0) {
+        score += 5
+      }
+    }
+    
+    // 3. 词典来源权重 (0-10分)
+    if (entry.source_book === '广州话俗语词典') {
+      score += 8
+    } else if (entry.source_book === '实用广州话分类词典') {
+      score += 10
+    } else if (entry.source_book === '粵典 (words.hk)' || entry.source_book === '粵典') {
+      score += 4
+    }
+    
+    return score
+  }
+
+  /**
    * 基础搜索（精确匹配，支持简繁体）
    * @param query 搜索关键词
-   * @param limit 返回结果数量限制，默认100
+   * @param optionsOrLimit 搜索选项或返回结果数量限制
    * @returns 匹配的词条数组，按相关度排序
    */
-  const searchBasic = async (query: string, limit: number = 100): Promise<DictionaryEntry[]> => {
+  const searchBasic = async (
+    query: string, 
+    optionsOrLimit: BasicSearchOptions | number = 100
+  ): Promise<DictionaryEntry[]> => {
+    // 兼容旧的 limit 参数
+    const options: BasicSearchOptions = typeof optionsOrLimit === 'number' 
+      ? { limit: optionsOrLimit }
+      : optionsOrLimit
+    
+    const { 
+      searchDefinition = false, // 默认不搜索释义（反查）
+      limit = 100,
+      onResults 
+    } = options
+
     // 只在客户端运行
     if (!process.client) {
       console.log('⏭️  服务器端跳过搜索')
@@ -267,91 +382,46 @@ export const useDictionary = () => {
       toTraditional(normalizedQuery).toLowerCase()
     ].filter((v, i, arr) => arr.indexOf(v) === i) // 去重
 
-    try {
-      // 1. 获取基础词典数据（已缓存，不包含 wiktionary）
-      const baseEntries = await getAllEntries()
-      // 创建新数组，避免修改缓存
-      const entries = [...baseEntries]
+    // 收集所有结果
+    const allResultsWithPriority: Array<{entry: DictionaryEntry, priority: number, secondaryScore: number}> = []
+    const seenIds = new Set<string>()
+
+    /**
+     * 处理词条，计算优先级
+     * 反查模式：只搜索释义
+     * 正常模式：搜索词头、粤拼、关键词
+     */
+    const processEntry = (entry: DictionaryEntry): {priority: number, secondaryScore: number} | null => {
+      if (seenIds.has(entry.id)) return null
       
-      // 2. 加载 wiktionary 分片数据
-      if (!chunkManifest) {
-        chunkManifest = await loadChunkManifest('wiktionary')
-      }
+      let priority = 0
       
-      if (chunkManifest) {
-        // 确定需要加载的分片
-        const requiredChunks = getRequiredChunks(normalizedQuery, chunkManifest)
-        
-        if (requiredChunks.length > 0) {
-          // 加载分片数据
-          const wiktionaryEntries = await loadChunks('wiktionary', requiredChunks)
-          entries.push(...wiktionaryEntries)
-        }
-      }
-      
-      /**
-       * 计算次要排序分数（在相同优先级内使用）
-       * 用于在两个词典的结果中进行更细致的排序
-       */
-      const calculateSecondaryScore = (entry: DictionaryEntry): number => {
-        let score = 0
-        
-        // 1. 词条长度匹配度 (0-30分)
-        // 越接近查询词长度的词条越相关
-        const headwordLength = entry.headword.display.length
-        const queryLength = normalizedQuery.length
-        if (headwordLength === queryLength) {
-          score += 30 // 长度完全匹配
-        } else {
-          // 长度差距越小，得分越高
-          const lengthDiff = Math.abs(headwordLength - queryLength)
-          score += Math.max(0, 30 - lengthDiff * 3)
-        }
-        
-        // 2. 释义详细程度 (0-20分)
-        // 释义越详细说明词条质量越高
-        if (entry.senses && entry.senses.length > 0) {
-          const firstSense = entry.senses[0]
-          const definitionLength = firstSense.definition?.length || 0
-          
-          // 根据释义长度给分
-          if (definitionLength > 50) {
-            score += 20
-          } else if (definitionLength > 20) {
-            score += 15
-          } else if (definitionLength > 0) {
-            score += 10
-          }
-          
-          // 有例句加分
-          if (firstSense.examples && firstSense.examples.length > 0) {
-            score += 5
+      // 反查模式：只搜索释义
+      if (searchDefinition) {
+        if (entry.senses) {
+          const definitionMatch = entry.senses.some(sense => {
+            if (!sense.definition) return false
+            const defVariants = [
+              sense.definition.toLowerCase(),
+              toSimplified(sense.definition).toLowerCase(),
+              toTraditional(sense.definition).toLowerCase()
+            ]
+            return queryVariants.some(qv =>
+              defVariants.some(dv => dv.includes(qv))
+            )
+          })
+          if (definitionMatch) {
+            // 反查模式下，完全匹配释义给更高优先级
+            const exactDefMatch = entry.senses.some(sense => {
+              if (!sense.definition) return false
+              const defLower = sense.definition.toLowerCase()
+              return queryVariants.some(qv => defLower === qv)
+            })
+            priority = exactDefMatch ? 100 : 80
           }
         }
-        
-        // 3. 词典来源权重 (0-10分)
-        // 根据词典特点调整权重
-        if (entry.source_book === '广州话俗语词典') {
-          // 俗语词典收录的多为成语、俗语，通常更具特色
-          score += 8
-        } else if (entry.source_book === '实用广州话分类词典') {
-          // 实用词典收录的词条更基础、更常用
-          score += 10
-        } else if (entry.source_book === '粵典 (words.hk)' || entry.source_book === '粵典') {
-          // 粵典词条数量庞大，需要降低权重
-          score += 4
-        }
-        
-        return score
-      }
-      
-      // 带优先级的过滤和评分
-      const resultsWithPriority: Array<{entry: DictionaryEntry, priority: number, secondaryScore: number}> = []
-      
-      // 优化：边遍历边评分和筛选，避免处理所有数据
-      for (const entry of entries) {
-        let priority = 0
-        
+      } else {
+        // 正常模式：搜索词头、粤拼、关键词
         const normalizedHeadword = entry.headword.normalized?.toLowerCase() || ''
         const displayHeadword = entry.headword.display?.toLowerCase() || ''
         
@@ -363,7 +433,7 @@ export const useDictionary = () => {
           toSimplified(displayHeadword).toLowerCase(),
           toTraditional(normalizedHeadword).toLowerCase(),
           toTraditional(displayHeadword).toLowerCase()
-        ].filter((v, i, arr) => arr.indexOf(v) === i) // 去重
+        ].filter((v, i, arr) => arr.indexOf(v) === i)
         
         // 1. 完全匹配词头 - 最高优先级
         const exactMatch = queryVariants.some(qv => 
@@ -420,51 +490,126 @@ export const useDictionary = () => {
             priority = 50
           }
         }
-        
-        // 7. 释义匹配（支持简繁体） - 最低优先级
-        if (priority === 0 && entry.senses) {
-          const definitionMatch = entry.senses.some(sense => {
-            if (!sense.definition) return false
-            const defVariants = [
-              sense.definition.toLowerCase(),
-              toSimplified(sense.definition).toLowerCase(),
-              toTraditional(sense.definition).toLowerCase()
-            ]
-            return queryVariants.some(qv =>
-              defVariants.some(dv => dv.includes(qv))
-            )
-          })
-          if (definitionMatch) {
-            priority = 40
-          }
-        }
-        
-        // 只保存有匹配的条目
-        if (priority > 0) {
-          resultsWithPriority.push({
-            entry,
-            priority,
-            secondaryScore: calculateSecondaryScore(entry)
-          })
+      }
+      
+      if (priority > 0) {
+        seenIds.add(entry.id)
+        return {
+          priority,
+          secondaryScore: calculateSecondaryScore(entry, normalizedQuery.length)
         }
       }
       
-      // 排序并限制返回数量
-      resultsWithPriority.sort((a, b) => {
-        // 先按主优先级降序排序
-        if (a.priority !== b.priority) {
-          return b.priority - a.priority
-        }
-        // 优先级相同时，按次要分数排序
-        if (a.secondaryScore !== b.secondaryScore) {
-          return b.secondaryScore - a.secondaryScore
-        }
-        // 次要分数也相同时，按ID排序（保持稳定排序）
+      return null
+    }
+
+    /**
+     * 排序并推送结果
+     */
+    const sortAndPush = (results: typeof allResultsWithPriority, isComplete: boolean) => {
+      results.sort((a, b) => {
+        if (a.priority !== b.priority) return b.priority - a.priority
+        if (a.secondaryScore !== b.secondaryScore) return b.secondaryScore - a.secondaryScore
         return a.entry.id.localeCompare(b.entry.id)
       })
       
-      // 只返回前 limit 个结果
-      return resultsWithPriority.slice(0, limit).map(item => item.entry)
+      if (onResults) {
+        const entries = results.slice(0, limit).map(item => item.entry)
+        onResults(entries, isComplete)
+      }
+    }
+
+    try {
+      // 1. 获取基础词典数据（已缓存，不包含 wiktionary）
+      const baseEntries = await getAllEntries()
+      
+      // 构建基础词典索引
+      if (!searchIndex.initialized && baseEntries.length > 0) {
+        buildSearchIndex(baseEntries)
+        searchIndex.initialized = true
+      }
+      
+      // 先快速搜索基础词典
+      for (const entry of baseEntries) {
+        const result = processEntry(entry)
+        if (result) {
+          allResultsWithPriority.push({ entry, ...result })
+        }
+      }
+      
+      // 第一批结果：基础词典搜索完成，立即推送
+      if (onResults && allResultsWithPriority.length > 0) {
+        sortAndPush([...allResultsWithPriority], false)
+      }
+      
+      // 2. 加载 wiktionary 分片数据
+      if (!chunkManifest) {
+        chunkManifest = await loadChunkManifest('wiktionary')
+      }
+      
+      if (chunkManifest) {
+        // 确定需要加载的分片
+        const requiredChunks = getRequiredChunks(normalizedQuery, chunkManifest)
+        
+        if (requiredChunks.length > 0) {
+          // 逐个分片加载并搜索，流式返回结果
+          for (const chunk of requiredChunks) {
+            const chunkKey = `wiktionary_${chunk}`
+            let chunkEntries: DictionaryEntry[] = []
+            
+            // 检查缓存
+            if (chunkCache[chunkKey]) {
+              chunkEntries = chunkCache[chunkKey]
+            } else {
+              try {
+                const response = await fetch(`/dictionaries/wiktionary/${chunk}.json`)
+                if (response.ok) {
+                  const data = await response.json()
+                  if (Array.isArray(data)) {
+                    chunkCache[chunkKey] = data
+                    chunkEntries = data
+                    // 构建索引
+                    buildSearchIndex(data)
+                  }
+                }
+              } catch (error) {
+                console.error(`加载分片失败 wiktionary/${chunk}.json:`, error)
+              }
+            }
+            
+            // 处理当前分片
+            let hasNewResults = false
+            for (const entry of chunkEntries) {
+              const result = processEntry(entry)
+              if (result) {
+                allResultsWithPriority.push({ entry, ...result })
+                hasNewResults = true
+              }
+            }
+            
+            // 如果有新结果，推送更新
+            if (onResults && hasNewResults) {
+              sortAndPush([...allResultsWithPriority], false)
+            }
+          }
+        }
+      }
+      
+      // 最终排序
+      allResultsWithPriority.sort((a, b) => {
+        if (a.priority !== b.priority) return b.priority - a.priority
+        if (a.secondaryScore !== b.secondaryScore) return b.secondaryScore - a.secondaryScore
+        return a.entry.id.localeCompare(b.entry.id)
+      })
+      
+      const finalResults = allResultsWithPriority.slice(0, limit).map(item => item.entry)
+      
+      // 最终结果推送
+      if (onResults) {
+        onResults(finalResults, true)
+      }
+      
+      return finalResults
     } catch (error) {
       console.error('搜索失败:', error)
       return []

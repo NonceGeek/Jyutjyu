@@ -32,9 +32,20 @@
             搜索
           </button>
         </div>
-        <div class="mt-4 text-sm text-gray-500 text-center">
-          支持繁简体、粤拼及释义反查，如：<span class="text-blue-600 cursor-pointer hover:underline" @click="searchExample('阿Sir')">阿Sir</span>、
-          <span class="text-blue-600 cursor-pointer hover:underline" @click="searchExample('aa3 soe4')">aa3 soe4</span>
+        <!-- 反查开关和提示 -->
+        <div class="mt-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6">
+          <label class="flex items-center gap-2 cursor-pointer select-none" title="反查：从释义中搜索词语">
+            <input
+              v-model="enableReverseSearch"
+              type="checkbox"
+              class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+            >
+            <span class="text-sm text-gray-600">反查（从释义中搜索）</span>
+          </label>
+          <div class="text-sm text-gray-500">
+            如：<span class="text-blue-600 cursor-pointer hover:underline" @click="searchExample('阿Sir')">阿Sir</span>、
+            <span class="text-blue-600 cursor-pointer hover:underline" @click="searchExample('aa3 soe4')">aa3 soe4</span>
+          </div>
         </div>
       </div>
 
@@ -263,6 +274,7 @@ import dictionariesIndex from '~/content/dictionaries/index.json'
 import type { DictionaryEntry } from '~/types/dictionary'
 
 const searchQuery = ref('')
+const enableReverseSearch = ref(false)
 const router = useRouter()
 const dictionariesData = ref(dictionariesIndex)
 
@@ -274,7 +286,11 @@ const { getAllEntries } = useDictionary()
 
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
-    router.push(`/search?q=${encodeURIComponent(searchQuery.value)}`)
+    const params = new URLSearchParams({ q: searchQuery.value })
+    if (enableReverseSearch.value) {
+      params.set('reverse', '1')
+    }
+    router.push(`/search?${params.toString()}`)
   }
 }
 

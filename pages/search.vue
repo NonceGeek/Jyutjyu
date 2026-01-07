@@ -37,6 +37,15 @@
               </button>
             </div>
           </div>
+          <!-- 反查开关 -->
+          <label class="flex items-center gap-2 cursor-pointer whitespace-nowrap select-none" title="反查：从释义中搜索词语">
+            <input
+              v-model="enableReverseSearch"
+              type="checkbox"
+              class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+            >
+            <span class="text-sm text-gray-600">反查</span>
+          </label>
         </div>
       </div>
     </header>
@@ -52,11 +61,15 @@
       <!-- Results Info -->
       <div v-else-if="actualSearchQuery" class="mb-6">
         <h2 class="text-2xl font-semibold text-gray-900">
-          搜索结果: "{{ actualSearchQuery }}"
+          {{ enableReverseSearch ? '反查' : '搜索' }}结果: "{{ actualSearchQuery }}"
         </h2>
         <p class="text-gray-600 mt-2">
+          <span v-if="enableReverseSearch" class="text-blue-500 text-sm mr-2">从释义中搜索</span>
           找到 <span class="font-semibold">{{ totalCount }}</span> 个结果
-          <span v-if="searchTime > 0" class="text-sm">
+          <span v-if="!isSearchComplete" class="text-sm text-blue-500">
+            <span class="inline-block animate-pulse">搜索中...</span>
+          </span>
+          <span v-else-if="searchTime > 0" class="text-sm">
             (耗时 {{ searchTime }}ms)
           </span>
           <span v-if="totalCount > PAGE_SIZE" class="text-sm">
@@ -279,6 +292,8 @@ const suggestions = ref<string[]>([])
 const showSuggestions = ref(false)
 const viewMode = ref<'card' | 'list'>('card')
 const expandedRow = ref<string | null>(null)
+const enableReverseSearch = ref(route.query.reverse === '1') // 从 URL 读取反查状态
+const isSearchComplete = ref(true) // 搜索是否完成（流式搜索中用）
 
 // 分页配置
 const PAGE_SIZE = 10 // 每页显示10条
@@ -299,6 +314,7 @@ const performSearch = async (query: string) => {
     displayedResults.value = []
     actualSearchQuery.value = ''
     currentPage.value = 1
+    isSearchComplete.value = true
     return
   }
 
@@ -306,23 +322,42 @@ const performSearch = async (query: string) => {
   actualSearchQuery.value = query.trim()
   
   loading.value = true
+  isSearchComplete.value = false
   searchTime.value = 0
   currentPage.value = 1
   const startTime = Date.now()
 
   try {
-    // 获取前1000个结果（避免返回过多数据）
-    const entries = await searchBasic(query.trim(), 1000)
-    allResults.value = entries
-    // 只显示第一页
-    displayedResults.value = entries.slice(0, PAGE_SIZE)
-    searchTime.value = Date.now() - startTime
+    // 流式搜索：搜到什么先展示什么
+    await searchBasic(query.trim(), {
+      limit: 1000,
+      searchDefinition: enableReverseSearch.value,
+      onResults: (entries, complete) => {
+        // 更新结果
+        allResults.value = entries
+        // 重新计算显示的结果（保持当前页数）
+        displayedResults.value = entries.slice(0, currentPage.value * PAGE_SIZE)
+        
+        // 首次收到结果时关闭 loading
+        if (loading.value && entries.length > 0) {
+          loading.value = false
+        }
+        
+        // 更新搜索耗时
+        if (complete) {
+          searchTime.value = Date.now() - startTime
+          isSearchComplete.value = true
+          loading.value = false
+        }
+      }
+    })
   } catch (error) {
     console.error('搜索失败:', error)
     allResults.value = []
     displayedResults.value = []
   } finally {
     loading.value = false
+    isSearchComplete.value = true
   }
 }
 
@@ -346,7 +381,11 @@ const loadMore = () => {
 // 处理搜索
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
-    router.push(`/search?q=${encodeURIComponent(searchQuery.value)}`)
+    const params = new URLSearchParams({ q: searchQuery.value })
+    if (enableReverseSearch.value) {
+      params.set('reverse', '1')
+    }
+    router.push(`/search?${params.toString()}`)
     showSuggestions.value = false
   }
 }
@@ -383,8 +422,9 @@ const searchExample = (query: string) => {
 }
 
 // 监听 URL 变化（只在客户端执行搜索）
-watch(() => route.query.q, (newQuery) => {
+watch(() => [route.query.q, route.query.reverse], ([newQuery, newReverse]) => {
   searchQuery.value = newQuery as string || ''
+  enableReverseSearch.value = newReverse === '1'
   // 只在客户端执行搜索
   if (process.client) {
     if (newQuery) {
@@ -395,6 +435,17 @@ watch(() => route.query.q, (newQuery) => {
     }
   }
 }, { immediate: true })
+
+// 监听反查开关变化，更新 URL 并重新搜索
+watch(enableReverseSearch, (newValue) => {
+  if (process.client && actualSearchQuery.value) {
+    const params = new URLSearchParams({ q: actualSearchQuery.value })
+    if (newValue) {
+      params.set('reverse', '1')
+    }
+    router.replace(`/search?${params.toString()}`)
+  }
+})
 
 // 点击外部关闭建议
 onMounted(() => {
