@@ -76,9 +76,9 @@ export const useDictionary = () => {
    * 根据查询词确定需要加载的分片
    * 
    * 策略说明：
-   * - 分片按粤拼首字母存储（如 GDP 的粤拼 zi1，存在 z.json）
-   * - 但用户可能按词头搜索（如搜索 "GDP"，首字母是 G）
-   * - 因此需要智能加载多个可能的分片
+   * - 分片按粤拼首字母存储（如"明"的粤拼 ming4，存在 m.json）
+   * - 汉字查询使用 manifest.headwordIndex 映射到对应分片
+   * - 拼音/英文查询按首字母精确匹配分片
    */
   const getRequiredChunks = (query: string, manifest: any): string[] => {
     if (!manifest || !manifest.chunks) return []
@@ -89,46 +89,34 @@ export const useDictionary = () => {
     if (!normalizedQuery) return []
     
     const firstChar = normalizedQuery[0]
-    const isLongQuery = normalizedQuery.length > 4
     
-    // 检查是否为汉字
-    const hasChineseChar = /[\u4e00-\u9fa5]/.test(normalizedQuery)
+    // 检查首字符是否为汉字
+    const isChineseFirstChar = /[\u4e00-\u9fa5]/.test(firstChar)
     
-    // 策略1: 非常短的查询（1-2字符）或英文/数字查询 → 加载所有分片
-    // 原因：不确定是按词头还是按拼音匹配，且数据量小
-    if (normalizedQuery.length <= 2 || (!hasChineseChar && normalizedQuery.length <= 4)) {
-      // 对于很短的查询，加载所有分片以确保找到结果
+    if (isChineseFirstChar) {
+      // 汉字查询：使用 headwordIndex 查找对应的分片
+      if (manifest.headwordIndex && manifest.headwordIndex[firstChar]) {
+        manifest.headwordIndex[firstChar].forEach((initial: string) => {
+          chunks.add(initial)
+        })
+      }
+      // 如果 headwordIndex 中没有这个字，返回空（不会有匹配结果）
+      return Array.from(chunks)
+    }
+    
+    // 以下策略适用于非汉字查询（拼音、英文等）
+    
+    // 非常短的非汉字查询（1-2字符）→ 加载所有分片
+    // 原因：短查询可能匹配多个分片的词条
+    if (normalizedQuery.length <= 2) {
       Object.keys(manifest.chunks).forEach(initial => {
         chunks.add(initial)
       })
       return Array.from(chunks)
     }
     
-    // 策略2: 中等长度的查询（3-4字符）→ 加载首字母相关的多个分片
-    if (!isLongQuery) {
-      // 添加查询词首字母对应的分片
-      if (manifest.chunks[firstChar]) {
-        chunks.add(firstChar)
-      }
-      
-      // 如果是汉字查询，也尝试加载其他常见拼音首字母
-      // （因为不同输入法可能有不同拼音）
-      if (hasChineseChar) {
-        // 加载一些常见的相关分片
-        // 这是一个启发式策略，可以根据实际情况调整
-        const relatedInitials = [firstChar]
-        relatedInitials.forEach(initial => {
-          if (manifest.chunks[initial]) {
-            chunks.add(initial)
-          }
-        })
-      }
-      
-      return Array.from(chunks)
-    }
-    
-    // 策略3: 长查询（5+字符）→ 只加载首字母分片
-    // 原因：长查询通常能精确匹配，不需要加载所有分片
+    // 中长度的非汉字查询（3+字符）→ 只加载首字母分片
+    // 原因：拼音/英文查询的首字母对应分片文件名
     if (manifest.chunks[firstChar]) {
       chunks.add(firstChar)
     }

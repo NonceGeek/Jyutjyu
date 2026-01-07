@@ -88,6 +88,25 @@ function optimizeEntry(entry) {
 }
 
 /**
+ * 获取词头首字符（用于建立汉字索引）
+ */
+function getHeadwordInitial(entry) {
+  // 优先使用 normalized，其次 display，最后 search
+  const headword = entry.headword?.normalized || entry.headword?.display || entry.headword?.search || '';
+  if (headword && headword.length > 0) {
+    return headword[0];
+  }
+  return null;
+}
+
+/**
+ * 检查是否为汉字
+ */
+function isChinese(char) {
+  return /[\u4e00-\u9fa5]/.test(char);
+}
+
+/**
  * 分片词典
  */
 async function splitDictionary(inputFile, outputDir) {
@@ -112,6 +131,10 @@ async function splitDictionary(inputFile, outputDir) {
   const chunks = {};
   const stats = {};
   
+  // 汉字首字符到分片的映射索引
+  // 格式: { "明": ["m"], "白": ["b"], ... }
+  const headwordIndex = {};
+  
   // 初始化分片
   JYUTPING_INITIALS.forEach(initial => {
     chunks[initial] = [];
@@ -135,17 +158,36 @@ async function splitDictionary(inputFile, outputDir) {
     stats[initial].originalSize += originalSize;
     stats[initial].optimizedSize += optimizedSize;
     optimizedCount++;
+    
+    // 建立汉字首字符索引
+    const headwordInitial = getHeadwordInitial(entry);
+    if (headwordInitial && isChinese(headwordInitial)) {
+      if (!headwordIndex[headwordInitial]) {
+        headwordIndex[headwordInitial] = new Set();
+      }
+      headwordIndex[headwordInitial].add(initial);
+    }
   });
   
   console.log(`\n✅ 数据分片完成`);
+  
+  // 将 Set 转换为数组
+  const headwordIndexArray = {};
+  for (const [char, chunks] of Object.entries(headwordIndex)) {
+    headwordIndexArray[char] = Array.from(chunks).sort();
+  }
+  
+  console.log(`✅ 汉字首字符索引: ${Object.keys(headwordIndexArray).length} 个字符`);
   
   // 写入分片文件
   console.log('\n⏳ 正在写入分片文件...');
   const manifest = {
     chunks: {},
+    // 汉字首字符到分片的映射索引
+    headwordIndex: headwordIndexArray,
     total_entries: data.length,
     created_at: new Date().toISOString(),
-    version: '1.0.0'
+    version: '1.1.0'
   };
   
   let totalOriginalSize = 0;
@@ -180,6 +222,7 @@ async function splitDictionary(inputFile, outputDir) {
   console.log('\n📊 统计信息:');
   console.log(`总词条数: ${data.length}`);
   console.log(`分片数量: ${Object.keys(manifest.chunks).length}`);
+  console.log(`汉字索引字符数: ${Object.keys(headwordIndexArray).length}`);
   console.log(`原始大小: ${(totalOriginalSize / 1024 / 1024).toFixed(2)} MB`);
   console.log(`优化后大小: ${(totalOptimizedSize / 1024 / 1024).toFixed(2)} MB`);
   console.log(`压缩率: ${((1 - totalOptimizedSize / totalOriginalSize) * 100).toFixed(1)}%`);
