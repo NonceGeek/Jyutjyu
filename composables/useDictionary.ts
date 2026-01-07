@@ -701,6 +701,73 @@ export const useDictionary = () => {
     }
   }
 
+  // 推荐词条缓存
+  let recommendedEntriesCache: DictionaryEntry[] | null = null
+
+  /**
+   * 快速获取随机推荐词条
+   * 只加载小词典，过滤无效词条，提升首页加载速度
+   */
+  const getRandomRecommendedEntries = async (count: number = 3): Promise<DictionaryEntry[]> => {
+    if (!process.client) {
+      return []
+    }
+
+    // 如果已有缓存，直接从缓存随机选取
+    if (recommendedEntriesCache && recommendedEntriesCache.length > 0) {
+      const shuffled = [...recommendedEntriesCache].sort(() => Math.random() - 0.5)
+      return shuffled.slice(0, count)
+    }
+
+    try {
+      // 只加载小词典以提升速度（约 10,000 条 vs 69,000 条）
+      const smallDictionaries = [
+        'gz-colloquialisms.json',      // 2,516 条
+        'gz-practical-classified.json'  // 7,530 条
+      ]
+
+      const allEntries: DictionaryEntry[] = []
+
+      await Promise.all(
+        smallDictionaries.map(async (file) => {
+          try {
+            const response = await fetch(`/dictionaries/${file}`)
+            if (response.ok) {
+              const data = await response.json()
+              if (Array.isArray(data)) {
+                allEntries.push(...data)
+              }
+            }
+          } catch (error) {
+            console.error(`加载词典 ${file} 失败:`, error)
+          }
+        })
+      )
+
+      // 过滤掉无效词条：
+      // 1. 释义含有"NO DATA"
+      // 2. 没有释义
+      // 3. 释义太短（少于3个字符）
+      const validEntries = allEntries.filter(entry => {
+        if (!entry.senses || entry.senses.length === 0) return false
+        const firstDef = entry.senses[0]?.definition || ''
+        if (firstDef.includes('NO DATA')) return false
+        if (firstDef.length < 3) return false
+        return true
+      })
+
+      // 缓存有效词条
+      recommendedEntriesCache = validEntries
+
+      // 随机选取
+      const shuffled = [...validEntries].sort(() => Math.random() - 0.5)
+      return shuffled.slice(0, count)
+    } catch (error) {
+      console.error('获取推荐词条失败:', error)
+      return []
+    }
+  }
+
   return {
     getAllEntries,
     getEntryById,
@@ -708,7 +775,8 @@ export const useDictionary = () => {
     searchAdvanced,
     getDictionaries,
     getSuggestions,
-    getPopularEntries
+    getPopularEntries,
+    getRandomRecommendedEntries
   }
 }
 

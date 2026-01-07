@@ -282,7 +282,7 @@ const dictionariesData = ref(dictionariesIndex)
 const randomEntries = useState<DictionaryEntry[]>('home-random-entries', () => [])
 const mobileIndex = useState<number>('home-mobile-index', () => 0)
 
-const { getAllEntries } = useDictionary()
+const { getRandomRecommendedEntries } = useDictionary()
 
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
@@ -303,16 +303,11 @@ const searchEntry = (headword: string) => {
   router.push(`/search?q=${encodeURIComponent(headword)}`)
 }
 
-const getRandomEntries = (entries: DictionaryEntry[], count: number): DictionaryEntry[] => {
-  const shuffled = [...entries].sort(() => Math.random() - 0.5)
-  return shuffled.slice(0, count)
-}
-
 const refreshRandomEntries = async () => {
   try {
-    const allEntries = await getAllEntries()
-    if (allEntries.length > 0) {
-      randomEntries.value = getRandomEntries(allEntries, 3)
+    const entries = await getRandomRecommendedEntries(3)
+    if (entries.length > 0) {
+      randomEntries.value = entries
       mobileIndex.value = 0
     }
   } catch (error) {
