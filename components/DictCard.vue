@@ -324,22 +324,58 @@ const formatDefinitionWithLinks = (definition: string): string => {
 
 /**
  * 判断是否应该显示"原书:"标签
- * 对于包含冒号分隔的多个读音变体的情况（如 hk-cantowords），
- * 如果这些读音都已在 jyutping 数组中，则不显示原书标签
+ * 对于以下情况不显示原书标签：
+ * 1. 冒号分隔的多个读音变体（如 hk-cantowords）
+ * 2. 括号变体格式（如 gz-practical-classified 的 "baau6 (biu6, beu6)"）
+ * 
+ * 只有当原书注音与解析后的 jyutping 数组有实质性差异时才显示
  */
 const shouldShowOriginalPhonetic = (entry: any): boolean => {
   if (!entry.phonetic.original) return false
   
-  // 如果 original 等于 jyutping[0]，不显示
-  if (entry.phonetic.original === entry.phonetic.jyutping[0]) return false
+  const original = entry.phonetic.original
+  const jyutpingArray = entry.phonetic.jyutping || []
   
-  // 检查是否是冒号分隔的多读音格式
-  if (entry.phonetic.original.includes(':')) {
-    const originalParts = entry.phonetic.original.split(':').map((p: string) => p.trim())
-    const jyutpingSet = new Set(entry.phonetic.jyutping)
+  // 如果 original 等于 jyutping[0]，不显示
+  if (original === jyutpingArray[0]) return false
+  
+  // 检查是否是冒号分隔的多读音格式 (hk-cantowords)
+  if (original.includes(':')) {
+    const originalParts = original.split(':').map((p: string) => p.trim())
+    const jyutpingSet = new Set(jyutpingArray)
     
-    // 如果所有原始读音部分都在 jyutping 数组中，说明已经正确拆分显示，不需要再显示原书
+    // 如果所有原始读音部分都在 jyutping 数组中，说明已经正确拆分显示
     if (originalParts.every((part: string) => jyutpingSet.has(part))) {
+      return false
+    }
+  }
+  
+  // 检查是否是括号变体格式 (gz-practical-classified)
+  // 例如: "baau6 (biu6, beu6)" 或 "dit1 (dik1) gam3 doe1 (do1)"
+  if (original.includes('(') || original.includes('（')) {
+    // 提取所有独立的读音：去掉括号，用空格和逗号分割
+    const cleanedOriginal = original
+      .replace(/[（(]/g, ' ')
+      .replace(/[）)]/g, ' ')
+      .replace(/[,，]/g, ' ')
+    const allSyllables = cleanedOriginal.split(/\s+/).filter((s: string) => s.trim())
+    
+    // 检查 jyutping 数组是否覆盖了所有提取的读音
+    // 或者 jyutping 数组的所有项都是由这些音节组成的组合
+    const syllableSet = new Set(allSyllables)
+    
+    // 方法1：检查所有独立音节是否都出现在 jyutping 数组中（单字多音情况）
+    const allSyllablesInJyutping = allSyllables.every((s: string) => 
+      jyutpingArray.includes(s) || jyutpingArray.some((jp: string) => jp.includes(s))
+    )
+    
+    // 方法2：检查 jyutping 数组中的所有项是否都由原始音节组成
+    const allJyutpingFromSyllables = jyutpingArray.every((jp: string) => {
+      const jpSyllables = jp.split(/\s+/)
+      return jpSyllables.every((s: string) => syllableSet.has(s))
+    })
+    
+    if (allSyllablesInJyutping || allJyutpingFromSyllables) {
       return false
     }
   }
