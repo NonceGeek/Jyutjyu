@@ -271,16 +271,54 @@ function processSenses(senses) {
     const label = null
     
     // 提取例句（如果有）
+    // 注意：Wiktionary 的例句经常有简繁体两个版本，我们只保留繁体版本以节省约50%空间
+    // 策略：
+    // 1. 明确标记为简体的直接跳过：tags 包含 "Simplified-Chinese"
+    // 2. 对于其他情况，通过 translation 去重（保留第一个，通常是繁体）
     const examples = []
+    const seenTranslations = new Map() // 用于追踪已见过的翻译
+    
     if (sense.examples && Array.isArray(sense.examples)) {
-      sense.examples.forEach(example => {
+      sense.examples.forEach((example, idx) => {
+        // 跳过明确标记为简体的例句
+        if (example.tags && Array.isArray(example.tags)) {
+          const isSimplifiedChinese = example.tags.some(tag => {
+            if (!tag || typeof tag !== 'string') return false
+            return tag.toLowerCase() === 'simplified-chinese'
+          })
+          
+          if (isSimplifiedChinese) {
+            return // 跳过简体版本
+          }
+        }
+        
+        // 处理例句
         if (typeof example === 'string') {
           examples.push({ text: example })
         } else if (example.text) {
-          examples.push({
-            text: example.text,
-            translation: example.english || null
-          })
+          // 使用 translation 作为去重键（同一翻译通常对应繁简体对）
+          const translationKey = example.english || example.translation || example.text
+          
+          if (seenTranslations.has(translationKey)) {
+            // 已经有相同翻译的例句了，检查是否为简繁体对
+            const prevExample = seenTranslations.get(translationKey)
+            const prevText = prevExample.text
+            const currText = example.text
+            
+            // 如果两个例句长度相同且翻译相同，很可能是繁简体对
+            // 保留第一个（通常是繁体），跳过第二个（通常是简体）
+            if (prevText && currText && prevText.length === currText.length && prevText !== currText) {
+              return // 跳过可能的简体版本
+            }
+          } else {
+            // 首次见到这个翻译，记录并添加
+            const exampleObj = {
+              text: example.text,
+              translation: example.english || null
+            }
+            examples.push(exampleObj)
+            seenTranslations.set(translationKey, exampleObj)
+          }
         }
       })
     }
