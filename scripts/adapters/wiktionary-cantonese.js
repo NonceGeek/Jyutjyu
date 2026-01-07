@@ -95,6 +95,7 @@ function extractJyutping(sounds) {
         // zh_pron 可能是 "gaa1 fei1" 或 "gaa¹ fei¹" 格式
         // 标准化为数字声调格式
         let normalized = sound.zh_pron
+          .replace(/⁰/g, '0')
           .replace(/¹/g, '1')
           .replace(/²/g, '2')
           .replace(/³/g, '3')
@@ -104,6 +105,7 @@ function extractJyutping(sounds) {
           .replace(/⁷/g, '7')
           .replace(/⁸/g, '8')
           .replace(/⁹/g, '9')
+          .replace(/⁻/g, '-')
           .trim()
         
         if (normalized) {
