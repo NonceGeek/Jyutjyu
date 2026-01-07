@@ -302,9 +302,10 @@ const isCantoDict = computed(() => {
 const formatDefinitionWithLinks = (definition: string): string => {
   if (!definition) return ''
   
-  // 匹配以#开头的词组（中文字符、数字、字母）
-  // 支持#后面跟中文、数字、字母、下划线等
-  const regex = /#([^\s，。！？；：、）】」』]+)/g
+  // 匹配以#开头的词组（仅汉字）
+  // 使用排除法：排除 ASCII 字符、空格、中文标点、全角字符等
+  // 这样可以自动支持所有汉字区块（包括未来的扩展区块）
+  const regex = /#([^\u0000-\u007F\u3000-\u303F\uFF00-\uFFEF\s]+)/g
   
   return definition.replace(regex, (match, word) => {
     // 生成搜索链接
