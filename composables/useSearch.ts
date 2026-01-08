@@ -21,8 +21,8 @@ export interface SearchOptions {
  */
 export const useSearch = () => {
   const config = useRuntimeConfig()
-  // 环境变量可能是字符串 'true' 或布尔值 true
-  const useApi = config.public.useApi === true || config.public.useApi === 'true'
+  // 环境变量可能是字符串 'true' 或布尔值 true，使用 String() 统一处理
+  const useApi = config.public.useApi === true || String(config.public.useApi) === 'true'
   
   // 根据配置选择实现
   const apiSearch = useApi ? useDictionaryAPI() : null
