@@ -2,6 +2,30 @@
 
 本文档介绍如何配置 MongoDB Atlas 作为词典数据的后端存储。
 
+## 数据存储模式说明
+
+项目支持两种数据存储模式，通过 `.env` 文件中的 `NUXT_PUBLIC_USE_API` 环境变量控制：
+
+| 模式 | 环境变量 | 说明 | 适用场景 |
+|------|----------|------|----------|
+| **静态 JSON** | `NUXT_PUBLIC_USE_API=false` 或不设置 | 数据存储在 `public/dictionaries/` 目录，客户端直接加载 JSON 文件 | 快速部署、演示、小型项目 |
+| **MongoDB API** | `NUXT_PUBLIC_USE_API=true` | 数据存储在 MongoDB Atlas，通过服务端 API 查询 | 生产环境、大规模数据、需要全文搜索 |
+
+### 两种模式对比
+
+| 特性 | 静态 JSON | MongoDB API |
+|------|-----------|-------------|
+| 部署成本 | 免费 | 免费（M0 层） |
+| 首次加载 | 需下载 JSON 文件 | 按需查询 |
+| 全文搜索 | 客户端搜索 | Atlas Search |
+| 简繁体转换 | 客户端 OpenCC | 服务端 OpenCC |
+| 数据更新 | 需重新部署 | 直接更新数据库 |
+| 离线支持 | ✅ 支持 | ❌ 需联网 |
+
+**推荐**：生产环境使用 MongoDB 模式，开发测试可用静态 JSON 模式。
+
+---
+
 ## 1. 创建 MongoDB Atlas 账号和集群
 
 1. 访问 [MongoDB Atlas](https://cloud.mongodb.com/)
@@ -71,20 +95,59 @@ NUXT_PUBLIC_USE_API=true
 
 确保本地 JSON 数据已构建好（`public/dictionaries/` 目录下有数据）。
 
-```bash
-# 安装 mongodb 驱动
-npm install mongodb
+### 首次导入
 
-# 运行导入脚本
-node scripts/import-to-mongodb.js
+```bash
+# 安装依赖（如果尚未安装）
+npm install
+
+# 全量导入所有词典
+npm run db:import
 ```
+
+### 更新模式
+
+脚本支持两种更新模式：
+
+| 模式 | 命令 | 说明 |
+|------|------|------|
+| **全量覆盖** | `npm run db:import` | 清空现有数据，重新导入（默认） |
+| **增量更新** | `npm run db:import:upsert` | 保留现有数据，更新已有词条，新增新词条 |
+
+### 只更新指定词典
+
+```bash
+# 只重新导入广州话俗语词典（全量覆盖该词典）
+node scripts/import-to-mongodb.js --dict gz-colloquialisms
+
+# 只增量更新粵典
+node scripts/import-to-mongodb.js --dict hk-cantowords --mode upsert
+
+# 查看所有可用选项
+npm run db:import:help
+```
+
+### 可用词典 ID
+
+| 词典 ID | 名称 |
+|---------|------|
+| `gz-practical-classified` | 实用广州话分类词典 |
+| `gz-colloquialisms` | 广州话俗语词典 |
+| `gz-word-origins` | 粵語辭源 |
+| `hk-cantowords` | 粵典 (words.hk) |
+| `wiktionary-cantonese` | Wiktionary Cantonese |
+
+### 导入完成后
 
 导入完成后会显示统计信息：
 
 ```
-🎉 导入完成! 共 175230 条词条
+🎉 处理完成!
+   总计: 175230 条
+   更新: 1234 条（仅 upsert 模式）
+   新增: 567 条（仅 upsert 模式）
 
-📊 词典统计:
+📊 数据库统计 (共 175230 条):
    Wiktionary Cantonese: 102195 条
    粵典 (words.hk): 59019 条
    实用广州话分类词典: 7549 条

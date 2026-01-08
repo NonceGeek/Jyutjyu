@@ -15,7 +15,7 @@
 - 🎯 **异构数据处理** - 智能处理不同词典的特有字段
 - 📱 **响应式设计** - 手机卡片式、桌面表格式自适应展示
 - 🎨 **简洁现代** - 轻量级UI，专注内容本身
-- 🚀 **零数据库** - 基于Git的内容管理，免费托管
+- 🔄 **双存储模式** - 支持静态 JSON（零成本）或 MongoDB（高性能）
 
 ### 📊 项目进度
 
@@ -84,7 +84,7 @@
 
 - **框架**: [Nuxt 3](https://nuxt.com/) - Vue 3 全栈框架，支持 SSR
 - **UI框架**: [Tailwind CSS](https://tailwindcss.com/) - 原子化CSS框架
-- **搜索**: 前端轻量级搜索 (计划使用 MiniSearch)
+- **数据存储**: 静态 JSON 或 [MongoDB Atlas](https://www.mongodb.com/atlas)（可选）
 - **中文转换**: [OpenCC.js](https://github.com/nk2028/opencc-js) - 繁简转换
 - **部署**: [Vercel](https://vercel.com/) - 边缘计算部署平台
 
@@ -110,6 +110,38 @@ npm run dev
 ```
 
 访问 http://localhost:3002
+
+### 数据存储模式
+
+项目支持两种数据存储模式，通过环境变量 `.env` 控制：
+
+#### 模式一：静态 JSON（默认）
+
+零数据库，数据以 JSON 文件形式存储在 `public/dictionaries/` 目录，适合：
+- 快速部署和测试
+- 小型项目或演示
+- 无服务器成本
+
+```bash
+# .env（默认，无需设置）
+NUXT_PUBLIC_USE_API=false
+```
+
+#### 模式二：MongoDB Atlas（推荐生产环境）
+
+使用 MongoDB 云数据库，支持全文搜索和高性能查询，适合：
+- 大规模词典数据（17万+词条）
+- 生产环境部署
+- 需要复杂查询和全文搜索
+
+```bash
+# .env
+MONGODB_URI=mongodb+srv://user:password@cluster.mongodb.net
+MONGODB_DB_NAME=Jyutjyu
+NUXT_PUBLIC_USE_API=true
+```
+
+详细配置请参考 [MongoDB 配置指南](./docs/MONGODB_SETUP.md)。
 
 ### 数据处理
 
@@ -194,6 +226,7 @@ jyutjyu/
 - [贡献指南](./CONTRIBUTING.md) - 如何参与贡献（含授权政策）
 - [CSV录入规范](./docs/CSV_GUIDE.md) - 如何整理和录入数据
 - [数据结构设计](./docs/DATA_SCHEMA.md) - TypeScript 类型和 JSON 格式
+- [MongoDB 配置指南](./docs/MONGODB_SETUP.md) - 如何配置 MongoDB 数据存储
 - [Wiktionary 使用指南](./docs/WIKTIONARY_GUIDE.md) - 如何获取和处理 Wiktionary 数据
 - [适配器开发](./scripts/adapters/README.md) - 如何为新词典创建适配器
 - [测试指南](./scripts/TEST_GUIDE.md) - 如何测试数据处理脚本
