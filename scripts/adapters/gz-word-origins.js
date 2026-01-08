@@ -7,7 +7,8 @@
  * 特点:
  * - 词源词典，重点在于追溯粤语词汇的来源
  * - 同一 page+index 的多行数据属于同一个词条
- * - content 字段包含释义、【源】标记的词源引用、【案】标记的按语
+ * - content 字段包含释义、【源】标记的文献引用、【案】标记的按语
+ * - 文献引用解析为结构化数据（作者、作品、引文、出处）
  * - 词条名称可能包含数字后缀（如"一味1"、"一味2"）表示同形异义
  * - gwongping 是广州话拼音方案
  * - jyutping 是粤拼
@@ -72,24 +73,78 @@ function parseEntryName(entry) {
 }
 
 /**
- * 解析 content 字段，分离释义、词源引用和按语
+ * 解析单条文献引用，提取结构化信息
+ * @param {string} refText - 单条引用文本
+ * @returns {Object} { author, work, quote, source }
+ * 
+ * 注意：source（出处）永远是括号内的完整内容，不应拆分。
+ * 出处可能引用更早的材料（如《半蕪園集》引用《驚蟄》），这是正常的。
+ */
+function parseReference(refText) {
+  if (!refText || !refText.trim()) return null
+  
+  const text = refText.trim()
+  
+  // 尝试提取结构化信息
+  // 格式1: 朝代·作者《作品名》：引文。（出处）
+  // 格式2: 作者《作品名》：引文。（出处）
+  // 格式3: 引文。（出处）- 出处可能包含作者/作品信息
+  
+  // 提取末尾的出处（括号内的完整内容，保持原样）
+  let source = null
+  let mainText = text
+  
+  // 匹配末尾的（...）或(...)
+  const sourceMatch = text.match(/[（(]([^）)]+)[）)]$/)
+  if (sourceMatch) {
+    source = sourceMatch[1].trim()
+    mainText = text.substring(0, sourceMatch.index).trim()
+  }
+  
+  // 尝试从主文本提取作者和作品
+  // 格式: 朝代·作者《作品》 或 作者《作品》
+  const authorWorkMatch = mainText.match(/^((?:[^·《]+·)?[^《]+)《([^》]+)》[：:]?\s*(.*)$/)
+  
+  if (authorWorkMatch) {
+    return {
+      author: authorWorkMatch[1].trim(),
+      work: authorWorkMatch[2].trim(),
+      quote: authorWorkMatch[3].trim() || null,
+      source: source
+    }
+  }
+  
+  // 无法解析主文本中的作者/作品，返回引文和出处
+  return {
+    author: null,
+    work: null,
+    quote: mainText,
+    source: source
+  }
+}
+
+/**
+ * 解析 content 字段，分离释义、文献引用和按语
  * @param {string} content - content 内容
- * @returns {Object} { definition, etymology, commentary }
+ * @returns {Object} { definition, references, commentary }
  */
 function parseContent(content) {
   if (!content || !content.trim()) {
-    return { definition: '', etymology: [], commentary: null }
+    return { definition: '', references: [], commentary: null }
   }
   
   const text = content.trim()
   
   // 检查是否包含【源】或【案】标记
   if (text.startsWith('【源】')) {
-    // 这是词源引用行
-    const etymologyText = text.replace(/^【源】/, '').trim()
+    // 这是文献引用行
+    const refText = text.replace(/^【源】/, '').trim()
+    // 按 ｜ 或 | 分割多条引用
+    const refItems = refText.split(/\s*[｜|]\s*/).filter(r => r.trim())
+    const references = refItems.map(r => parseReference(r)).filter(r => r)
     return {
       definition: '',
-      etymology: [etymologyText],
+      references: references,
       commentary: null
     }
   } else if (text.startsWith('案：') || text.startsWith('【案】')) {
@@ -97,14 +152,14 @@ function parseContent(content) {
     const commentary = text.replace(/^(案：|【案】)/, '').trim()
     return {
       definition: '',
-      etymology: [],
+      references: [],
       commentary: commentary
     }
   } else {
     // 这是释义行
     return {
       definition: text,
-      etymology: [],
+      references: [],
       commentary: null
     }
   }
@@ -176,7 +231,7 @@ export function transformEntry(rows) {
   
   // 解析所有行的 content
   let definition = ''
-  const etymologies = []
+  const references = []
   let commentary = null
   
   rows.forEach(row => {
@@ -184,8 +239,8 @@ export function transformEntry(rows) {
     if (parsed.definition) {
       definition = parsed.definition
     }
-    if (parsed.etymology.length > 0) {
-      etymologies.push(...parsed.etymology)
+    if (parsed.references.length > 0) {
+      references.push(...parsed.references)
     }
     if (parsed.commentary) {
       commentary = parsed.commentary
@@ -240,8 +295,8 @@ export function transformEntry(rows) {
       // 同形异义标记
       variant_number: variantNumber,
       
-      // 词源引用（多条）
-      etymology: etymologies.length > 0 ? etymologies : null,
+      // 文献引用（结构化数组）
+      references: references.length > 0 ? references : null,
       
       // 按语/说明
       commentary: commentary,
@@ -397,15 +452,15 @@ export function aggregateEntries(entries) {
         })
         baseEntry.keywords = Array.from(allKeywords)
         
-        // 合并词源
-        const allEtymologies = []
+        // 合并文献引用
+        const allReferences = []
         group.forEach(entry => {
-          if (entry.meta.etymology) {
-            allEtymologies.push(...entry.meta.etymology)
+          if (entry.meta.references) {
+            allReferences.push(...entry.meta.references)
           }
         })
-        if (allEtymologies.length > 0) {
-          baseEntry.meta.etymology = allEtymologies
+        if (allReferences.length > 0) {
+          baseEntry.meta.references = allReferences
         }
         
         // 合并按语
@@ -446,6 +501,6 @@ export const FIELD_NOTES = {
   entry: '词条名称，可能包含数字后缀（如"一味1"、"一味2"）表示同形异义',
   gwongping: '广州话拼音方案，保留用于研究对比',
   jyutping: '粤拼',
-  content: '内容字段，包含释义、【源】标记的词源引用、【案】标记的按语',
+  content: '内容字段，包含释义、【源】标记的文献引用、【案】标记的按语',
   proofreaders_note: '校对者备注，通常包含补充说明或考证'
 }

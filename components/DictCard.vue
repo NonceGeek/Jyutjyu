@@ -190,13 +190,36 @@
         {{ entry.meta.notes }}
       </div>
 
-      <!-- 词源 -->
+      <!-- 词源（用于 wiktionary 等真正的词源说明） -->
       <div
-        v-if="entry.meta?.etymology"
+        v-if="entry.meta?.etymology && typeof entry.meta.etymology === 'string'"
         class="mt-4 p-3 border-l-4 bg-purple-50 border-purple-400 text-sm text-gray-700"
       >
         <span class="font-semibold text-purple-700">词源：</span>
         {{ entry.meta.etymology }}
+      </div>
+
+      <!-- 参考文献（用于 gz-word-origins 的文献引用） -->
+      <div
+        v-if="entry.meta?.references && entry.meta.references.length > 0"
+        class="mt-4 p-3 border-l-4 bg-amber-50 border-amber-400 text-sm text-gray-700"
+      >
+        <span class="font-semibold text-amber-700">参考文献：</span>
+        <ul class="mt-2 space-y-2">
+          <li
+            v-for="(ref, refIdx) in entry.meta.references"
+            :key="refIdx"
+          >
+            <!-- 作者和作品 -->
+            <span v-if="ref.author" class="font-medium">{{ ref.author }}</span>
+            <span v-if="ref.work">《{{ ref.work }}》</span>
+            <span v-if="ref.author || ref.work">：</span>
+            <!-- 引文（用 ～ 代替词头） -->
+            <span v-if="ref.quote">{{ ref.quote }}</span>
+            <!-- 出处 -->
+            <span v-if="ref.source" class="text-gray-500">（{{ ref.source }}）</span>
+          </li>
+        </ul>
       </div>
 
       <!-- 参见 -->

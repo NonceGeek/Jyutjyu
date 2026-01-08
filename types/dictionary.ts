@@ -107,6 +107,20 @@ export interface Reference {
 }
 
 /**
+ * 文献引用（结构化）
+ */
+export interface LiteraryReference {
+  /** 作者（包含朝代，如"清·黃石麟"） */
+  author?: string | null
+  /** 作品名称 */
+  work?: string | null
+  /** 引文内容（～ 代表词头） */
+  quote?: string | null
+  /** 出版/版本信息 */
+  source?: string | null
+}
+
+/**
  * 词典特有元数据
  */
 export interface DictionaryMeta {
@@ -116,8 +130,10 @@ export interface DictionaryMeta {
   subcategories?: string[]
   /** 词性 */
   pos?: PosLabel
-  /** 词源（"词源词典"特有） */
+  /** 词源说明（wiktionary 等真正的词源学解释） */
   etymology?: string
+  /** 文献引用（粵語辭源等历史文献引用） */
+  references?: LiteraryReference[]
   /** 首次记录时间 */
   first_recorded?: string
   /** 用法说明（"俗语词典"特有） */
