@@ -591,6 +591,196 @@ node scripts/jsonl-to-json.js \
    }
    ```
 
+## 示例 5：粵語辭源
+
+参考 `gz-word-origins.js`，它展示了如何处理：
+
+### CSV 格式特点
+
+粵語辭源词典的特点是记录词语的来源和演变，CSV格式中同一词条包含多行：
+
+```csv
+page,index,verified,entry,gwongping,jyutping,content,proofreaders_note
+55_1,0,1,一身蟻,yed1 sen1 ngei5,jat1 san1 ngai5,形容招惹了不少麻煩。（饒秉才等：2020：478）,
+55_1,0,1,,,,【源】坐處即所卧，卧處即所坐。三日蝸在殼，～於磨。（清·何紹基《東洲草堂詩鈔》卷二十四葉十二，清同治六至八年長沙無園刻本）,
+```
+
+- 第一行包含词条名称、拼音和释义
+- 后续行（entry和jyutping为空）包含词源引用【源】和按语【案】
+
+### 核心功能实现
+
+1. **按 page+index 分组**
+   
+   同一词条的多行数据需要先分组再处理：
+   
+   ```javascript
+   function groupByEntry(rows) {
+     const grouped = new Map()
+     
+     rows.forEach(row => {
+       const key = `${row.page}_${row.index}`
+       if (!grouped.has(key)) {
+         grouped.set(key, [])
+       }
+       grouped.get(key).push(row)
+     })
+     
+     return grouped
+   }
+   ```
+
+2. **解析 content 字段**
+   
+   content 字段可能包含释义、词源引用或按语：
+   
+   ```javascript
+   function parseContent(content) {
+     if (content.startsWith('【源】')) {
+       // 词源引用行
+       const etymologyText = content.replace(/^【源】/, '').trim()
+       return {
+         definition: '',
+         etymology: [etymologyText],
+         commentary: null
+       }
+     } else if (content.startsWith('案：')) {
+       // 按语/说明行
+       const commentary = content.replace(/^案：/, '').trim()
+       return {
+         definition: '',
+         etymology: [],
+         commentary: commentary
+       }
+     } else {
+       // 释义行
+       return {
+         definition: content,
+         etymology: [],
+         commentary: null
+       }
+     }
+   }
+   ```
+
+3. **解析多义项标记**（①②③格式）
+   
+   ```javascript
+   function parseSenses(definition) {
+     const sensePattern = /[①②③④⑤⑥⑦⑧⑨⑩]/g
+     const matches = [...definition.matchAll(sensePattern)]
+     
+     if (matches.length === 0) {
+       return [{ definition: definition.trim(), examples: [] }]
+     }
+     
+     const senses = []
+     for (let i = 0; i < matches.length; i++) {
+       const start = matches[i].index + 1
+       const end = i < matches.length - 1 ? matches[i + 1].index : definition.length
+       const senseText = definition.substring(start, end).trim()
+       
+       if (senseText) {
+         senses.push({ definition: senseText, examples: [] })
+       }
+     }
+     
+     return senses
+   }
+   ```
+
+4. **处理同形异义词**（如"一味1"、"一味2"）
+   
+   ```javascript
+   function parseEntryName(entry) {
+     // 检查是否有数字后缀
+     const match = entry.match(/^(.+?)(\d+)$/)
+     if (match) {
+       return {
+         baseEntry: match[1].trim(),
+         variantNumber: parseInt(match[2])
+       }
+     }
+     
+     return {
+       baseEntry: entry.trim(),
+       variantNumber: null
+     }
+   }
+   
+   // 在 aggregateEntries 中聚合同形异义词
+   export function aggregateEntries(entries) {
+     // 按词头和读音分组
+     const grouped = new Map()
+     entries.forEach(entry => {
+       const key = `${entry.headword.normalized}_${entry.phonetic.jyutping[0]}`
+       // ... 聚合逻辑
+     })
+   }
+   ```
+
+5. **灵活的必填字段验证**
+   
+   因为后续行的entry和jyutping为空，所以只验证核心字段：
+   
+   ```javascript
+   export const REQUIRED_FIELDS = ['page', 'index', 'content']
+   // entry 和 jyutping 不是必填，允许词源引用行为空
+   ```
+
+### 使用说明
+
+```bash
+# 转换粵語辭源数据
+node scripts/csv-to-json.js \
+  --dict gz-word-origins \
+  --input data/processed/gz-word-origins.csv
+
+# 生成的词条包含丰富的词源信息
+```
+
+### 数据特点
+
+```javascript
+// 典型词条结构
+{
+  "headword": { "display": "一於" },
+  "phonetic": {
+    "original": "yed1 yü1",
+    "jyutping": ["jat1 jyu1"]
+  },
+  "senses": [
+    { "definition": "堅決。" },
+    { "definition": "一定要；怎麼也……。" },
+    { "definition": "就……。（饒秉才等：2020：479）" }
+  ],
+  "meta": {
+    "page": "55_1",
+    "verified": true,
+    "etymology": [
+      "賢者或出或處，～爲道而已，豈曰徒名哉？（宋·程珌《洺水集》卷九葉十二，清文淵閣四庫全書本）｜..."
+    ],
+    "commentary": "古漢語的"一於"，表"只在於"的意義，粵語引申爲"堅決"、"務必"等意義。",
+    "gwongping": "yed1 yü1"
+  }
+}
+```
+
+### 注意事项
+
+⚠️ **重要**：
+- CSV中同一词条包含多行，需要正确分组
+- 词源引用（【源】）和按语（案：）在单独的行中
+- 同形异义词（如"一味1"、"一味2"）会被自动聚合
+- 保留了广州话拼音方案(gwongping)用于研究对比
+
+### 统计数据
+
+- 总词条数：约 3,950 条
+- 包含词源的词条：99.9%（几乎所有词条都有词源引用）
+- 包含按语的词条：约 487 条（12%）
+- 多义项词条：约 619 条（16%）
+
 ---
 
 ## 常见问题

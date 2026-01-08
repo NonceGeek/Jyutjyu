@@ -19,6 +19,7 @@ import { parseCSV, validateRequiredFields, cleanRow } from './utils/csv-parser.j
 const ADAPTERS = {
   'gz-practical-classified': () => import('./adapters/gz-practical-classified.js'),
   'gz-colloquialisms': () => import('./adapters/gz-colloquialisms.js'),
+  'gz-word-origins': () => import('./adapters/gz-word-origins.js'),
   'hk-cantowords': () => import('./adapters/hk-cantowords.js'),
   // 未来可以添加更多词典
 }
@@ -271,6 +272,7 @@ CSV 转 JSON 工具
 可用的词典适配器:
   - gz-practical-classified    实用广州话分类词典
   - gz-colloquialisms          广州话俗语词典
+  - gz-word-origins            粵語辭源
   - hk-cantowords              粵典 (words.hk)
 
 示例:

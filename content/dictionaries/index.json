@@ -67,8 +67,24 @@
       "usage_restriction": "需遵循CC BY-SA 4.0协议",
       "chunked": true,
       "chunk_dir": "wiktionary"
+    },
+    {
+      "id": "gz-word-origins",
+      "name": "粵語辭源",
+      "dialect": "广州话",
+      "file": "gz-word-origins.json",
+      "entries_count": 3951,
+      "author": "谭步云",
+      "publisher": "广东人民出版社",
+      "year": 2025,
+      "version": "2026-01-08",
+      "description": "追溯粤语词汇的来源和演变，引用大量古籍文献，展示粤语词汇的历史渊源",
+      "source": "scanned_from_internet",
+      "license": "Copyrighted. For technical demonstration only.",
+      "attribution": "《粵語辭源》，谭步云编，广东人民出版社，2025年版",
+      "usage_restriction": "此词表内容受版权保护，来源于互联网公开扫描资源，仅用于本项目原型验证和技术演示，不得用于商业用途或二次分发。"
     }
   ],
-  "last_updated": "2026-01-07T18:14:00.500Z",
+  "last_updated": "2026-01-08T02:29:06.616Z",
   "schema_version": "1.0.0"
 }
