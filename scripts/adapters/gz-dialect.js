@@ -181,19 +181,34 @@ function parseExamplesInDefinition(text) {
 
 /**
  * 转换粤拼声调标记
- * 规则：1' → 1`53，1 → 1`55
+ * 规则：
+ * - 非入声韵的 1' → 1`53
+ * - 非入声韵的 1 → 1`55
+ * - 入声韵（韵母以 p/t/k 结尾）的 1 和 1' 保持不变
+ * 
  * @param {string} jyutping - 原始粤拼
  * @returns {string} 转换后的粤拼
+ * 
+ * 例子：
+ * - baa1 → baa1`55  (非入声)
+ * - bat1 → bat1     (入声，t结尾)
+ * - baa1' → baa1`53 (非入声)
+ * - bat1' → bat1'   (入声，t结尾)
  */
 function convertJyutpingTones(jyutping) {
   if (!jyutping) return jyutping
   
-  // 先处理 1'（带撇号），避免与单独的 1 冲突
-  let converted = jyutping.replace(/1'/g, '1`53')
+  // 使用负向后查找（lookbehind），检查前面不是 p/t/k
+  // 注意：Node.js v9+ 和现代浏览器都支持 lookbehind
   
-  // 再处理单独的 1（不在反引号后面的）
-  // 使用负向后查找，确保不匹配已经转换的 1`53 中的 1
-  converted = converted.replace(/1(?!`)/g, '1`55')
+  // 先处理非入声韵的 1'
+  // (?<![ptk]) 表示前面不是 p、t、k
+  let converted = jyutping.replace(/(?<![ptk])1'/g, '1`53')
+  
+  // 再处理非入声韵的 1
+  // (?<![ptk]) 前面不是 p/t/k
+  // (?![`']) 后面不是反引号或撇号（避免重复转换或误匹配1'）
+  converted = converted.replace(/(?<![ptk])1(?![`'])/g, '1`55')
   
   return converted
 }
