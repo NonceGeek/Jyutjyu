@@ -89,7 +89,7 @@
       "name": "廣州方言詞典",
       "dialect": "广州话",
       "file": "gz-dialect.json",
-      "entries_count": 7475,
+      "entries_count": 7476,
       "author": "白宛如",
       "publisher": "江苏教育出版社",
       "year": 1998,
@@ -101,6 +101,6 @@
       "usage_restriction": "此词表内容受版权保护，来源于互联网公开扫描资源，仅用于本项目原型验证和技术演示，不得用于商业用途或二次分发。"
     }
   ],
-  "last_updated": "2026-01-11T17:28:53.997Z",
+  "last_updated": "2026-01-11T17:55:28.948Z",
   "schema_version": "1.0.0"
 }
