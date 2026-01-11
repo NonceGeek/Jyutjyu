@@ -228,15 +228,25 @@
                 </span>
               </div>
               
-              <!-- 授权信息 -->
+              <!-- 授权信息和免责说明 -->
               <div v-if="dict.license" class="mt-3 pt-3 border-t border-gray-100">
                 <div class="flex items-start gap-2">
                   <svg class="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <div class="flex-1">
-                    <p class="text-xs text-gray-600">
+                    <p class="text-xs text-gray-600 mb-2">
                       <span class="font-medium">许可:</span> {{ dict.license }}
+                    </p>
+                    <!-- 免责说明 - 社区词典 -->
+                    <p v-if="dict.source === 'community_contributed'" class="text-xs text-gray-500 leading-relaxed">
+                      词条内容由社区编者负责，本网站不对内容负责。
+                    </p>
+                    <!-- 免责说明 - 出版词典 -->
+                    <p v-else-if="dict.source === 'scanned_from_internet'" class="text-xs text-gray-500 leading-relaxed">
+                      词条内容由书籍作者负责。因采用OCR批量处理，难免有错误，如发现错误可在
+                      <a href="https://github.com/jyutjyucom/jyutjyu/issues" target="_blank" class="text-blue-600 hover:underline">GitHub Issue</a>
+                      提出。
                     </p>
                   </div>
                 </div>
@@ -276,18 +286,25 @@
                   </span>
                 </div>
                 
-                <!-- 授权信息 -->
+                <!-- 授权信息和免责说明 -->
                 <div v-if="mobileDictionary.license" class="mt-3 pt-3 border-t border-gray-100">
                   <div class="flex items-start gap-2">
                     <svg class="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <div class="flex-1">
-                      <p class="text-xs text-gray-600">
+                      <p class="text-xs text-gray-600 mb-2">
                         <span class="font-medium">许可:</span> {{ mobileDictionary.license }}
                       </p>
-                      <p v-if="mobileDictionary.usage_restriction" class="text-xs text-gray-500 mt-1">
-                        {{ mobileDictionary.usage_restriction }}
+                      <!-- 免责说明 - 社区词典 -->
+                      <p v-if="mobileDictionary.source === 'community_contributed'" class="text-xs text-gray-500 leading-relaxed">
+                        词条内容由社区编者负责，本网站不对内容负责。
+                      </p>
+                      <!-- 免责说明 - 出版词典 -->
+                      <p v-else-if="mobileDictionary.source === 'scanned_from_internet'" class="text-xs text-gray-500 leading-relaxed">
+                        词条内容由书籍作者负责。因采用OCR批量处理，难免有错误，如发现错误可在
+                        <a href="https://github.com/jyutjyucom/jyutjyu/issues" target="_blank" class="text-blue-600 hover:underline">GitHub Issue</a>
+                        提出。
                       </p>
                     </div>
                   </div>
@@ -432,7 +449,8 @@ const mobileDictionary = computed(() => {
       entries_count: 0,
       description: '',
       license: '',
-      usage_restriction: ''
+      usage_restriction: '',
+      source: ''
     }
   }
   return dictionariesData.value.dictionaries[mobileDictionaryIndex.value]

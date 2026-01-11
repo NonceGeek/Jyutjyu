@@ -69,6 +69,14 @@
                 这些词典内容受中华人民共和国著作权法保护，数据来源于互联网上的公开扫描资源。
               </p>
               
+              <h4 class="font-semibold text-gray-900 mb-2">📝 内容免责</h4>
+              <p class="text-sm text-gray-700 mb-3">
+                词条内容由原书籍作者负责。本平台数据来源于OCR批量处理，因技术限制，难免存在识别错误或格式问题。
+                如发现错误，欢迎通过
+                <a href="https://github.com/jyutjyucom/jyutjyu/issues" class="text-blue-600 hover:underline" target="_blank">GitHub Issue</a>
+                反馈。
+              </p>
+              
               <h4 class="font-semibold text-gray-900 mb-2">🎯 当前用途</h4>
               <ul class="text-sm text-gray-700 list-disc list-inside space-y-1 mb-3">
                 <li>技术原型验证和演示</li>
@@ -99,6 +107,14 @@
             <p class="text-gray-700 mb-4">
               由开放社区协作编写的词典，采用开放授权协议。
             </p>
+            
+            <div class="bg-amber-50 border border-amber-300 rounded-lg p-4 mb-4">
+              <p class="text-sm text-amber-900">
+                <strong>⚠️ 内容免责：</strong>社区协作词典的词条内容均由其各自社区的编者负责编写和维护。
+                本网站仅作为内容聚合展示平台，不对词条内容的准确性、完整性或适用性承担责任。
+                如对具体词条内容有疑问，请访问原词典网站或联系其编者团队。
+              </p>
+            </div>
             
             <!-- 粵典 -->
             <div class="bg-white rounded-lg p-4 mb-4">
