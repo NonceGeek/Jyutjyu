@@ -62,8 +62,11 @@ export interface Headword {
  * 标音信息
  */
 export interface Phonetic {
-  /** 原书注音（如耶鲁拼音、不规范拼音） */
-  original: string
+  /** 原书注音（如耶鲁拼音、不规范拼音、IPA）
+   * - string: 单个注音或多个注音的字符串表示
+   * - string[]: 与jyutping一一对应的注音数组（如Wiktionary的IPA）
+   */
+  original: string | string[]
   /** 粤拼（数组支持多音） */
   jyutping: string[]
   /** 变调信息（可选） */

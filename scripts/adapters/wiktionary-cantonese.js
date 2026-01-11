@@ -72,17 +72,19 @@ const POS_MAP = {
 }
 
 /**
- * 提取粤语Jyutping发音
+ * 提取粤语发音配对（Jyutping + IPA）
+ * 注意：Wiktionary中Jyutping和IPA通常在不同的sound对象中
  * @param {Array} sounds - 发音数组
- * @returns {Array<string>} 粤拼数组
+ * @returns {Array<{jyutping: string, ipa: string|null}>} 发音配对数组
  */
-function extractJyutping(sounds) {
+function extractCantonesePhonetics(sounds) {
   if (!sounds || !Array.isArray(sounds)) return []
   
-  const jyutpingSet = new Set()
+  // 第一步：提取所有Jyutping
+  const jyutpingList = []
+  const seenJyutping = new Set()
   
   sounds.forEach(sound => {
-    // 筛选包含 Cantonese 和 Jyutping 标签的发音
     if (sound.tags && Array.isArray(sound.tags)) {
       const hasCantonese = sound.tags.some(tag => 
         tag && typeof tag === 'string' && tag.toLowerCase().includes('cantonese')
@@ -92,9 +94,8 @@ function extractJyutping(sounds) {
       )
       
       if (hasCantonese && hasJyutping && sound.zh_pron) {
-        // zh_pron 可能是 "gaa1 fei1" 或 "gaa¹ fei¹" 格式
-        // 标准化为数字声调格式
-        let normalized = sound.zh_pron
+        // 标准化粤拼为数字声调格式
+        let jyutping = sound.zh_pron
           .replace(/⁰/g, '0')
           .replace(/¹/g, '1')
           .replace(/²/g, '2')
@@ -108,38 +109,50 @@ function extractJyutping(sounds) {
           .replace(/⁻/g, '-')
           .trim()
         
-        if (normalized) {
-          jyutpingSet.add(normalized)
+        if (jyutping && !seenJyutping.has(jyutping)) {
+          seenJyutping.add(jyutping)
+          jyutpingList.push(jyutping)
         }
       }
     }
   })
   
-  return Array.from(jyutpingSet)
-}
-
-/**
- * 提取粤语IPA发音
- * @param {Array} sounds - 发音数组
- * @returns {string|null} IPA字符串
- */
-function extractIPA(sounds) {
-  if (!sounds || !Array.isArray(sounds)) return null
+  // 第二步：提取所有IPA（Sinological-IPA标签）
+  const ipaList = []
+  const seenIPA = new Set()
   
-  // 查找包含 Cantonese 标签且有 IPA 的发音
-  for (const sound of sounds) {
-    if (sound.tags && Array.isArray(sound.tags)) {
+  sounds.forEach(sound => {
+    if (sound.tags && Array.isArray(sound.tags) && sound.ipa) {
       const hasCantonese = sound.tags.some(tag => 
         tag && typeof tag === 'string' && tag.toLowerCase().includes('cantonese')
       )
+      const hasIPA = sound.tags.some(tag => 
+        tag && typeof tag === 'string' && tag.toLowerCase().includes('ipa')
+      )
       
-      if (hasCantonese && sound.ipa) {
-        return sound.ipa
+      if (hasCantonese && hasIPA && !seenIPA.has(sound.ipa)) {
+        seenIPA.add(sound.ipa)
+        ipaList.push(sound.ipa)
       }
     }
+  })
+  
+  // 第三步：配对Jyutping和IPA
+  const phonetics = []
+  
+  // 如果IPA数量和Jyutping数量相同，按顺序一一配对
+  if (ipaList.length === jyutpingList.length && ipaList.length > 0) {
+    jyutpingList.forEach((jp, idx) => {
+      phonetics.push({ jyutping: jp, ipa: ipaList[idx] })
+    })
+  } else {
+    // 否则，只记录jyutping，IPA设为null
+    jyutpingList.forEach(jp => {
+      phonetics.push({ jyutping: jp, ipa: null })
+    })
   }
   
-  return null
+  return phonetics
 }
 
 /**
@@ -276,9 +289,10 @@ function processSenses(senses) {
     // 注意：Wiktionary 的例句经常有简繁体两个版本，我们只保留繁体版本以节省约50%空间
     // 策略：
     // 1. 明确标记为简体的直接跳过：tags 包含 "Simplified-Chinese"
-    // 2. 对于其他情况，通过 translation 去重（保留第一个，通常是繁体）
+    // 2. 使用 ref + roman 去重（同一引用和罗马音对应繁简体对）
+    // 3. 对于相同 ref + roman 的例句，只保留第一个（通常是繁体）
     const examples = []
-    const seenTranslations = new Map() // 用于追踪已见过的翻译
+    const seenKeys = new Map() // 用于追踪已见过的例句（ref + roman 组合）
     
     if (sense.examples && Array.isArray(sense.examples)) {
       sense.examples.forEach((example, idx) => {
@@ -298,28 +312,36 @@ function processSenses(senses) {
         if (typeof example === 'string') {
           examples.push({ text: example })
         } else if (example.text) {
-          // 使用 translation 作为去重键（同一翻译通常对应繁简体对）
-          const translationKey = example.english || example.translation || example.text
+          // 使用 ref + roman 作为去重键
+          // 繁简体例句通常有相同的 ref 和 roman，只有 text 不同
+          let dedupeKey = null
           
-          if (seenTranslations.has(translationKey)) {
-            // 已经有相同翻译的例句了，检查是否为简繁体对
-            const prevExample = seenTranslations.get(translationKey)
-            const prevText = prevExample.text
-            const currText = example.text
-            
-            // 如果两个例句长度相同且翻译相同，很可能是繁简体对
-            // 保留第一个（通常是繁体），跳过第二个（通常是简体）
-            if (prevText && currText && prevText.length === currText.length && prevText !== currText) {
-              return // 跳过可能的简体版本
-            }
-          } else {
-            // 首次见到这个翻译，记录并添加
-            const exampleObj = {
-              text: example.text,
-              translation: example.english || null
-            }
-            examples.push(exampleObj)
-            seenTranslations.set(translationKey, exampleObj)
+          if (example.ref && example.roman) {
+            // 引文类型：使用 ref + roman 组合
+            dedupeKey = `${example.ref}||${example.roman}`
+          } else if (example.ref) {
+            // 只有 ref：使用 ref
+            dedupeKey = example.ref
+          } else if (example.english || example.translation) {
+            // 有翻译：使用翻译
+            dedupeKey = example.english || example.translation
+          }
+          
+          // 检查是否已见过此例句
+          if (dedupeKey && seenKeys.has(dedupeKey)) {
+            // 已经有相同来源的例句了，跳过（保留第一个，通常是繁体）
+            return
+          }
+          
+          // 记录此例句
+          const exampleObj = {
+            text: example.text,
+            translation: example.english || null
+          }
+          examples.push(exampleObj)
+          
+          if (dedupeKey) {
+            seenKeys.set(dedupeKey, exampleObj)
           }
         }
       })
@@ -375,14 +397,17 @@ export function transformEntry(entry, index) {
     throw new Error('Not a Cantonese entry')
   }
   
-  // 1. 提取粤拼和IPA
-  const jyutpingArray = extractJyutping(entry.sounds)
-  const ipa = extractIPA(entry.sounds)
+  // 1. 提取粤语发音配对（Jyutping + IPA）
+  const phonetics = extractCantonesePhonetics(entry.sounds)
   
-  if (jyutpingArray.length === 0) {
+  if (phonetics.length === 0) {
     // 没有粤拼，跳过此词条
     throw new Error('No Jyutping found')
   }
+  
+  // 分离jyutping和IPA数组
+  const jyutpingArray = phonetics.map(p => p.jyutping)
+  const ipaArray = phonetics.map(p => p.ipa).filter(Boolean) // 过滤掉null
   
   // 2. 处理词头
   const headwordInfo = cleanHeadword(entry.word)
@@ -441,7 +466,11 @@ export function transformEntry(entry, index) {
     },
     
     phonetic: {
-      original: ipa || jyutpingArray[0], // 优先使用IPA作为原始注音
+      // 如果每个jyutping都有对应的IPA，就构建IPA数组
+      // 否则使用第一个IPA或第一个jyutping作为单个字符串
+      original: phonetics.every(p => p.ipa) 
+        ? phonetics.map(p => p.ipa)  // 数组：与jyutping一一对应
+        : (ipaArray.length > 0 ? ipaArray[0] : jyutpingArray[0]), // 字符串：兜底方案
       jyutping: jyutpingArray
     },
     
@@ -461,9 +490,6 @@ export function transformEntry(entry, index) {
       
       // 词源信息
       etymology: entry.etymology_text || null,
-      
-      // IPA（作为额外信息）
-      ipa: ipa || null,
       
       // 派生词、相关词等
       derived: entry.senses?.[0]?.derived?.map(d => d.word).filter(Boolean) || null,
@@ -585,12 +611,44 @@ export function aggregateEntries(entries) {
       
       baseEntry.senses = allSenses
       
-      // 合并粤拼
-      const allJyutping = new Set()
+      // 合并粤拼和原书注音（IPA）
+      // 使用Map来保持jyutping和IPA的配对关系
+      const phoneticPairs = new Map() // key: jyutping, value: ipa
+      
       group.forEach(entry => {
-        entry.phonetic.jyutping.forEach(jp => allJyutping.add(jp))
+        const jyutpings = entry.phonetic.jyutping
+        const originals = entry.phonetic.original
+        
+        if (Array.isArray(originals) && originals.length === jyutpings.length) {
+          // 如果original是数组且长度匹配，说明是一一对应的
+          jyutpings.forEach((jp, idx) => {
+            if (!phoneticPairs.has(jp)) {
+              phoneticPairs.set(jp, originals[idx])
+            }
+          })
+        } else {
+          // 否则只记录jyutping，IPA设为null
+          jyutpings.forEach(jp => {
+            if (!phoneticPairs.has(jp)) {
+              phoneticPairs.set(jp, null)
+            }
+          })
+        }
       })
-      baseEntry.phonetic.jyutping = Array.from(allJyutping)
+      
+      // 重构jyutping数组和original数组
+      const mergedJyutping = Array.from(phoneticPairs.keys())
+      const mergedOriginals = Array.from(phoneticPairs.values())
+      
+      baseEntry.phonetic.jyutping = mergedJyutping
+      
+      // 如果所有original都有值，就用数组；否则用第一个有效值或fallback
+      if (mergedOriginals.every(o => o)) {
+        baseEntry.phonetic.original = mergedOriginals
+      } else {
+        const firstValid = mergedOriginals.find(o => o)
+        baseEntry.phonetic.original = firstValid || mergedJyutping[0]
+      }
       
       // 合并关键词
       const allKeywords = new Set()
@@ -623,12 +681,15 @@ export function aggregateEntries(entries) {
 export const FIELD_NOTES = {
   word: '词条本身',
   pos: '词性（需要映射为中文）',
-  sounds: '发音数组，需要筛选Cantonese+Jyutping标签的发音',
+  sounds: '发音数组，提取Cantonese+Jyutping标签的配对（jyutping与IPA一一对应）',
   senses: '释义数组，包含glosses、tags、examples等',
   forms: '词形变化，主要关注alternative标记的异体字',
   etymology_text: '词源说明',
   tags: '标签系统，用于识别地区（Hong-Kong）和语域（colloquial）',
-  ipa: 'IPA音标，作为original字段展示'
+  phonetic: {
+    original: 'IPA数组（与jyutping一一对应）或单个IPA字符串',
+    jyutping: '粤拼数组'
+  }
 }
 
 /**

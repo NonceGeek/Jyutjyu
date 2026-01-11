@@ -227,8 +227,12 @@ async function main() {
     if (options.mode === 'replace') {
       if (options.dict) {
         // 只删除指定词典的数据
+        // 使用ID前缀模式匹配（更可靠，因为每个词典的ID前缀都是唯一的）
+        const dictId = dictionaries[0].id
         const dictName = dictionaries[0].name
-        const deleteResult = await collection.deleteMany({ source_book: dictName })
+        const deleteResult = await collection.deleteMany({ 
+          id: { $regex: `^${dictId}_` } 
+        })
         console.log(`🗑️  已删除 ${dictName} 的 ${deleteResult.deletedCount} 条数据\n`)
       } else {
         // 清空所有数据

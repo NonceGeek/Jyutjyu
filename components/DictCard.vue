@@ -39,18 +39,28 @@
           </p>
         </div>
 
-        <!-- 粤拼 -->
+        <!-- 粤拼 + 原书注音 -->
         <div class="sm:text-right">
           <div
             v-for="(jp, idx) in entry.phonetic.jyutping"
             :key="idx"
-            class="font-mono text-lg text-blue-600 font-semibold break-words"
+            class="flex items-center justify-start sm:justify-end gap-2"
           >
-            {{ jp }}
+            <!-- 粤拼 -->
+            <div class="font-mono text-lg text-blue-600 font-semibold break-words">
+              {{ jp }}
+            </div>
+            <!-- 原书注音（与粤拼对应，左右并排） -->
+            <div
+              v-if="getOriginalForIndex(entry, idx)"
+              class="text-xs text-gray-400 break-words"
+            >
+              原书：{{ getOriginalForIndex(entry, idx) }}
+            </div>
           </div>
-          <!-- 原书注音（如果不同） -->
+          <!-- 单个原书注音（不对应粤拼，兜底显示） -->
           <div
-            v-if="shouldShowOriginalPhonetic(entry)"
+            v-if="shouldShowSingleOriginal(entry)"
             class="text-xs text-gray-400 mt-1 break-words"
           >
             原书: {{ entry.phonetic.original }}
@@ -346,17 +356,37 @@ const formatDefinitionWithLinks = (definition: string): string => {
 }
 
 /**
- * 判断是否应该显示"原书:"标签
- * 对于以下情况不显示原书标签：
- * 1. 冒号分隔的多个读音变体（如 hk-cantowords）
- * 2. 括号变体格式（如 gz-practical-classified 的 "baau6 (biu6, beu6)"）
- * 
- * 只有当原书注音与解析后的 jyutping 数组有实质性差异时才显示
+ * 获取指定索引的原书注音
+ * 如果original是数组且索引有效，返回对应的注音
+ * @param entry - 词条对象
+ * @param idx - 索引
+ * @returns 原书注音字符串或null
  */
-const shouldShowOriginalPhonetic = (entry: any): boolean => {
-  if (!entry.phonetic.original) return false
-  
+const getOriginalForIndex = (entry: any, idx: number): string | null => {
   const original = entry.phonetic.original
+  
+  // 如果original是数组，返回对应索引的值
+  if (Array.isArray(original)) {
+    return original[idx] || null
+  }
+  
+  // 否则不显示（由shouldShowSingleOriginal处理）
+  return null
+}
+
+/**
+ * 判断是否应该显示单个原书注音（不与jyutping对应的情况）
+ * @param entry - 词条对象
+ * @returns 是否显示
+ */
+const shouldShowSingleOriginal = (entry: any): boolean => {
+  const original = entry.phonetic.original
+  
+  // 如果original是数组，不在这里显示（已经与jyutping对应显示了）
+  if (Array.isArray(original)) return false
+  
+  if (!original) return false
+  
   const jyutpingArray = entry.phonetic.jyutping || []
   
   // 如果 original 等于 jyutping[0]，不显示

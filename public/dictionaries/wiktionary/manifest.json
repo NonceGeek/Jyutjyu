@@ -3,112 +3,112 @@
     "a": {
       "file": "a.json",
       "entries": 978,
-      "size": 622833
+      "size": 628983
     },
     "b": {
       "file": "b.json",
       "entries": 6154,
-      "size": 3972435
+      "size": 4003768
     },
     "c": {
       "file": "c.json",
       "entries": 7312,
-      "size": 4685527
+      "size": 4737471
     },
     "d": {
       "file": "d.json",
       "entries": 6305,
-      "size": 4113315
+      "size": 4146050
     },
     "e": {
       "file": "e.json",
       "entries": 76,
-      "size": 46601
+      "size": 48609
     },
     "f": {
       "file": "f.json",
       "entries": 5045,
-      "size": 3214969
+      "size": 3234350
     },
     "g": {
       "file": "g.json",
       "entries": 9939,
-      "size": 6399654
+      "size": 6443914
     },
     "h": {
       "file": "h.json",
       "entries": 6677,
-      "size": 4282294
+      "size": 4321714
     },
     "i": {
       "file": "i.json",
       "entries": 18,
-      "size": 12174
+      "size": 12298
     },
     "j": {
       "file": "j.json",
       "entries": 9624,
-      "size": 6183860
+      "size": 6215839
     },
     "k": {
       "file": "k.json",
       "entries": 2439,
-      "size": 1558965
+      "size": 1584322
     },
     "l": {
       "file": "l.json",
       "entries": 5666,
-      "size": 3585811
+      "size": 3624056
     },
     "m": {
       "file": "m.json",
       "entries": 5470,
-      "size": 3497918
+      "size": 3520969
     },
     "n": {
       "file": "n.json",
       "entries": 3839,
-      "size": 2458142
+      "size": 2477416
     },
     "o": {
       "file": "o.json",
       "entries": 728,
-      "size": 473926
+      "size": 480378
     },
     "p": {
       "file": "p.json",
       "entries": 2352,
-      "size": 1486866
+      "size": 1506713
     },
     "s": {
       "file": "s.json",
       "entries": 12457,
-      "size": 8006231
+      "size": 8048286
     },
     "t": {
       "file": "t.json",
       "entries": 4214,
-      "size": 2738244
+      "size": 2755472
     },
     "u": {
       "file": "u.json",
       "entries": 28,
-      "size": 16124
+      "size": 16226
     },
     "w": {
       "file": "w.json",
       "entries": 3571,
-      "size": 2254989
+      "size": 2276377
     },
     "z": {
       "file": "z.json",
       "entries": 9301,
-      "size": 5972125
+      "size": 6026150
     },
     "other": {
       "file": "other.json",
       "entries": 2,
-      "size": 1357
+      "size": 1419
     }
   },
   "headwordIndex": {
@@ -33891,6 +33891,6 @@
     ]
   },
   "total_entries": 102195,
-  "created_at": "2026-01-07T18:14:01.864Z",
+  "created_at": "2026-01-11T18:25:05.620Z",
   "version": "1.1.0"
 }
