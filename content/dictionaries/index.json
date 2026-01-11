@@ -9,7 +9,7 @@
       "publisher": "广东人民出版社",
       "year": 1997,
       "file": "gz-practical-classified.json",
-      "version": "2026-01-08",
+      "version": "2026-01-11",
       "description": "按主题分类的实用广州话词典，收录日常生活各领域词汇",
       "source": "scanned_from_internet",
       "license": "Copyrighted. For technical demonstration only.",
@@ -77,7 +77,7 @@
       "author": "谭步云",
       "publisher": "广东人民出版社",
       "year": 2025,
-      "version": "2026-01-08",
+      "version": "2026-01-11",
       "description": "追溯粤语词汇的来源和演变，引用大量古籍文献，展示粤语词汇的历史渊源",
       "source": "scanned_from_internet",
       "license": "Copyrighted. For technical demonstration only.",
@@ -89,11 +89,11 @@
       "name": "廣州方言詞典",
       "dialect": "广州话",
       "file": "gz-dialect.json",
-      "entries_count": 7461,
+      "entries_count": 7475,
       "author": "白宛如",
       "publisher": "江苏教育出版社",
       "year": 1998,
-      "version": "2026-01-09",
+      "version": "2026-01-11",
       "description": "收录广州话词汇，包含释义、读音、用例等，是研究粤语方言的重要工具书",
       "source": "scanned_from_internet",
       "license": "Copyrighted. For technical demonstration only.",
@@ -101,6 +101,6 @@
       "usage_restriction": "此词表内容受版权保护，来源于互联网公开扫描资源，仅用于本项目原型验证和技术演示，不得用于商业用途或二次分发。"
     }
   ],
-  "last_updated": "2026-01-09T11:31:56.004Z",
+  "last_updated": "2026-01-11T17:28:53.997Z",
   "schema_version": "1.0.0"
 }
