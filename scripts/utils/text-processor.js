@@ -170,6 +170,100 @@ function hasExampleCharacteristics(text) {
 }
 
 /**
+ * 分离补充说明和例句
+ * 格式: "补充说明（注释）。例句（翻译）"
+ * @param {string} text - 包含补充说明和例句的文本
+ * @returns {Object} { explanation, example }
+ * 
+ * 策略：
+ * 1. 寻找包含波浪号（～）的句子，那是例句的起点
+ * 2. 如果没有波浪号，寻找最后一个完整句子（句号后有括号翻译）
+ * 3. 在例句之前的都是补充说明
+ */
+function separateExplanationFromExample(text) {
+  if (!text) return { explanation: null, example: null }
+  
+  // 策略1: 寻找包含波浪号的句子位置
+  const tildeIndex = text.search(/[～~]/)
+  
+  if (tildeIndex !== -1) {
+    // 找到波浪号，需要回溯到这个句子的开始（前一个句号后）
+    let sentenceStart = 0
+    let inParentheses = 0
+    
+    for (let i = tildeIndex - 1; i >= 0; i--) {
+      const char = text[i]
+      if (char === '）' || char === ')') {
+        inParentheses++
+      } else if (char === '（' || char === '(') {
+        inParentheses--
+      } else if (char === '。' && inParentheses === 0) {
+        sentenceStart = i + 1
+        break
+      }
+    }
+    
+    const explanation = text.substring(0, sentenceStart).trim()
+    const example = text.substring(sentenceStart).trim()
+    
+    return {
+      explanation: explanation || null,
+      example: example || null
+    }
+  }
+  
+  // 策略2: 没有波浪号，检查是否有多个句子
+  // 找出所有句号的位置（排除括号内的）
+  const sentenceEnds = []
+  let inParentheses = 0
+  
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i]
+    if (char === '（' || char === '(') {
+      inParentheses++
+    } else if (char === '）' || char === ')') {
+      inParentheses--
+    } else if (char === '。' && inParentheses === 0) {
+      sentenceEnds.push(i)
+    }
+  }
+  
+  // 如果只有一个句子或没有句子，检查是否有例句特征
+  if (sentenceEnds.length <= 1) {
+    const hasExample = hasExampleCharacteristics(text)
+    if (hasExample) {
+      return { explanation: null, example: text }
+    } else {
+      return { explanation: text, example: null }
+    }
+  }
+  
+  // 有多个句子，从后往前查找第一个有例句特征的句子
+  for (let i = sentenceEnds.length - 1; i >= 0; i--) {
+    const sentenceStart = i > 0 ? sentenceEnds[i - 1] + 1 : 0
+    const sentenceEnd = sentenceEnds[i]
+    const sentence = text.substring(sentenceStart, sentenceEnd + 1).trim()
+    
+    // 检查这个句子及其后续部分是否有例句特征
+    const remainingText = text.substring(sentenceStart).trim()
+    
+    if (hasExampleCharacteristics(remainingText)) {
+      // 找到例句起点
+      const explanation = text.substring(0, sentenceStart).trim()
+      const example = remainingText
+      
+      return {
+        explanation: explanation || null,
+        example: example || null
+      }
+    }
+  }
+  
+  // 都没有明显的例句特征，全部当作说明
+  return { explanation: text, example: null }
+}
+
+/**
  * 解析单个义项
  * @param {string} text - 包含释义和例句的文本
  * @returns {Object} { definition, examples }
@@ -211,21 +305,22 @@ function parseSingleSense(text) {
     // 提取释义
     result.definition = firstSegment.substring(0, definitionEnd).trim()
     
-    // 第一段剩余部分可能包含例句
-    const firstExample = firstSegment.substring(definitionEnd + 1).trim()
-    if (firstExample) {
-      // 判断剩余部分是释义的补充说明还是真正的例句
-      const isOnlyParenthetical = /^[（(][^）)]+[）)]$/.test(firstExample)
-      const hasExampleFeatures = hasExampleCharacteristics(firstExample)
+    // 第一段剩余部分可能包含补充说明和例句
+    const remainder = firstSegment.substring(definitionEnd + 1).trim()
+    if (remainder) {
+      // 尝试分离补充说明和例句
+      const { explanation, example } = separateExplanationFromExample(remainder)
       
-      if (isOnlyParenthetical || !hasExampleFeatures) {
-        // 这是释义的补充说明，应该包含在definition中
-        result.definition = firstSegment.substring(0, definitionEnd + 1).trim() + firstExample
-      } else {
-        // 这是真正的例句
-        const example = parseExamplePair(firstExample)
-        if (example.text) {
-          result.examples.push(example)
+      // 如果有补充说明，加入释义
+      if (explanation) {
+        result.definition = result.definition + '。' + explanation
+      }
+      
+      // 如果有例句，解析它
+      if (example) {
+        const parsedExample = parseExamplePair(example)
+        if (parsedExample.text) {
+          result.examples.push(parsedExample)
         }
       }
     }
@@ -292,26 +387,52 @@ function parseMultipleSenses(text, markers) {
  * 格式: "例句。（翻译。）"
  * @param {string} text - 包含例句和翻译的文本
  * @returns {Object} { text, translation }
+ * 
+ * 策略：只提取最后一对括号作为翻译（如果它靠近句子末尾）
+ * 其他括号（如注释）保留在例句中
  */
 function parseExamplePair(text) {
   if (!text) return { text: '', translation: null }
   
-  // 提取括号内容作为翻译
-  const translationMatch = text.match(/[（(]([^）)]+)[）)]/g)
-  let translation = null
+  // 找出所有括号及其位置
+  const bracketMatches = []
+  const bracketRegex = /[（(]([^）)]+)[）)]/g
+  let match
   
-  if (translationMatch) {
-    // 提取所有括号内容并合并
-    translation = translationMatch
-      .map(m => m.replace(/[（()）]/g, ''))
-      .join('')
-      .replace(/[。！？]+$/, '') // 去除末尾标点
-      .trim()
+  while ((match = bracketRegex.exec(text)) !== null) {
+    bracketMatches.push({
+      fullMatch: match[0],
+      content: match[1],
+      startIndex: match.index,
+      endIndex: match.index + match[0].length
+    })
   }
   
-  // 移除括号部分，得到纯例句
-  const exampleText = text
-    .replace(/[（(][^）)]+[）)]/g, '')
+  let translation = null
+  let exampleText = text
+  
+  if (bracketMatches.length > 0) {
+    // 获取最后一对括号
+    const lastBracket = bracketMatches[bracketMatches.length - 1]
+    
+    // 检查最后一对括号是否靠近文本末尾（允许有标点符号）
+    const afterBracket = text.substring(lastBracket.endIndex).trim()
+    const isNearEnd = afterBracket.length === 0 || /^[。！？]+$/.test(afterBracket)
+    
+    if (isNearEnd) {
+      // 最后一对括号是翻译
+      translation = lastBracket.content
+        .replace(/[。！？]+$/, '')
+        .trim()
+      
+      // 移除这个括号，但保留其他括号
+      exampleText = text.substring(0, lastBracket.startIndex) + 
+                    text.substring(lastBracket.endIndex)
+    }
+  }
+  
+  // 清理例句文本
+  exampleText = exampleText
     .replace(/[。！？]+$/, '') // 去除末尾标点
     .trim()
   
