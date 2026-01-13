@@ -99,8 +99,24 @@
       "license": "Copyrighted. For technical demonstration only.",
       "attribution": "《廣州方言詞典》，白宛如编，江苏教育出版社，1998年版",
       "usage_restriction": "此词表内容受版权保护，来源于互联网公开扫描资源，仅用于本项目原型验证和技术演示，不得用于商业用途或二次分发。"
+    },
+    {
+      "id": "gz-modern",
+      "name": "现代粤语词典",
+      "dialect": "广州话",
+      "file": "gz-modern.json",
+      "entries_count": 16347,
+      "author": "范俊军、范兰德等",
+      "publisher": "广东人民出版社",
+      "year": 2021,
+      "version": "2026-01-13",
+      "description": "现代权威粤语词典，系统收录广州话词汇，包含详细释义、读音、用例等",
+      "source": "scanned_from_internet",
+      "license": "Copyrighted. For technical demonstration only.",
+      "attribution": "《现代粤语词典》，范俊军、范兰德等编，广东人民出版社，2021年版",
+      "usage_restriction": "此词表内容受版权保护，来源于互联网公开扫描资源，仅用于本项目原型验证和技术演示，不得用于商业用途或二次分发。"
     }
   ],
-  "last_updated": "2026-01-12T05:11:36.581Z",
+  "last_updated": "2026-01-13T11:22:57.492Z",
   "schema_version": "1.0.0"
 }

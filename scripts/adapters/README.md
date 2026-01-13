@@ -740,7 +740,208 @@ export const DICTIONARY_INFO = {
 }
 ```
 
-## 示例 6：粵語辭源
+## 示例 6：现代粤语词典
+
+参考 `gz-modern.js`，它展示了如何处理：
+
+### CSV 格式特点
+
+现代粤语词典是一本现代权威粤语词典，CSV格式包含校对状态和API建议字段：
+
+```csv
+index,entry_type,headword,pronunciation,jyutping,api_suggestion,verification_status,definition,page,source_file
+1,字头,吖,aa1 / aa5,aa1 / aa3,aa1 / aa3 / a1,建議,①表示同意或强调...,138,...
+2,词头,吖啶,aa1 ding6,aa1 ding6,aa1 ding6,✓ 匹配,有机化合物...,138,...
+```
+
+**关键特性**：
+- `pronunciation`：原书拼音标注
+- `jyutping`：转换后的粤拼（用于词典展示和搜索优化）
+- `verification_status`：校对状态（"✓ 匹配"、"建議"、"⚠️ API未找到，請檢查字頭"）
+- 数据处理时只保留 verification_status 为 "✓ 匹配" 的词条
+
+### 核心功能实现
+
+1. **过滤未匹配数据**
+   
+   ```javascript
+   function shouldFilterRow(row) {
+     // 只保留 verification_status 为 "✓ 匹配" 的词条
+     return row.verification_status !== '✓ 匹配'
+   }
+   
+   export function transformRow(row) {
+     if (shouldFilterRow(row)) {
+       return null // 过滤掉
+     }
+     // ... 继续处理
+   }
+   ```
+
+2. **处理原书拼音和粤拼**
+   
+   ```javascript
+   // pronunciation 作为 phonetic.original（原书标注）
+   // jyutping 作为 phonetic.jyutping（标准粤拼）
+   phonetic: {
+     original: row.pronunciation || '', // 原书拼音
+     jyutping: jyutpingArray // 转换后的粤拼
+   }
+   ```
+
+3. **解析多义项和例句**
+   
+   释义格式：`①表示同意：好～［好的］丨系～［是啊］！`
+   
+   ```javascript
+   function parseSenses(definition) {
+     // 检查是否包含 ① ② ③ 等标记
+     const sensePattern = /[①②③④⑤⑥⑦⑧⑨⑩]/g
+     const matches = [...text.matchAll(sensePattern)]
+     
+     if (matches.length === 0) {
+       // 没有多义项标记，整个作为一个义项
+       return parseExamplesInDefinition(text)
+     }
+     
+     // 有多义项标记，分割处理
+     // ...
+   }
+   ```
+
+4. **提取例句和翻译（方括号格式）**
+   
+   支持格式：`释义：例句1［翻译1］丨例句2［翻译2］`
+   
+   ```javascript
+   function parseExamplesInDefinition(text) {
+     // 检查是否有例句（用冒号或丨分隔）
+     const exampleSplit = text.split(/[:：]/)
+     
+     if (exampleSplit.length > 1) {
+       sense.definition = exampleSplit[0].trim()
+       // 解析例句（可能用丨分隔多个例句）
+       const exampleParts = exampleText.split(/[丨｜|]/)
+       
+       exampleParts.forEach(part => {
+         // 检查是否有方括号包裹的翻译（［］）
+         const translationMatch = part.match(/［([^］]+)］/)
+         if (translationMatch) {
+           sense.examples.push({
+             text: exampleText,
+             translation: translation
+           })
+         }
+       })
+     }
+   }
+   ```
+
+5. **映射词条类型**
+   
+   原书分类映射到标准格式：
+   
+   ```javascript
+   function mapEntryType(originalType, headword) {
+     // "字头" → 'character'
+     if (originalType === '字头') {
+       return 'character'
+     }
+     
+     // "词头" → 根据长度判断 'word' 或 'phrase'
+     if (originalType === '词头') {
+       const length = headword.match(/[\u4e00-\u9fa5]/g)?.length || 0
+       if (length <= 4) return 'word'
+       return 'phrase'
+     }
+     
+     // 默认根据长度判断
+     // ...
+   }
+   
+   // 原书分类保存到 meta
+   meta: {
+     original_entry_type: row.entry_type, // "字头"/"词头"
+   }
+   ```
+
+6. **忽略特定字段**
+   
+   按照要求，以下字段不需要处理：
+   
+   ```javascript
+   // ❌ 不处理的字段：
+   // - api_suggestion (API建议)
+   // - verification_status (用于过滤，不存入metadata)
+   // - source_file (源文件)
+   
+   meta: {
+     page: row.page || null,
+     // 注：api_suggestion, verification_status, source_file 字段已省略
+   }
+   ```
+
+### 使用说明
+
+```bash
+# 转换现代粤语词典数据
+node scripts/csv-to-json.js \
+  --dict gz-modern \
+  --input data/processed/gz-modern.csv
+
+# 查看统计信息
+# - 会显示被过滤的行数（非"✓ 匹配"状态的数据）
+# - 会显示转换成功的词条数
+```
+
+### 数据质量说明
+
+- ✅ 现代权威词典（2021年版）
+- ✅ 多义项标记清晰（①②③）
+- ✅ 例句和翻译格式规范（方括号格式）
+- ✅ 双重拼音标注（原书拼音 + 标准粤拼）
+- ⚠️ 部分数据仍待校对（会被自动过滤）
+- ⚠️ 只保留"✓ 匹配"状态的词条
+
+### 返回格式
+
+```javascript
+// transformAll 返回包含过滤统计的对象
+{
+  entries: [...],        // 成功转换的词条
+  errors: [...],         // 错误列表
+  filteredCount: 123     // 被过滤的行数（非"✓ 匹配"状态）
+}
+```
+
+### 注意事项
+
+⚠️ **重要**：
+- 只保留 verification_status 为 "✓ 匹配" 的词条
+- 其他状态（"建議"、"⚠️ API未找到"）的词条会被过滤
+- `entry_type` 映射关系：
+  - "字头" → `'character'`
+  - "词头" (2-4字) → `'word'`
+  - "词头" (5字+) → `'phrase'`
+  - 原书分类保存到 `meta.original_entry_type`
+- `api_suggestion`、`verification_status`、`source_file` 字段不存入metadata
+- 转换完成后会显示过滤掉的行数
+- 翻译使用方括号［］而非尖括号<>
+
+### 词典信息
+
+```javascript
+export const DICTIONARY_INFO = {
+  id: 'gz-modern',
+  name: '现代粤语词典',
+  author: '范俊军、范兰德等',
+  publisher: '广东人民出版社',
+  year: 2021,
+  description: '现代权威粤语词典，系统收录广州话词汇'
+}
+```
+
+## 示例 7：粵語辭源
 
 参考 `gz-word-origins.js`，它展示了如何处理：
 

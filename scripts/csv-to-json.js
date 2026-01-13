@@ -21,6 +21,7 @@ const ADAPTERS = {
   'gz-colloquialisms': () => import('./adapters/gz-colloquialisms.js'),
   'gz-word-origins': () => import('./adapters/gz-word-origins.js'),
   'gz-dialect': () => import('./adapters/gz-dialect.js'),
+  'gz-modern': () => import('./adapters/gz-modern.js'),
   'hk-cantowords': () => import('./adapters/hk-cantowords.js'),
   // 未来可以添加更多词典
 }
@@ -285,6 +286,7 @@ CSV 转 JSON 工具
   - gz-colloquialisms          广州话俗语词典
   - gz-word-origins            粵語辭源
   - gz-dialect                 廣州方言詞典
+  - gz-modern                  现代粤语词典
   - hk-cantowords              粵典 (words.hk)
 
 示例:
