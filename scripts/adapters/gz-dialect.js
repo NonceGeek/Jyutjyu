@@ -35,7 +35,7 @@ export const DICTIONARY_INFO = {
   publisher: '江苏教育出版社',
   year: 1998,
   version: new Date().toISOString().slice(0, 10),
-  description: '收录广州话词汇，包含释义、读音、用例等，是研究粤语方言的重要工具书',
+  description: '收录广州话词汇，包含释义、读音、用例等，是研究粤语（广州话）的重要工具书',
   source: 'scanned_from_internet',
   license: 'Copyrighted. For technical demonstration only.',
   usage_restriction: '此词表内容受版权保护，来源于互联网公开扫描资源，仅用于本项目原型验证和技术演示，不得用于商业用途或二次分发。',
