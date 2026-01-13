@@ -63,7 +63,7 @@
             v-if="shouldShowSingleOriginal(entry)"
             class="text-xs text-gray-400 mt-1 break-words"
           >
-            原书: {{ entry.phonetic.original }}
+            原书: {{ Array.isArray(entry.phonetic.original) ? entry.phonetic.original[0] : entry.phonetic.original }}
           </div>
         </div>
       </div>
@@ -425,8 +425,13 @@ const formatDefinitionWithLinks = (definition: string): string => {
 const getOriginalForIndex = (entry: any, idx: number): string | null => {
   const original = entry.phonetic.original
   
-  // 如果original是数组，返回对应索引的值
+  // 如果original是数组
   if (Array.isArray(original)) {
+    // 如果数组只有一个元素，不在这里显示（应该在兜底位置显示）
+    if (original.length === 1) {
+      return null
+    }
+    // 数组有多个元素时，返回对应索引的值
     return original[idx] || null
   }
   
@@ -442,10 +447,18 @@ const getOriginalForIndex = (entry: any, idx: number): string | null => {
 const shouldShowSingleOriginal = (entry: any): boolean => {
   const original = entry.phonetic.original
   
-  // 如果original是数组，不在这里显示（已经与jyutping对应显示了）
-  if (Array.isArray(original)) return false
+  // 如果original是数组
+  if (Array.isArray(original)) {
+    // 如果数组只有一个元素，在这里显示
+    if (original.length === 1) {
+      // 继续后续逻辑判断
+    } else {
+      // 如果数组有多个元素，不在这里显示（已经与jyutping对应显示了）
+      return false
+    }
+  }
   
-  if (!original) return false
+  if (!original || (Array.isArray(original) && original.length === 0)) return false
   
   const jyutpingArray = entry.phonetic.jyutping || []
   
