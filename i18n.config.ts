@@ -77,7 +77,9 @@ export default defineI18nConfig(() => ({
         langZhHans: '简体中文',
         langZhHant: '繁體中文',
         langYueHans: '简体粤语',
-        langYueHant: '繁體粵語'
+        langYueHant: '繁體粵語',
+        exactMatchLabel: '完全匹配',
+        otherResultsLabel: '其他相关结果'
       },
       about: {
         pageTitle: '关于',
@@ -242,7 +244,9 @@ export default defineI18nConfig(() => ({
         langZhHans: '簡體中文',
         langZhHant: '繁體中文',
         langYueHans: '簡體粵語',
-        langYueHant: '繁體粵語'
+        langYueHant: '繁體粵語',
+        exactMatchLabel: '完全匹配',
+        otherResultsLabel: '其他相關結果'
       },
       about: {
         pageTitle: '關於',
@@ -407,7 +411,9 @@ export default defineI18nConfig(() => ({
         langZhHans: '简体中文',
         langZhHant: '繁体中文',
         langYueHans: '简体粤语',
-        langYueHant: '繁体粤语'
+        langYueHant: '繁体粤语',
+        exactMatchLabel: '完全匹配',
+        otherResultsLabel: '其他相关结果'
       },
       about: {
         pageTitle: '关于',
@@ -571,7 +577,9 @@ export default defineI18nConfig(() => ({
         langZhHans: '簡體中文',
         langZhHant: '繁體中文',
         langYueHans: '簡體粵語',
-        langYueHant: '繁體粵語'
+        langYueHant: '繁體粵語',
+        exactMatchLabel: '完全匹配',
+        otherResultsLabel: '其他相關結果'
       },
       about: {
         pageTitle: '關於',

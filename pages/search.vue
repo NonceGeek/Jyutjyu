@@ -148,43 +148,74 @@
             {{ enableReverseSearch ? t('common.reverseSearchResultsPrefix') : t('common.searchResultsPrefix') }}
             "{{ actualSearchQuery }}"
           </h2>
-          <p class="text-gray-600 mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span v-if="enableReverseSearch" class="text-blue-500 text-sm">
-              {{ t('common.searching') }}
-            </span>
-            <span>
-              {{ t('common.searchHeader') }}
-              <span class="font-semibold">{{ allResults.length }}</span>
-              {{ t('common.remainingSuffix') }}
-            </span>
-            <!-- 筛选状态 -->
-            <template v-if="selectedDict || selectedDialect">
-              <span class="text-gray-400">→</span>
-              <span class="text-blue-600">
-                {{ t('common.filterLabel') }}
-                <span class="font-semibold">{{ filteredResults.length }}</span>
+          <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 justify-between">
+            <p class="text-gray-600 flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span v-if="enableReverseSearch" class="text-blue-500 text-sm">
+                {{ t('common.searching') }}
+              </span>
+              <span>
+                {{ t('common.searchHeader') }}
+                <span class="font-semibold">{{ allResults.length }}</span>
                 {{ t('common.remainingSuffix') }}
               </span>
-              <button
-                class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs text-gray-500 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-                @click="clearFilters"
-              >
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                {{ t('common.clear') }}
-              </button>
-            </template>
-            <span v-if="!isSearchComplete" class="text-sm text-blue-500">
-              <span class="inline-block animate-pulse">{{ t('common.searching') }}</span>
-            </span>
-            <span v-else-if="searchTime > 0" class="text-sm text-gray-400">
-              ({{ searchTime }}ms)
-            </span>
-            <span v-if="totalCount > PAGE_SIZE" class="text-sm text-gray-400">
-              · {{ t('common.showFirstPrefix') }} {{ displayedResults.length }} {{ t('common.showFirstSuffix') }}
-            </span>
-          </p>
+              <!-- 筛选状态 -->
+              <template v-if="selectedDict || selectedDialect">
+                <span class="text-gray-400">→</span>
+                <span class="text-blue-600">
+                  {{ t('common.filterLabel') }}
+                  <span class="font-semibold">{{ filteredResults.length }}</span>
+                  {{ t('common.remainingSuffix') }}
+                </span>
+                <button
+                  class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs text-gray-500 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                  @click="clearFilters"
+                >
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  {{ t('common.clear') }}
+                </button>
+              </template>
+              <span v-if="!isSearchComplete" class="text-sm text-blue-500">
+                <span class="inline-block animate-pulse">{{ t('common.searching') }}</span>
+              </span>
+              <span v-else-if="searchTime > 0" class="text-sm text-gray-400">
+                ({{ searchTime }}ms)
+              </span>
+              <span v-if="totalCount > PAGE_SIZE" class="text-sm text-gray-400">
+                · {{ t('common.showFirstPrefix') }} {{ displayedResults.length }} {{ t('common.showFirstSuffix') }}
+              </span>
+            </p>
+            <!-- 视图切换（桌面端，仅在有结果时显示） -->
+            <div v-if="displayedResults.length > 0" class="hidden md:flex">
+              <div class="inline-flex rounded-lg border border-gray-300">
+                <button
+                  class="px-4 py-2 text-sm font-medium transition-colors"
+                  :class="viewMode === 'card' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
+                  @click="viewMode = 'card'"
+                >
+                  <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                    {{ t('common.cardView') }}
+                  </span>
+                </button>
+                <button
+                  class="px-4 py-2 text-sm font-medium transition-colors border-l border-gray-300"
+                  :class="viewMode === 'list' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
+                  @click="viewMode = 'list'"
+                >
+                  <span class="flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                    {{ t('common.listView') }}
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
       <!-- No Results -->
@@ -209,43 +240,39 @@
 
       <!-- Results -->
       <div v-else-if="!loading && displayedResults.length > 0" class="space-y-4">
-        <!-- 视图切换（桌面端） -->
-        <div class="hidden md:flex justify-end mb-4">
-          <div class="inline-flex rounded-lg border border-gray-300">
-            <button
-              class="px-4 py-2 text-sm font-medium transition-colors"
-              :class="viewMode === 'card' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
-              @click="viewMode = 'card'"
-            >
-              <span class="flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-                {{ t('common.cardView') }}
-              </span>
-            </button>
-            <button
-              class="px-4 py-2 text-sm font-medium transition-colors border-l border-gray-300"
-              :class="viewMode === 'list' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
-              @click="viewMode = 'list'"
-            >
-              <span class="flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-                {{ t('common.listView') }}
-              </span>
-            </button>
-          </div>
-        </div>
-
         <!-- 卡片视图 -->
         <div v-if="viewMode === 'card'" class="space-y-4">
-          <DictCard
-            v-for="entry in displayedResults"
-            :key="entry.id"
-            :entry="entry"
-          />
+          <!-- 完全匹配的结果 -->
+          <template v-if="!enableReverseSearch && displayedGroupedResults.exactMatches.length > 0">
+            <div class="mb-2">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="text-green-800">
+                  → {{ t('common.exactMatchLabel') }} <span class="font-semibold">{{ groupedResults.exactMatches.length }}</span> {{ t('common.remainingSuffix') }}
+                </span>
+              </div>
+            </div>
+            <DictCard
+              v-for="entry in displayedGroupedResults.exactMatches"
+              :key="entry.id"
+              :entry="entry"
+            />
+          </template>
+          
+          <!-- 其他相关结果 -->
+          <template v-if="displayedGroupedResults.otherResults.length > 0">
+            <div class="mb-2" :class="{ 'mt-6': !enableReverseSearch && displayedGroupedResults.exactMatches.length > 0 }">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="text-blue-800">
+                  → {{ t('common.otherResultsLabel') }} <span class="font-semibold">{{ groupedResults.otherResults.length }}</span> {{ t('common.remainingSuffix') }}
+                </span>
+              </div>
+            </div>
+            <DictCard
+              v-for="entry in displayedGroupedResults.otherResults"
+              :key="entry.id"
+              :entry="entry"
+            />
+          </template>
           
           <!-- 加载更多按钮 -->
           <div v-if="hasMore" class="flex justify-center py-8">
@@ -262,63 +289,141 @@
 
         <!-- 列表视图（简洁） -->
         <div v-else class="space-y-4">
-          <div class="bg-white rounded-lg shadow-md overflow-hidden">
-            <div class="overflow-x-auto">
-              <table class="w-full">
-                <thead class="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {{ t('common.wordColumn') }}
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {{ t('common.jyutpingColumn') }}
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {{ t('common.definitionColumn') }}
-                    </th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {{ t('common.sourceColumn') }}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                  <template v-for="entry in displayedResults" :key="entry.id">
-                    <tr
-                      class="hover:bg-gray-50 cursor-pointer transition-colors"
-                      @click="expandedRow = expandedRow === entry.id ? null : entry.id"
-                    >
-                      <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-semibold text-gray-900">
-                          {{ entry.headword.display }}
-                        </div>
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-mono text-blue-600">
-                          {{ entry.phonetic.jyutping[0] }}
-                        </div>
-                      </td>
-                      <td class="px-6 py-4">
-                        <div class="text-sm text-gray-700 line-clamp-2">
-                          {{ entry.senses[0]?.definition }}
-                        </div>
-                      </td>
-                      <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded-full">
-                          {{ entry.source_book }}
-                        </span>
-                      </td>
-                    </tr>
-                    <!-- 展开详情 -->
-                    <tr v-if="expandedRow === entry.id" :key="`${entry.id}-detail`">
-                      <td colspan="4" class="px-6 py-4 bg-gray-50">
-                        <DictCard :entry="entry" :show-details="false" />
-                      </td>
-                    </tr>
-                  </template>
-                </tbody>
-              </table>
+          <!-- 完全匹配的结果 -->
+          <template v-if="!enableReverseSearch && displayedGroupedResults.exactMatches.length > 0">
+            <div class="mb-2">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="text-green-800">
+                  → {{ t('common.exactMatchLabel') }} <span class="font-semibold">{{ groupedResults.exactMatches.length }}</span> {{ t('common.remainingSuffix') }}
+                </span>
+              </div>
             </div>
-          </div>
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {{ t('common.wordColumn') }}
+                      </th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {{ t('common.jyutpingColumn') }}
+                      </th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {{ t('common.definitionColumn') }}
+                      </th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {{ t('common.sourceColumn') }}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
+                    <template v-for="entry in displayedGroupedResults.exactMatches" :key="entry.id">
+                      <tr
+                        class="hover:bg-gray-50 cursor-pointer transition-colors"
+                        @click="expandedRow = expandedRow === entry.id ? null : entry.id"
+                      >
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="text-sm font-semibold text-gray-900">
+                            {{ entry.headword.display }}
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="text-sm font-mono text-blue-600">
+                            {{ entry.phonetic.jyutping[0] }}
+                          </div>
+                        </td>
+                        <td class="px-6 py-4">
+                          <div class="text-sm text-gray-700 line-clamp-2">
+                            {{ entry.senses[0]?.definition }}
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <span class="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded-full">
+                            {{ entry.source_book }}
+                          </span>
+                        </td>
+                      </tr>
+                      <!-- 展开详情 -->
+                      <tr v-if="expandedRow === entry.id" :key="`${entry.id}-detail`">
+                        <td colspan="4" class="px-6 py-4 bg-gray-50">
+                          <DictCard :entry="entry" :show-details="false" />
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </template>
+          
+          <!-- 其他相关结果 -->
+          <template v-if="displayedGroupedResults.otherResults.length > 0">
+            <div class="mb-2" :class="{ 'mt-6': !enableReverseSearch && displayedGroupedResults.exactMatches.length > 0 }">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="text-blue-800">
+                  → {{ t('common.otherResultsLabel') }} <span class="font-semibold">{{ groupedResults.otherResults.length }}</span> {{ t('common.remainingSuffix') }}
+                </span>
+              </div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {{ t('common.wordColumn') }}
+                      </th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {{ t('common.jyutpingColumn') }}
+                      </th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {{ t('common.definitionColumn') }}
+                      </th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        {{ t('common.sourceColumn') }}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
+                    <template v-for="entry in displayedGroupedResults.otherResults" :key="entry.id">
+                      <tr
+                        class="hover:bg-gray-50 cursor-pointer transition-colors"
+                        @click="expandedRow = expandedRow === entry.id ? null : entry.id"
+                      >
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="text-sm font-semibold text-gray-900">
+                            {{ entry.headword.display }}
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <div class="text-sm font-mono text-blue-600">
+                            {{ entry.phonetic.jyutping[0] }}
+                          </div>
+                        </td>
+                        <td class="px-6 py-4">
+                          <div class="text-sm text-gray-700 line-clamp-2">
+                            {{ entry.senses[0]?.definition }}
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <span class="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded-full">
+                            {{ entry.source_book }}
+                          </span>
+                        </td>
+                      </tr>
+                      <!-- 展开详情 -->
+                      <tr v-if="expandedRow === entry.id" :key="`${entry.id}-detail`">
+                        <td colspan="4" class="px-6 py-4 bg-gray-50">
+                          <DictCard :entry="entry" :show-details="false" />
+                        </td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </template>
           
           <!-- 加载更多按钮 -->
           <div v-if="hasMore" class="flex justify-center py-8">
@@ -390,6 +495,7 @@ const route = useRoute()
 const router = useRouter()
 const { searchBasic, getSuggestions, getMode } = useSearch()
 const { t } = useI18n()
+const { getAllVariants, ensureInitialized } = useChineseConverter()
 
 // 开发时显示当前模式
 if (process.dev) {
@@ -448,7 +554,9 @@ const clearFilters = () => {
 
 // 更新显示结果（基于筛选）
 const updateDisplayedResults = () => {
-  displayedResults.value = filteredResults.value.slice(0, currentPage.value * PAGE_SIZE)
+  // 保持 displayedResults 用于兼容性，但实际显示使用 displayedGroupedResults
+  const { exactMatches, otherResults } = displayedGroupedResults.value
+  displayedResults.value = [...exactMatches, ...otherResults]
 }
 
 // 计算属性：从搜索结果中提取可用的词典和方言点
@@ -480,6 +588,97 @@ const filteredResults = computed(() => {
   return results
 })
 
+// 检查词条是否与查询词完全匹配（仅正常查询时，支持简繁转换）
+const isExactMatch = (entry: DictionaryEntry, query: string): boolean => {
+  if (enableReverseSearch.value) {
+    return false // 反查时不进行完全匹配判断
+  }
+  const queryTrimmed = query.trim()
+  if (!queryTrimmed) return false
+  
+  try {
+    // 获取查询词的所有变体（原文、简体、繁体），并转换为小写
+    const queryVariants = getAllVariants(queryTrimmed).map(v => v.toLowerCase())
+    
+    // 获取词头的所有变体（原文、简体、繁体），并转换为小写
+    const displayVariants = getAllVariants(entry.headword.display || '').map(v => v.toLowerCase())
+    const normalizedVariants = getAllVariants(entry.headword.normalized || '').map(v => v.toLowerCase())
+    
+    // 合并所有词头变体
+    const allHeadwordVariants = new Set([...displayVariants, ...normalizedVariants])
+    
+    // 检查是否有任何查询变体与词头变体完全匹配
+    return queryVariants.some(qv => allHeadwordVariants.has(qv))
+  } catch (error) {
+    // 如果转换失败，回退到直接匹配
+    console.warn('简繁转换失败，使用直接匹配:', error)
+    const queryLower = queryTrimmed.toLowerCase()
+    const displayMatch = (entry.headword.display || '').toLowerCase() === queryLower
+    const normalizedMatch = (entry.headword.normalized || '').toLowerCase() === queryLower
+    return displayMatch || normalizedMatch
+  }
+}
+
+// 将结果分为完全匹配和其他结果（仅正常查询时）
+const groupedResults = computed(() => {
+  if (enableReverseSearch.value || !actualSearchQuery.value) {
+    // 反查或没有查询词时，不分组
+    return {
+      exactMatches: [] as DictionaryEntry[],
+      otherResults: filteredResults.value
+    }
+  }
+  
+  const exactMatches: DictionaryEntry[] = []
+  const otherResults: DictionaryEntry[] = []
+  
+  // 按照后端返回的顺序遍历，保持顺序
+  for (const entry of filteredResults.value) {
+    if (isExactMatch(entry, actualSearchQuery.value)) {
+      exactMatches.push(entry)
+    } else {
+      otherResults.push(entry)
+    }
+  }
+  
+  return {
+    exactMatches,
+    otherResults
+  }
+})
+
+// 用于显示的合并结果（完全匹配在前，其他结果在后）
+const displayedGroupedResults = computed(() => {
+  const { exactMatches, otherResults } = groupedResults.value
+  
+  // 先显示所有完全匹配的结果
+  const allExactDisplayed = exactMatches
+  
+  // 计算当前页应该显示的其他结果数量
+  const targetDisplayCount = currentPage.value * PAGE_SIZE
+  
+  // 如果完全匹配的结果已经超过当前页限制，只显示部分完全匹配
+  if (allExactDisplayed.length >= targetDisplayCount) {
+    return {
+      exactMatches: allExactDisplayed.slice(0, targetDisplayCount),
+      otherResults: [] as DictionaryEntry[],
+      hasMoreExact: allExactDisplayed.length > targetDisplayCount,
+      hasMoreOther: otherResults.length > 0
+    }
+  }
+  
+  // 否则显示所有完全匹配，再加上部分其他结果
+  const remainingSlots = targetDisplayCount - allExactDisplayed.length
+  const otherDisplayed = otherResults.slice(0, remainingSlots)
+  
+  return {
+    exactMatches: allExactDisplayed,
+    otherResults: otherDisplayed,
+    hasMoreExact: false,
+    hasMoreOther: otherResults.length > otherDisplayed.length
+  }
+})
+
 // 计算各筛选项的数量
 const getDictCount = (dict: string): number => {
   let results = allResults.value
@@ -498,8 +697,10 @@ const getDialectCount = (dialect: string): number => {
 }
 
 // 基于筛选结果的分页
-const totalPages = computed(() => Math.ceil(filteredResults.value.length / PAGE_SIZE))
-const hasMore = computed(() => currentPage.value < totalPages.value)
+const hasMore = computed(() => {
+  const totalDisplayed = displayedGroupedResults.value.exactMatches.length + displayedGroupedResults.value.otherResults.length
+  return totalDisplayed < filteredResults.value.length
+})
 const totalCount = computed(() => filteredResults.value.length)
 
 // 执行搜索
@@ -520,6 +721,9 @@ const performSearch = async (query: string) => {
   selectedDict.value = null
   selectedDialect.value = null
   
+  // 确保转换器已初始化（用于完全匹配判断）
+  await ensureInitialized()
+  
   loading.value = true
   isSearchComplete.value = false
   searchTime.value = 0
@@ -536,7 +740,7 @@ const performSearch = async (query: string) => {
         allResults.value = entries
         // 重新计算显示的结果（保持当前页数，使用筛选后的结果）
         // 新搜索时筛选已重置，所以 filteredResults 等于 allResults
-        displayedResults.value = entries.slice(0, currentPage.value * PAGE_SIZE)
+        updateDisplayedResults()
         
         // 首次收到结果时关闭 loading
         if (loading.value && entries.length > 0) {
@@ -571,8 +775,7 @@ const loadMore = () => {
   
   setTimeout(() => {
     currentPage.value++
-    const endIndex = currentPage.value * PAGE_SIZE
-    displayedResults.value = filteredResults.value.slice(0, endIndex)
+    updateDisplayedResults()
     loadingMore.value = false
   }, 100) // 小延迟以显示加载状态
 }
@@ -647,7 +850,10 @@ watch(enableReverseSearch, (newValue) => {
 })
 
 // 点击外部关闭建议和筛选下拉菜单
-onMounted(() => {
+onMounted(async () => {
+  // 确保转换器已初始化（用于完全匹配判断）
+  await ensureInitialized()
+  
   const handleClickOutside = (e: MouseEvent) => {
     const target = e.target as HTMLElement
     if (!target.closest('.relative')) {
