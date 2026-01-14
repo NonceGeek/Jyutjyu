@@ -10,8 +10,38 @@ export default defineNuxtConfig({
   
   modules: [
     '@nuxt/content',
-    '@nuxtjs/tailwindcss'
+    '@nuxtjs/tailwindcss',
+    '@nuxtjs/i18n'
   ],
+
+  i18n: {
+    vueI18n: './i18n.config.ts',
+    defaultLocale: 'zh-Hans',
+    strategy: 'no_prefix',
+    detectBrowserLanguage: {
+      useCookie: true,
+      cookieKey: 'jyutjyu_i18n_lang',
+      redirectOn: 'root'
+    },
+    locales: [
+      {
+        code: 'zh-Hans',
+        name: '简体中文'
+      },
+      {
+        code: 'zh-Hant',
+        name: '繁體中文'
+      },
+      {
+        code: 'yue-Hans',
+        name: '简体粤语'
+      },
+      {
+        code: 'yue-Hant',
+        name: '繁體粵語'
+      }
+    ]
+  },
 
   // Nuxt Content 配置
   content: {
@@ -85,6 +115,15 @@ export default defineNuxtConfig({
     prerender: {
       crawlLinks: true,
       routes: ['/']
+    }
+  },
+
+  // Vite 配置（解决 HMR 端口冲突）
+  vite: {
+    server: {
+      hmr: {
+        port: 24679
+      }
     }
   }
 })

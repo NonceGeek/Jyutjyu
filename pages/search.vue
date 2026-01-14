@@ -5,13 +5,13 @@
       <div class="container mx-auto px-4 py-4">
         <div class="flex items-center gap-4">
           <NuxtLink to="/" class="text-xl font-bold text-blue-600 whitespace-nowrap">
-            粤语辞丛
+            {{ t('common.siteName') }}
           </NuxtLink>
           <div class="flex-1 max-w-2xl relative">
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="搜索词语或粤拼..."
+              :placeholder="t('common.searchPlaceholder')"
               class="w-full px-4 py-2 pr-20 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
               @keyup.enter="handleSearch"
               @input="handleInput"
@@ -20,7 +20,7 @@
               class="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
               @click="handleSearch"
             >
-              搜索
+              {{ t('common.searchButton') }}
             </button>
             <!-- 搜索建议 -->
             <div
@@ -44,7 +44,7 @@
               type="checkbox"
               class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
             >
-            <span class="text-sm text-gray-600">反查</span>
+            <span class="text-sm text-gray-600">{{ t('common.reverseSearchShort') }}</span>
           </label>
         </div>
       </div>
@@ -53,7 +53,7 @@
       <div v-if="actualSearchQuery && allResults.length > 0" class="border-t border-gray-100 bg-gray-50/80">
         <div class="container mx-auto px-4 py-3">
           <div class="flex flex-wrap items-center gap-3">
-            <span class="text-sm text-gray-500 font-medium">筛选:</span>
+            <span class="text-sm text-gray-500 font-medium">{{ t('common.filterLabel') }}</span>
             
             <!-- 词典筛选 -->
             <div class="relative">
@@ -62,10 +62,7 @@
                 :class="selectedDict ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'"
                 @click="showDictDropdown = !showDictDropdown"
               >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-                <span>{{ selectedDict || '全部词典' }}</span>
+                <span>{{ selectedDict || t('common.allDictionaries') }}</span>
                 <svg class="w-4 h-4" :class="showDictDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
@@ -80,7 +77,7 @@
                   :class="!selectedDict ? 'text-blue-600 bg-blue-50' : 'text-gray-700'"
                   @click="selectDict(null)"
                 >
-                  全部词典
+                  {{ t('common.allDictionaries') }}
                 </button>
                 <button
                   v-for="dict in availableDicts"
@@ -102,11 +99,7 @@
                 :class="selectedDialect ? 'bg-green-50 border-green-300 text-green-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'"
                 @click="showDialectDropdown = !showDialectDropdown"
               >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span>{{ selectedDialect || '全部方言' }}</span>
+                <span>{{ selectedDialect || t('common.allDialects') }}</span>
                 <svg class="w-4 h-4" :class="showDialectDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
@@ -121,7 +114,7 @@
                   :class="!selectedDialect ? 'text-green-600 bg-green-50' : 'text-gray-700'"
                   @click="selectDialect(null)"
                 >
-                  全部方言
+                  {{ t('common.allDialects') }}
                 </button>
                 <button
                   v-for="dialect in availableDialects"
@@ -134,6 +127,11 @@
                   <span class="text-gray-400 text-xs ml-1">({{ getDialectCount(dialect) }})</span>
                 </button>
               </div>
+            </div>
+
+            <!-- 语言切换（移动到筛选栏） -->
+            <div class="ml-auto">
+              <LanguageSwitcher />
             </div>
             
           </div>
@@ -152,58 +150,65 @@
 
         <!-- Results Info -->
         <div v-else-if="actualSearchQuery" class="mb-6">
-        <h2 class="text-2xl font-semibold text-gray-900">
-          {{ enableReverseSearch ? '反查' : '搜索' }}结果: "{{ actualSearchQuery }}"
-        </h2>
-        <p class="text-gray-600 mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span v-if="enableReverseSearch" class="text-blue-500 text-sm">从释义中搜索</span>
-          <span>
-            找到 <span class="font-semibold">{{ allResults.length }}</span> 个结果
-          </span>
-          <!-- 筛选状态 -->
-          <template v-if="selectedDict || selectedDialect">
-            <span class="text-gray-400">→</span>
-            <span class="text-blue-600">
-              筛选后 <span class="font-semibold">{{ filteredResults.length }}</span> 条
+          <h2 class="text-2xl font-semibold text-gray-900">
+            {{ enableReverseSearch ? t('common.reverseSearchResultsPrefix') : t('common.searchResultsPrefix') }}
+            "{{ actualSearchQuery }}"
+          </h2>
+          <p class="text-gray-600 mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span v-if="enableReverseSearch" class="text-blue-500 text-sm">
+              {{ t('common.searching') }}
             </span>
-            <button
-              class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs text-gray-500 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-              @click="clearFilters"
-            >
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              清除
-            </button>
-          </template>
-          <span v-if="!isSearchComplete" class="text-sm text-blue-500">
-            <span class="inline-block animate-pulse">搜索中...</span>
-          </span>
-          <span v-else-if="searchTime > 0" class="text-sm text-gray-400">
-            ({{ searchTime }}ms)
-          </span>
-          <span v-if="totalCount > PAGE_SIZE" class="text-sm text-gray-400">
-            · 显示前 {{ displayedResults.length }} 条
-          </span>
-        </p>
-      </div>
+            <span>
+              {{ t('common.searchHeader') }}
+              <span class="font-semibold">{{ allResults.length }}</span>
+              {{ t('common.remainingSuffix') }}
+            </span>
+            <!-- 筛选状态 -->
+            <template v-if="selectedDict || selectedDialect">
+              <span class="text-gray-400">→</span>
+              <span class="text-blue-600">
+                {{ t('common.filterLabel') }}
+                <span class="font-semibold">{{ filteredResults.length }}</span>
+                {{ t('common.remainingSuffix') }}
+              </span>
+              <button
+                class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs text-gray-500 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                @click="clearFilters"
+              >
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                {{ t('common.clear') }}
+              </button>
+            </template>
+            <span v-if="!isSearchComplete" class="text-sm text-blue-500">
+              <span class="inline-block animate-pulse">{{ t('common.searching') }}</span>
+            </span>
+            <span v-else-if="searchTime > 0" class="text-sm text-gray-400">
+              ({{ searchTime }}ms)
+            </span>
+            <span v-if="totalCount > PAGE_SIZE" class="text-sm text-gray-400">
+              · {{ t('common.showFirstPrefix') }} {{ displayedResults.length }} {{ t('common.showFirstSuffix') }}
+            </span>
+          </p>
+        </div>
 
       <!-- No Results -->
       <div v-if="!loading && actualSearchQuery && allResults.length === 0" class="text-center py-16">
         <div class="text-6xl mb-4">🔍</div>
         <h3 class="text-2xl font-semibold text-gray-900 mb-2">
-          没有找到相关结果
+          {{ t('common.noResultsTitle') }}
         </h3>
         <p class="text-gray-600 mb-6">
-          试试其他关键词或粤拼
+          {{ t('common.noResultsDescription') }}
         </p>
         <div class="text-sm text-gray-500">
-          <p class="font-semibold mb-2">搜索提示：</p>
+          <p class="font-semibold mb-2">{{ t('common.noResultsTipsTitle') }}</p>
           <ul class="space-y-1">
-            <li>• 尝试使用繁体字或简体字</li>
-            <li>• 尝试使用粤拼搜索（如: nei5 hou2）</li>
-            <li>• 检查拼写是否正确</li>
-            <li>• 尝试使用更简短的关键词</li>
+            <li>• {{ t('common.noResultsTip1') }}</li>
+            <li>• {{ t('common.noResultsTip2') }}</li>
+            <li>• {{ t('common.noResultsTip3') }}</li>
+            <li>• {{ t('common.noResultsTip4') }}</li>
           </ul>
         </div>
       </div>
@@ -222,7 +227,7 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                 </svg>
-                卡片
+                {{ t('common.cardView') }}
               </span>
             </button>
             <button
@@ -234,7 +239,7 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
-                列表
+                {{ t('common.listView') }}
               </span>
             </button>
           </div>
@@ -255,8 +260,8 @@
               :disabled="loadingMore"
               @click="loadMore"
             >
-              <span v-if="loadingMore">加载中...</span>
-              <span v-else>加载更多 ({{ totalCount - displayedResults.length }} 条)</span>
+              <span v-if="loadingMore">{{ t('common.loadingMore') }}</span>
+              <span v-else>{{ t('common.loadMore') }} ({{ totalCount - displayedResults.length }} {{ t('common.remainingSuffix') }})</span>
             </button>
           </div>
         </div>
@@ -269,16 +274,16 @@
                 <thead class="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      词汇
+                      {{ t('common.wordColumn') }}
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      粤拼
+                      {{ t('common.jyutpingColumn') }}
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      释义
+                      {{ t('common.definitionColumn') }}
                     </th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      来源
+                      {{ t('common.sourceColumn') }}
                     </th>
                   </tr>
                 </thead>
@@ -328,8 +333,8 @@
               :disabled="loadingMore"
               @click="loadMore"
             >
-              <span v-if="loadingMore">加载中...</span>
-              <span v-else>加载更多 ({{ totalCount - displayedResults.length }} 条)</span>
+              <span v-if="loadingMore">{{ t('common.loadingMore') }}</span>
+              <span v-else>{{ t('common.loadMore') }} ({{ totalCount - displayedResults.length }} {{ t('common.remainingSuffix') }})</span>
             </button>
           </div>
         </div>
@@ -339,14 +344,14 @@
       <div v-else-if="!loading" class="text-center py-16">
         <div class="text-6xl mb-4">📚</div>
         <h3 class="text-2xl font-semibold text-gray-900 mb-2">
-          输入关键词开始搜索
+          {{ t('common.startSearchTitle') }}
         </h3>
         <p class="text-gray-600 mb-6">
-          支持繁简体、粤拼搜索
+          {{ t('common.startSearchDescription') }}
         </p>
         <!-- 示例搜索 -->
         <div class="flex flex-wrap gap-2 justify-center">
-          <span class="text-sm text-gray-500">试试搜索:</span>
+          <span class="text-sm text-gray-500">{{ t('common.exampleSearchPrefix') }}</span>
           <button
             v-for="example in exampleSearches"
             :key="example"
@@ -364,19 +369,19 @@
     <footer class="border-t border-gray-200 py-6 mt-16 bg-white">
       <div class="container mx-auto px-4 text-center text-gray-600 text-sm">
         <p class="mb-2">
-          粤语辞丛 © 2025 · 
+          {{ t('common.footerCopyright') }}
           <NuxtLink to="/about" class="text-blue-600 hover:underline">
-            关于项目
+            {{ t('common.aboutProject') }}
           </NuxtLink>
           · 
           <a href="https://github.com/jyutjyucom/jyutjyu" class="text-blue-600 hover:underline" target="_blank">
-            GitHub
+            {{ t('common.github') }}
           </a>
         </p>
         <p class="text-xs text-gray-500">
           收录内容遵循不同授权协议 · 
           <NuxtLink to="/about#license" class="text-blue-600 hover:underline">
-            查看详情
+            {{ t('common.licenseDetails') }}
           </NuxtLink>
         </p>
       </div>
@@ -390,6 +395,7 @@ import type { DictionaryEntry } from '~/types/dictionary'
 const route = useRoute()
 const router = useRouter()
 const { searchBasic, getSuggestions, getMode } = useSearch()
+const { t } = useI18n()
 
 // 开发时显示当前模式
 if (process.dev) {
@@ -666,8 +672,8 @@ onMounted(() => {
 // SEO
 useHead({
   title: computed(() => actualSearchQuery.value 
-    ? `${actualSearchQuery.value} - 搜索结果 | 粤语辞丛` 
-    : '搜索 | 粤语辞丛'
+    ? `${actualSearchQuery.value} - ${t('common.searchHeader')} | ${t('common.siteName')}` 
+    : `${t('common.searchHeader')} | ${t('common.siteName')}`
   )
 })
 </script>

@@ -5,12 +5,14 @@
 </template>
 
 <script setup lang="ts">
+const { locale } = useI18n()
+
 // 全局配置
 useHead({
-  htmlAttrs: {
-    lang: 'zh-HK',
+  htmlAttrs: computed(() => ({
+    lang: locale.value || 'zh-Hans',
     style: 'color-scheme: light;'
-  }
+  }))
 })
 </script>
 

@@ -2,16 +2,21 @@
   <div class="min-h-screen bg-gradient-to-b from-blue-50 to-white" style="color-scheme: light; background-color: #ffffff;">
     <!-- Hero Section -->
     <div class="container mx-auto px-4 py-16 md:py-24">
+      <!-- Top bar: language switcher -->
+      <div class="flex justify-end mb-4">
+        <LanguageSwitcher />
+      </div>
+
       <!-- Logo & Title -->
       <div class="text-center mb-12">
         <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-4">
-          粤语辞丛
+          {{ t('common.siteName') }}
         </h1>
         <h2 class="text-xl md:text-2xl text-gray-600 mb-2">
-          The Jyut Collection
+          {{ t('common.siteSubtitle') }}
         </h2>
         <p class="text-base md:text-lg text-gray-500">
-          开放的粤语词典聚合平台
+          {{ t('common.siteDescription') }}
         </p>
       </div>
 
@@ -21,7 +26,7 @@
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="搜索词语或粤拼..."
+            :placeholder="t('common.searchPlaceholder')"
             class="w-full px-6 py-4 text-lg border-2 border-gray-300 rounded-full focus:outline-none focus:border-blue-500 shadow-lg"
             @keyup.enter="handleSearch"
           >
@@ -29,21 +34,25 @@
             class="absolute right-3 top-1/2 -translate-y-1/2 px-6 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
             @click="handleSearch"
           >
-            搜索
+            {{ t('common.searchButton') }}
           </button>
         </div>
         <!-- 反查开关和提示 -->
         <div class="mt-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6">
-          <label class="flex items-center gap-2 cursor-pointer select-none" title="反查：从释义中搜索词语">
+          <label
+            class="flex items-center gap-2 cursor-pointer select-none"
+            :title="t('common.reverseSearchTitle')"
+          >
             <input
               v-model="enableReverseSearch"
               type="checkbox"
               class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
             >
-            <span class="text-sm text-gray-600">反查（从释义中搜索）</span>
+            <span class="text-sm text-gray-600">{{ t('common.reverseSearch') }}</span>
           </label>
           <div class="text-sm text-gray-500">
-            如：<span class="text-blue-600 cursor-pointer hover:underline" @click="searchExample('阿Sir')">阿Sir</span>、
+            {{ t('common.examplesPrefix') }}
+            <span class="text-blue-600 cursor-pointer hover:underline" @click="searchExample('阿Sir')">阿Sir</span>、
             <span class="text-blue-600 cursor-pointer hover:underline" @click="searchExample('aa3 soe4')">aa3 soe4</span>
           </div>
         </div>
@@ -52,7 +61,7 @@
       <!-- Random Entries -->
       <div class="max-w-5xl mx-auto mb-16">
         <div class="flex justify-between items-center mb-6">
-          <h3 class="text-2xl font-semibold">推荐词条</h3>
+          <h3 class="text-2xl font-semibold">{{ t('common.recommendedEntries') }}</h3>
           <button
             @click="refreshRandomEntries"
             class="text-blue-600 hover:text-blue-700 flex items-center gap-2 text-sm"
@@ -60,7 +69,7 @@
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
-            换一批
+            {{ t('common.changeBatch') }}
           </button>
         </div>
 
@@ -82,13 +91,13 @@
                 </p>
               </div>
               <p class="text-gray-700 text-sm line-clamp-3 flex-1 group-hover:text-gray-900">
-                {{ entry.senses[0]?.definition || '暂无释义' }}
+                {{ entry.senses[0]?.definition || t('common.noDefinition') }}
               </p>
               <div class="mt-3 pt-3 border-t border-gray-100">
                 <div class="flex justify-between items-center">
                   <span class="text-xs text-gray-500 group-hover:text-gray-700">{{ entry.source_book }}</span>
                   <span class="text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                    点击查看 →
+                    {{ t('common.clickToView') }}
                   </span>
                 </div>
               </div>
@@ -113,9 +122,9 @@
                     {{ randomEntries[mobileIndex].phonetic.jyutping[0] }}
                   </p>
                 </div>
-                <p class="text-gray-700 text-sm line-clamp-4">
-                  {{ randomEntries[mobileIndex].senses[0]?.definition || '暂无释义' }}
-                </p>
+              <p class="text-gray-700 text-sm line-clamp-4">
+                {{ randomEntries[mobileIndex].senses[0]?.definition || t('common.noDefinition') }}
+              </p>
               </div>
             </div>
             
@@ -127,7 +136,7 @@
               >
                 <span class="text-xs text-gray-500">{{ randomEntries[mobileIndex].source_book }}</span>
                 <span class="text-blue-600 font-medium flex items-center gap-1 text-sm">
-                  下一个
+                  {{ t('common.next') }}
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                   </svg>
@@ -145,7 +154,7 @@
                 @click="mobileIndex = idx"
                 class="w-2 h-2 rounded-full transition-all"
                 :class="idx === mobileIndex ? 'bg-blue-600 w-6' : 'bg-gray-300 hover:bg-gray-400'"
-                :aria-label="`切换到第 ${idx + 1} 个词条`"
+                :aria-label="t('common.switchEntryAria', { index: Number(idx) + 1 })"
               />
             </div>
           </div>
@@ -154,7 +163,7 @@
         <!-- Loading state -->
         <div v-if="randomEntries.length === 0" class="text-center py-12 text-gray-500">
           <div class="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-3"></div>
-          <p>加载中...</p>
+          <p>{{ t('common.loading') }}</p>
         </div>
       </div>
 
@@ -162,7 +171,7 @@
       <div class="max-w-5xl mx-auto mb-16">
         <div class="flex flex-col items-center mb-6">
           <div class="flex justify-between items-center w-full mb-2">
-            <h3 class="text-2xl font-semibold">收录词典</h3>
+            <h3 class="text-2xl font-semibold">{{ t('common.includedDictionaries') }}</h3>
             <div class="flex items-center gap-4">
               <!-- Navigation buttons for desktop -->
               <div class="hidden md:flex items-center gap-2">
@@ -170,7 +179,7 @@
                   @click="prevDictionary"
                   :disabled="dictionaryStartIndex === 0"
                   class="p-2 rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  aria-label="上一组词典"
+                  :aria-label="t('common.prevDictionariesAria')"
                 >
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -180,7 +189,7 @@
                   @click="nextDictionary"
                   :disabled="dictionaryStartIndex + 3 >= (dictionariesData?.dictionaries.length || 0)"
                   class="p-2 rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                  aria-label="下一组词典"
+                  :aria-label="t('common.nextDictionariesAria')"
                 >
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -190,7 +199,9 @@
             </div>
           </div>
           <p class="text-sm text-gray-600">
-            共收录 <span class="text-blue-600 font-semibold text-lg">{{ totalEntriesCount.toLocaleString() }}</span> 条词条
+            {{ t('common.totalEntriesPrefix') }}
+            <span class="text-blue-600 font-semibold text-lg">{{ totalEntriesCount.toLocaleString() }}</span>
+            {{ t('common.totalEntriesSuffix') }}
           </p>
         </div>
 
@@ -224,7 +235,7 @@
                   }"
                   class="inline-block px-3 py-1 rounded-full text-sm font-medium"
                 >
-                  {{ dict.entries_count > 0 ? `${dict.entries_count.toLocaleString()} 条` : '整理中' }}
+                  {{ dict.entries_count > 0 ? `${dict.entries_count.toLocaleString()} ${t('common.entriesCountSuffix')}` : t('common.inProgress') }}
                 </span>
               </div>
               
@@ -236,17 +247,17 @@
                   </svg>
                   <div class="flex-1">
                     <p class="text-xs text-gray-600 mb-2">
-                      <span class="font-medium">许可:</span> {{ dict.license }}
+                      <span class="font-medium">{{ t('common.licenseLabel') }}</span> {{ dict.license }}
                     </p>
                     <!-- 免责说明 - 社区词典 -->
                     <p v-if="dict.source === 'community_contributed'" class="text-xs text-gray-500 leading-relaxed">
-                      词条内容由社区编者负责，本网站不对内容负责。
+                      {{ t('common.licenseCommunityDisclaimer') }}
                     </p>
                     <!-- 免责说明 - 出版词典 -->
                     <p v-else-if="dict.source === 'scanned_from_internet'" class="text-xs text-gray-500 leading-relaxed">
-                      词条内容由书籍作者负责。因采用OCR批量处理，难免有错误，如发现错误可在
+                      {{ t('common.licenseScannedDisclaimerPrefix') }}
                       <a href="https://github.com/jyutjyucom/jyutjyu/issues" target="_blank" class="text-blue-600 hover:underline">GitHub Issue</a>
-                      提出。
+                      {{ t('common.licenseScannedDisclaimerSuffix') }}
                     </p>
                   </div>
                 </div>
@@ -282,7 +293,7 @@
                     }"
                     class="inline-block px-3 py-1 rounded-full text-sm font-medium"
                   >
-                    {{ mobileDictionary.entries_count > 0 ? `${mobileDictionary.entries_count.toLocaleString()} 条` : '整理中' }}
+                    {{ mobileDictionary.entries_count > 0 ? `${mobileDictionary.entries_count.toLocaleString()} ${t('common.entriesCountSuffix')}` : t('common.inProgress') }}
                   </span>
                 </div>
                 
@@ -334,22 +345,22 @@
               <button
                 v-for="(_, idx) in dictionariesData.dictionaries"
                 :key="idx"
-                @click="mobileDictionaryIndex = idx"
+                @click="mobileDictionaryIndex = Number(idx)"
                 class="w-2 h-2 rounded-full transition-all"
-                :class="idx === mobileDictionaryIndex ? 'bg-blue-600 w-6' : 'bg-gray-300 hover:bg-gray-400'"
-                :aria-label="`切换到第 ${idx + 1} 个词典`"
+                :class="Number(idx) === mobileDictionaryIndex ? 'bg-blue-600 w-6' : 'bg-gray-300 hover:bg-gray-400'"
+                :aria-label="t('common.switchDictionaryAria', { index: Number(idx) + 1 })"
               />
             </div>
           </div>
         </div>
 
         <div class="mt-6 text-center">
-          <p class="text-gray-500 text-sm mb-3">更多词典陆续上架...</p>
+          <p class="text-gray-500 text-sm mb-3">{{ t('common.moreDictionariesComing') }}</p>
           <NuxtLink 
             to="/about" 
             class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm font-medium"
           >
-            查看完整授权说明
+            {{ t('common.viewLicense') }}
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
@@ -359,9 +370,9 @@
 
       <!-- Call to Action -->
       <div class="mt-16 text-center">
-        <h3 class="text-2xl font-semibold mb-4">参与贡献</h3>
+        <h3 class="text-2xl font-semibold mb-4">{{ t('common.contribute') }}</h3>
         <p class="text-gray-600 mb-6">
-          这是一个开源项目，欢迎贡献数据、代码或建议
+          {{ t('common.contributeDescription') }}
         </p>
         <div class="flex gap-4 justify-center flex-wrap">
           <a
@@ -369,20 +380,20 @@
             target="_blank"
             class="px-6 py-3 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors"
           >
-            GitHub
+            {{ t('common.github') }}
           </a>
           <a
             href="https://github.com/jyutjyucom/jyutjyu/blob/main/docs/CSV_GUIDE.md"
             target="_blank"
             class="px-6 py-3 border-2 border-gray-900 text-gray-900 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            贡献数据
+            {{ t('common.contributeData') }}
           </a>
           <NuxtLink
             to="/about"
             class="px-6 py-3 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors"
           >
-            关于项目
+            {{ t('common.aboutProject') }}
           </NuxtLink>
         </div>
       </div>
@@ -394,12 +405,12 @@
         <!-- 版权信息 -->
         <div class="text-center text-gray-600 text-sm">
           <p class="mb-2">
-            粤语辞丛 © 2025 · 开源于
+            {{ t('common.footerCopyright') }}
             <a href="https://github.com/jyutjyucom/jyutjyu" class="text-blue-600 hover:underline" target="_blank">
-              GitHub
+              {{ t('common.github') }}
             </a>
           </p>
-          <p>为粤语文化保育与传承贡献力量</p>
+          <p>{{ t('common.footerMission') }}</p>
         </div>
       </div>
     </footer>
@@ -407,13 +418,18 @@
 </template>
 
 <script setup lang="ts">
-import dictionariesIndex from '~/content/dictionaries/index.json'
 import type { DictionaryEntry } from '~/types/dictionary'
+
+const { t } = useI18n()
 
 const searchQuery = ref('')
 const enableReverseSearch = ref(false)
 const router = useRouter()
-const dictionariesData = ref(dictionariesIndex)
+
+// 通过 Nuxt Content 加载词典索引，避免直接 import JSON 触发 i18n 插件处理
+const { data: dictionariesData } = await useAsyncData('dictionaries-index', () =>
+  queryContent('/dictionaries').findOne()
+)
 
 // 使用 useState 来保持状态在页面导航时不丢失
 const randomEntries = useState<DictionaryEntry[]>('home-random-entries', () => [])
@@ -428,7 +444,10 @@ const { getRandomRecommendedEntries } = useSearch()
 // 计算总词条数
 const totalEntriesCount = computed(() => {
   if (!dictionariesData.value) return 0
-  return dictionariesData.value.dictionaries.reduce((sum, dict) => sum + dict.entries_count, 0)
+  return dictionariesData.value.dictionaries.reduce(
+    (sum: number, dict: any) => sum + (dict.entries_count || 0),
+    0
+  )
 })
 
 // 计算桌面端显示的词典（3个）
@@ -522,11 +541,14 @@ onMounted(() => {
 
 // SEO
 useHead({
-  title: '粤语辞丛 | The Jyut Collection - 开放的粤语词典聚合平台',
+  title: computed(() => `${t('common.siteName')} | ${t('common.siteSubtitle')} - ${t('common.siteDescription')}`),
   meta: [
     {
       name: 'description',
-      content: '粤语辞丛是一个开放的粤语词典聚合平台，支持多词典统一查询、粤拼搜索，为粤语学习者和研究者提供便捷的工具。'
+      content: computed(
+        () =>
+          `${t('common.siteName')}是一个开放的粤语词典聚合平台，支持多词典统一查询、粤拼搜索，为粤语学习者和研究者提供便捷的工具。`
+      )
     }
   ]
 })
