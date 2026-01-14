@@ -22,6 +22,7 @@ const ADAPTERS = {
   'gz-word-origins': () => import('./adapters/gz-word-origins.js'),
   'gz-dialect': () => import('./adapters/gz-dialect.js'),
   'gz-modern': () => import('./adapters/gz-modern.js'),
+  'gz-dict': () => import('./adapters/gz-dict.js'),
   'hk-cantowords': () => import('./adapters/hk-cantowords.js'),
   // 未来可以添加更多词典
 }
@@ -287,6 +288,7 @@ CSV 转 JSON 工具
   - gz-word-origins            粵語辭源
   - gz-dialect                 廣州方言詞典
   - gz-modern                  现代粤语词典
+  - gz-dict                    广州话词典（第2版）
   - hk-cantowords              粵典 (words.hk)
 
 示例:

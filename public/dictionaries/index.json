@@ -115,8 +115,24 @@
       "license": "Copyrighted. For technical demonstration only.",
       "attribution": "《现代粤语词典》，范俊军、范兰德等编，广东人民出版社，2021年版",
       "usage_restriction": "此词表内容受版权保护，来源于互联网公开扫描资源，仅用于本项目原型验证和技术演示，不得用于商业用途或二次分发。"
+    },
+    {
+      "id": "gz-dict",
+      "name": "广州话词典（第2版）",
+      "dialect": "广州话",
+      "file": "gz-dict.json",
+      "entries_count": 10803,
+      "author": "饶秉才、欧阳觉亚、周无忌",
+      "publisher": "广东人民出版社",
+      "year": 2020,
+      "version": "2026-01-14",
+      "description": "系统收录广州话词汇，包含释义、读音与用例。",
+      "source": "scanned_from_internet",
+      "license": "Copyrighted. For technical demonstration only.",
+      "attribution": "《广州话词典（第2版）》，饶秉才、欧阳觉亚、周无忌编，广东人民出版社，2020年版",
+      "usage_restriction": "此词表内容受版权保护，来源于互联网公开扫描资源，仅用于本项目原型验证和技术演示，不得用于商业用途或二次分发。"
     }
   ],
-  "last_updated": "2026-01-13T11:33:06.354Z",
+  "last_updated": "2026-01-14T07:10:18.012Z",
   "schema_version": "1.0.0"
 }

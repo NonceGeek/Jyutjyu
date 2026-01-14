@@ -19,6 +19,7 @@
     "build:data:gzwo": "node scripts/csv-to-json.js --dict gz-word-origins --input data/processed/gz-word-origins.csv",
     "build:data:gzd": "node scripts/csv-to-json.js --dict gz-dialect --input data/processed/gz-dialect.csv",
     "build:data:gzm": "node scripts/csv-to-json.js --dict gz-modern --input data/processed/gz-modern.csv",
+    "build:data:gzdict": "node scripts/csv-to-json.js --dict gz-dict --input data/processed/gz-dict.csv",
     "build:data:hkcw": "node scripts/csv-to-json.js --dict hk-cantowords --input data/processed/hk-cantowords.csv",
     "build:data:wiktionary": "node scripts/jsonl-to-json.js --dict wiktionary-cantonese --input data/processed/wiktionary_cantonese_entries.jsonl",
     "build:data:wiktionary:test": "node scripts/jsonl-to-json.js --dict wiktionary-cantonese --input data/processed/wiktionary_cantonese_entries.jsonl --limit 1000",
@@ -37,6 +38,7 @@
     "db:import:gzwo": "node scripts/import-to-mongodb.js --dict gz-word-origins --mode replace",
     "db:import:gzd": "node scripts/import-to-mongodb.js --dict gz-dialect --mode replace",
     "db:import:gzm": "node scripts/import-to-mongodb.js --dict gz-modern --mode replace",
+    "db:import:gzdict": "node scripts/import-to-mongodb.js --dict gz-dict --mode replace",
     "db:import:hkcw": "node scripts/import-to-mongodb.js --dict hk-cantowords --mode replace",
     "db:import:wiktionary": "node scripts/import-to-mongodb.js --dict wiktionary-cantonese --mode replace",
     "db:import:help": "node scripts/import-to-mongodb.js --help"
