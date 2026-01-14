@@ -128,12 +128,6 @@
                 </button>
               </div>
             </div>
-
-            <!-- 语言切换（移动到筛选栏） -->
-            <div class="ml-auto">
-              <LanguageSwitcher />
-            </div>
-            
           </div>
         </div>
       </div>
