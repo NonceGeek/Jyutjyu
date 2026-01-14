@@ -81,6 +81,24 @@ export default defineI18nConfig(() => ({
         exactMatchLabel: '完全匹配',
         otherResultsLabel: '其他相关结果'
       },
+      dictCard: {
+        placeholderWord: '有音无字',
+        originalPhonetic: '原书: ',
+        variantWords: '异形词: ',
+        standardWriting: '参考标准写法: ',
+        entryTypeCharacter: '字',
+        entryTypeWord: '词',
+        entryTypePhrase: '短语',
+        collapse: '收起',
+        expand: '展开',
+        details: '详情',
+        note: '备注：',
+        proofreaderNote: '校对者备注：',
+        etymology: '词源：',
+        references: '参考文献：',
+        seeAlso: '参见：',
+        usage: '用法:'
+      },
       about: {
         pageTitle: '关于',
         metaDescription: '了解粤语辞丛项目的使命、内容授权政策和技术架构。我们致力于打造开放、包容、可持续的粤语词典聚合平台。',
@@ -247,6 +265,24 @@ export default defineI18nConfig(() => ({
         langYueHant: '繁體粵語',
         exactMatchLabel: '完全匹配',
         otherResultsLabel: '其他相關結果'
+      },
+      dictCard: {
+        placeholderWord: '有音無字',
+        originalPhonetic: '原書: ',
+        variantWords: '異形詞: ',
+        standardWriting: '參考標準寫法: ',
+        entryTypeCharacter: '字',
+        entryTypeWord: '詞',
+        entryTypePhrase: '短語',
+        collapse: '收起',
+        expand: '展開',
+        details: '詳情',
+        note: '備註：',
+        proofreaderNote: '校對者備註：',
+        etymology: '詞源：',
+        references: '參考文獻：',
+        seeAlso: '參見：',
+        usage: '用法:'
       },
       about: {
         pageTitle: '關於',
@@ -415,6 +451,24 @@ export default defineI18nConfig(() => ({
         exactMatchLabel: '完全匹配',
         otherResultsLabel: '其他相关结果'
       },
+      dictCard: {
+        placeholderWord: '有音无字',
+        originalPhonetic: '原书: ',
+        variantWords: '异形词: ',
+        standardWriting: '参考标准写法: ',
+        entryTypeCharacter: '字',
+        entryTypeWord: '词',
+        entryTypePhrase: '短语',
+        collapse: '收起',
+        expand: '展开',
+        details: '详情',
+        note: '备注：',
+        proofreaderNote: '校对者备注：',
+        etymology: '词源：',
+        references: '参考文献：',
+        seeAlso: '参见：',
+        usage: '用法:'
+      },
       about: {
         pageTitle: '关于',
         metaDescription: '了解粤语辞丛项目嘅使命、内容授权政策同技术架构。我们致力于打造开放、包容、可持续嘅粤语词典聚合平台。',
@@ -580,6 +634,24 @@ export default defineI18nConfig(() => ({
         langYueHant: '繁體粵語',
         exactMatchLabel: '完全匹配',
         otherResultsLabel: '其他相關結果'
+      },
+      dictCard: {
+        placeholderWord: '有音無字',
+        originalPhonetic: '原書: ',
+        variantWords: '異形詞: ',
+        standardWriting: '參考標準寫法: ',
+        entryTypeCharacter: '字',
+        entryTypeWord: '詞',
+        entryTypePhrase: '短語',
+        collapse: '收起',
+        expand: '展開',
+        details: '詳情',
+        note: '備註：',
+        proofreaderNote: '校對者備註：',
+        etymology: '詞源：',
+        references: '參考文獻：',
+        seeAlso: '參見：',
+        usage: '用法:'
       },
       about: {
         pageTitle: '關於',

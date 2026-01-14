@@ -11,9 +11,9 @@
             <span
               v-if="entry.headword.is_placeholder"
               class="ml-2 text-xs text-orange-600 font-normal"
-              title="有音无字"
+              :title="t('dictCard.placeholderWord')"
             >
-              有音无字
+              {{ t('dictCard.placeholderWord') }}
             </span>
             <!-- 同形异义标记 -->
             <sup
@@ -41,7 +41,7 @@
                 v-if="getOriginalPhonetic(entry, idx)"
                 class="text-xs text-gray-500 break-words"
               >
-                <span class="text-gray-400">原书: </span>{{ getOriginalPhonetic(entry, idx) }}
+                <span class="text-gray-400">{{ t('dictCard.originalPhonetic') }}</span>{{ getOriginalPhonetic(entry, idx) }}
               </div>
             </div>
           </div>
@@ -51,14 +51,14 @@
             v-if="entry.meta?.headword_variants && entry.meta.headword_variants.length > 0"
             class="text-sm text-gray-600 break-words mt-2"
           >
-            异形词: {{ entry.meta.headword_variants.join('、') }}
+            {{ t('dictCard.variantWords') }}{{ entry.meta.headword_variants.join('、') }}
           </p>
           <!-- 如果显示词和标准词不同，显示标准词 -->
           <p
             v-if="entry.headword.display !== entry.headword.normalized"
             class="text-sm text-gray-500 break-words mt-1"
           >
-            参考标准写法: {{ entry.headword.normalized }}
+            {{ t('dictCard.standardWriting') }}{{ entry.headword.normalized }}
           </p>
         </div>
 
@@ -250,7 +250,7 @@
           class="font-semibold"
           :class="entry.meta?.note_type === 'proofreader' ? 'text-blue-700' : 'text-yellow-700'"
         >
-          {{ entry.meta?.note_type === 'proofreader' ? '校对者备注：' : '备注：' }}
+          {{ entry.meta?.note_type === 'proofreader' ? t('dictCard.proofreaderNote') : t('dictCard.note') }}
         </span>
         {{ entry.meta.notes }}
       </div>
@@ -260,7 +260,7 @@
         v-if="entry.meta?.etymology && typeof entry.meta.etymology === 'string'"
         class="mt-4 p-3 border-l-4 bg-purple-50 border-purple-400 text-sm text-gray-700"
       >
-        <span class="font-semibold text-purple-700">词源：</span>
+        <span class="font-semibold text-purple-700">{{ t('dictCard.etymology') }}</span>
         {{ entry.meta.etymology }}
       </div>
 
@@ -269,7 +269,7 @@
         v-if="entry.meta?.references && entry.meta.references.length > 0"
         class="mt-4 p-3 border-l-4 bg-amber-50 border-amber-400 text-sm text-gray-700"
       >
-        <span class="font-semibold text-amber-700">参考文献：</span>
+        <span class="font-semibold text-amber-700">{{ t('dictCard.references') }}</span>
         <ul class="mt-2 space-y-2">
           <li
             v-for="(ref, refIdx) in entry.meta.references"
@@ -292,7 +292,7 @@
         v-if="entry.refs && entry.refs.length > 0"
         class="mt-4 text-sm"
       >
-        <span class="text-gray-500">参见：</span>
+        <span class="text-gray-500">{{ t('dictCard.seeAlso') }}</span>
         <span
           v-for="(ref, refIdx) in entry.refs"
           :key="refIdx"
@@ -330,7 +330,7 @@
         class="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-1"
         @click="detailsExpanded = !detailsExpanded"
       >
-        <span>{{ detailsExpanded ? '收起' : '展开' }}详情</span>
+        <span>{{ detailsExpanded ? t('dictCard.collapse') : t('dictCard.expand') }} {{ t('dictCard.details') }}</span>
         <svg
           class="w-4 h-4 transition-transform"
           :class="{ 'rotate-180': detailsExpanded }"
@@ -347,7 +347,7 @@
         class="mt-3 text-sm text-gray-600 space-y-1"
       >
         <p v-if="entry.meta?.usage">
-          <span class="font-semibold">用法:</span> {{ entry.meta.usage }}
+          <span class="font-semibold">{{ t('dictCard.usage') }}</span> {{ entry.meta.usage }}
         </p>
       </div>
     </div>
@@ -356,6 +356,8 @@
 
 <script setup lang="ts">
 import type { DictionaryEntry } from '~/types/dictionary'
+
+const { t } = useI18n()
 
 interface Props {
   entry: DictionaryEntry
@@ -371,9 +373,9 @@ const detailsExpanded = ref(false)
 // 词条类型标签
 const entryTypeLabel = computed(() => {
   const labels = {
-    character: '字',
-    word: '词',
-    phrase: '短语'
+    character: t('dictCard.entryTypeCharacter'),
+    word: t('dictCard.entryTypeWord'),
+    phrase: t('dictCard.entryTypePhrase')
   }
   return labels[props.entry.entry_type] || props.entry.entry_type
 })
