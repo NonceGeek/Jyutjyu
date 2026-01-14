@@ -139,7 +139,7 @@
         <!-- Loading State -->
         <div v-if="loading" class="text-center py-16">
           <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p class="text-gray-600 mt-4">搜索中...</p>
+          <p class="text-gray-600 mt-4">{{ t('common.searching') }}</p>
         </div>
 
         <!-- Results Info -->

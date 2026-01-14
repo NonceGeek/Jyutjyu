@@ -304,8 +304,8 @@
               </h3>
               <ul class="list-disc list-inside space-y-1">
                 <li>Node.js</li>
-                <li>CSV 解析与验证</li>
-                <li>OpenCC 繁简转换</li>
+                <li>{{ t('about.tech.csvParsing') }}</li>
+                <li>{{ t('about.tech.openccConversion') }}</li>
               </ul>
             </div>
           </div>

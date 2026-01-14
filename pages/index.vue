@@ -309,13 +309,13 @@
                       </p>
                       <!-- 免责说明 - 社区词典 -->
                       <p v-if="mobileDictionary.source === 'community_contributed'" class="text-xs text-gray-500 leading-relaxed">
-                        词条内容由社区编者负责，本网站不对内容负责。
+                        {{ t('common.licenseCommunityDisclaimer') }}
                       </p>
                       <!-- 免责说明 - 出版词典 -->
                       <p v-else-if="mobileDictionary.source === 'scanned_from_internet'" class="text-xs text-gray-500 leading-relaxed">
-                        词条内容由书籍作者负责。因采用OCR批量处理，难免有错误，如发现错误可在
+                        {{ t('common.licenseScannedDisclaimerPrefix') }}
                         <a href="https://github.com/jyutjyucom/jyutjyu/issues" target="_blank" class="text-blue-600 hover:underline">GitHub Issue</a>
-                        提出。
+                        {{ t('common.licenseScannedDisclaimerSuffix') }}
                       </p>
                     </div>
                   </div>
@@ -547,7 +547,7 @@ useHead({
       name: 'description',
       content: computed(
         () =>
-          `${t('common.siteName')}是一个开放的粤语词典聚合平台，支持多词典统一查询、粤拼搜索，为粤语学习者和研究者提供便捷的工具。`
+          `${t('common.siteName')} ${t('common.siteDescription')}`
       )
     }
   ]

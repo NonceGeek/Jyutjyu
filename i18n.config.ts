@@ -155,7 +155,9 @@ export default defineI18nConfig(() => ({
         tech: {
           title: '技术栈',
           frontendTitle: '前端',
-          dataTitle: '数据处理'
+          dataTitle: '数据处理',
+          csvParsing: 'CSV 解析与验证',
+          openccConversion: 'OpenCC 繁简转换'
         },
         contribute: {
           title: '参与贡献',
@@ -318,7 +320,9 @@ export default defineI18nConfig(() => ({
         tech: {
           title: '技術棧',
           frontendTitle: '前端',
-          dataTitle: '數據處理'
+          dataTitle: '數據處理',
+          csvParsing: 'CSV 解析與驗證',
+          openccConversion: 'OpenCC 繁簡轉換'
         },
         contribute: {
           title: '參與貢獻',
@@ -481,7 +485,9 @@ export default defineI18nConfig(() => ({
         tech: {
           title: '技术栈',
           frontendTitle: '前端',
-          dataTitle: '数据处理'
+          dataTitle: '数据处理',
+          csvParsing: 'CSV 解析同验证',
+          openccConversion: 'OpenCC 繁简转换'
         },
         contribute: {
           title: '参与贡献',
@@ -643,7 +649,9 @@ export default defineI18nConfig(() => ({
         tech: {
           title: '技術棧',
           frontendTitle: '前端',
-          dataTitle: '數據處理'
+          dataTitle: '數據處理',
+          csvParsing: 'CSV 解析同驗證',
+          openccConversion: 'OpenCC 繁簡轉換'
         },
         contribute: {
           title: '參與貢獻',
