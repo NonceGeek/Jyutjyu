@@ -63,26 +63,26 @@
         </div>
 
         <!-- 标签：来源、分类等（大屏幕右上角，移动端下方） -->
-        <div class="flex flex-wrap gap-2 md:justify-end md:mt-0 md:ml-4">
+        <div class="flex flex-wrap gap-2 md:justify-end md:mt-0 md:ml-4 md:max-w-[40%]">
           <!-- 来源词典: ID -->
-          <span class="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm whitespace-nowrap">
+          <span class="px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-sm whitespace-nowrap">
             {{ entry.source_book }}<template v-if="entry.source_id">: {{ entry.source_id }}</template>
           </span>
 
           <!-- 方言 -->
-          <span class="px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm whitespace-nowrap">
+          <span class="px-3 py-1 bg-green-50 text-green-700 rounded-lg text-sm whitespace-nowrap">
             {{ entry.dialect.name }}
           </span>
 
           <!-- 词条类型 -->
-          <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm whitespace-nowrap">
+          <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-sm whitespace-nowrap">
             {{ entryTypeLabel }}
           </span>
 
           <!-- 语域标签（口语、书面、俚语等） -->
           <span
             v-if="entry.meta?.register"
-            class="px-3 py-1 bg-orange-50 text-orange-700 rounded-full text-sm whitespace-nowrap"
+            class="px-3 py-1 bg-orange-50 text-orange-700 rounded-lg text-sm whitespace-nowrap"
           >
             {{ entry.meta.register }}
           </span>
@@ -90,7 +90,7 @@
           <!-- 分类（如果有） -->
           <span
             v-if="entry.meta?.category"
-            class="px-3 py-1 bg-purple-50 text-purple-700 rounded-full text-sm whitespace-nowrap"
+            class="px-3 py-1 bg-purple-50 text-purple-700 rounded-lg text-sm break-words max-w-full"
           >
             {{ entry.meta.category }}
           </span>
