@@ -11,6 +11,8 @@
  *
  * 数据处理规则:
  * - 忽略 entry_type、source_file 字段（不写入 metadata）
+ * - 字头前的星号 "*" 表示外来语（不是本身是广州话的，可能来自香港话或其他语言）
+ * - 字头前的数字标记（如 "1 飞"、"² 爆"、"⁴飞"）表示同形异义的不同义项
  */
 
 import { generateKeywords, cleanHeadword } from '../utils/text-processor.js'
@@ -42,6 +44,68 @@ export const DICTIONARY_INFO = {
  * 必填字段验证
  */
 export const REQUIRED_FIELDS = ['index', 'headword', 'jyutping', 'definition']
+
+/**
+ * 解析词头的特殊标记（星号和数字前缀）
+ * @param {string} headword - 原始词头字符串
+ * @returns {Object} { 
+ *   cleanedHeadword: 清理后的词头,
+ *   isLoanword: 是否为外来语（星号标记）,
+ *   variantNumber: 同形异义标记数字（如有）
+ * }
+ */
+function parseHeadwordMarkers(headword) {
+  if (!headword) {
+    return { cleanedHeadword: '', isLoanword: false, variantNumber: null }
+  }
+  
+  let text = headword.trim()
+  const result = {
+    cleanedHeadword: text,
+    isLoanword: false,
+    variantNumber: null
+  }
+  
+  // 1. 检查是否有星号（外来语标记）
+  if (text.startsWith('*')) {
+    result.isLoanword = true
+    text = text.substring(1).trim()
+  }
+  
+  // 2. 检查并提取数字前缀标记（同形异义）
+  // 支持普通数字（1 飞）和上标数字（¹ 爆、² 爆、⁴飞）
+  // 上标数字映射：⁰¹²³⁴⁵⁶⁷⁸⁹ → 0-9
+  const superscriptMap = {
+    '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4',
+    '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9'
+  }
+  
+  // 匹配开头的数字（普通数字或上标数字）+ 空格 + 词头
+  // 例如: "1 飞"、"¹ 爆"、"⁴飞"
+  const numberPrefixMatch = text.match(/^([0-9⁰¹²³⁴⁵⁶⁷⁸⁹]+)\s*(.+)$/)
+  if (numberPrefixMatch) {
+    const numberStr = numberPrefixMatch[1]
+    const restText = numberPrefixMatch[2]
+    
+    // 转换上标数字为普通数字
+    let normalizedNumber = ''
+    for (const char of numberStr) {
+      if (superscriptMap[char]) {
+        normalizedNumber += superscriptMap[char]
+      } else if (/[0-9]/.test(char)) {
+        normalizedNumber += char
+      }
+    }
+    
+    if (normalizedNumber) {
+      result.variantNumber = parseInt(normalizedNumber, 10)
+      text = restText.trim()
+    }
+  }
+  
+  result.cleanedHeadword = text
+  return result
+}
 
 /**
  * 猜测词条类型（character/word/phrase）
@@ -146,10 +210,13 @@ function parseExampleWithTranslation(part) {
  * @returns {Object} DictionaryEntry
  */
 export function transformRow(row) {
-  // 1. 清理词头
-  const headwordInfo = cleanHeadword(row.headword)
+  // 1. 解析词头标记（星号和数字前缀）
+  const headwordMarkers = parseHeadwordMarkers(row.headword)
+  
+  // 2. 清理词头（去除其他标记，如末尾数字等）
+  const headwordInfo = cleanHeadword(headwordMarkers.cleanedHeadword)
 
-  // 2. 处理粤拼（已是转换后的格式）
+  // 3. 处理粤拼（已是转换后的格式）
   const jyutpingArray = row.jyutping
     ? row.jyutping
         .split(/[,;/]/)
@@ -157,10 +224,10 @@ export function transformRow(row) {
         .filter(Boolean)
     : []
 
-  // 3. 解析释义（多义项+例句）
+  // 4. 解析释义（多义项+例句）
   const senses = parseSenses(row.definition)
 
-  // 4. 构建标准词条
+  // 5. 构建标准词条
   const entry = {
     id: `${DICTIONARY_INFO.id}_${String(row.index).padStart(6, '0')}`,
     source_book: DICTIONARY_INFO.source_book,
@@ -185,14 +252,18 @@ export function transformRow(row) {
     senses,
 
     meta: {
-      page: row.page || null
+      page: row.page || null,
+      // 外来语标记（星号表示）
+      is_loanword: headwordMarkers.isLoanword || false,
+      // 同形异义标记（数字前缀）
+      variant_number: headwordMarkers.variantNumber || null
       // 注：entry_type, source_file 字段按要求忽略，不写入 metadata
     },
 
     created_at: new Date().toISOString()
   }
 
-  // 5. 生成搜索关键词
+  // 6. 生成搜索关键词
   entry.keywords = generateKeywords(entry)
 
   return entry
