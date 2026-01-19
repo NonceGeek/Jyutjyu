@@ -96,7 +96,7 @@
         </div>
 
         <!-- Desktop: 3 cards in grid -->
-        <div v-else-if="randomEntries.length > 0" class="hidden md:grid md:grid-cols-3 gap-6">
+        <div v-if="!loadingRandomEntries && randomEntries.length > 0" class="hidden md:grid md:grid-cols-3 gap-6">
           <div
             v-for="entry in randomEntries"
             :key="entry.id"
@@ -128,7 +128,7 @@
         </div>
 
         <!-- Mobile: 1 card with navigation -->
-        <div v-else-if="randomEntries.length > 0" class="md:hidden">
+        <div v-if="!loadingRandomEntries && randomEntries.length > 0" class="md:hidden">
           <div class="bg-white rounded-lg shadow-md overflow-hidden">
             <!-- Card content - clickable to search -->
             <div
@@ -531,6 +531,8 @@ const refreshRandomEntries = async () => {
     console.error('加载随机词条失败:', error)
   } finally {
     loadingRandomEntries.value = false
+    // 确保 Vue 响应式更新完成
+    await nextTick()
   }
 }
 

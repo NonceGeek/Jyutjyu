@@ -737,7 +737,7 @@ const performSearch = async (query: string) => {
   displayedResults.value = []
   searchTime.value = 0
   currentPage.value = 1
-  
+
   // 更新实际搜索的查询词
   actualSearchQuery.value = query.trim()
   
