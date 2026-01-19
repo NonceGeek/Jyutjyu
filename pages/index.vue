@@ -514,7 +514,13 @@ const searchExample = (query: string) => {
 }
 
 const searchEntry = (headword: string) => {
-  router.push(`/search?q=${encodeURIComponent(headword)}`)
+  // 清理零宽字符（Zero Width Characters）
+  // U+200B: Zero Width Space
+  // U+200C: Zero Width Non-Joiner
+  // U+200D: Zero Width Joiner
+  // U+FEFF: Zero Width No-Break Space (BOM)
+  const cleanedHeadword = headword.replace(/[\u200B-\u200D\uFEFF]/g, '')
+  router.push(`/search?q=${encodeURIComponent(cleanedHeadword)}`)
 }
 
 const refreshRandomEntries = async () => {

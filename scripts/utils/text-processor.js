@@ -99,11 +99,19 @@ export function cleanHeadword(word) {
     marker: null
   }
   
+  // 清理零宽字符（Zero Width Characters）
+  // U+200B: Zero Width Space
+  // U+200C: Zero Width Non-Joiner
+  // U+200D: Zero Width Joiner
+  // U+FEFF: Zero Width No-Break Space (BOM)
+  result.display = result.display.replace(/[\u200B-\u200D\uFEFF]/g, '')
+  result.normalized = result.normalized.replace(/[\u200B-\u200D\uFEFF]/g, '')
+  
   // 检测星号标记 (如 *哋1)
-  if (word.startsWith('*')) {
+  if (result.normalized.startsWith('*')) {
     result.hasMarker = true
     result.marker = '*'
-    result.normalized = word.substring(1)
+    result.normalized = result.normalized.substring(1)
   }
   
   // 去除末尾数字标记 (如 哋1 → 哋)
