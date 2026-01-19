@@ -18,6 +18,125 @@
 import { generateKeywords, cleanHeadword } from '../utils/text-processor.js'
 
 /**
+ * 解析粤拼字符串中的变体标记，生成所有可能的发音组合
+ * @param {string} jyutping - 原始粤拼字符串
+ * @returns {Array<string>} 所有可能的发音组合
+ *
+ * 例如:
+ * - "baau6 (biu6, beu6)" → ["baau6", "biu6", "beu6"]  (单音节多音)
+ * - "dit1 (dik1) gam3 doe1 (do1)" → ["dit1 gam3 doe1", "dik1 gam3 doe1", "dit1 gam3 do1", "dik1 gam3 do1"]
+ * - "tam4 tam2 (dam4 dam2) zyun3" → ["tam4 tam2 zyun3", "dam4 dam2 zyun3"]
+ *
+ * 逻辑：
+ * 1. 括号内如有逗号分隔的多个读音，表示前一音节的多种读法
+ * 2. 括号内如有空格分隔的多音节，则替换前面相同数量的音节
+ */
+function parseJyutpingVariants(jyutping) {
+  if (!jyutping) return []
+
+  const text = jyutping.trim()
+  if (!text) return []
+
+  // 检查是否包含括号变体标记
+  if (!text.includes('(') && !text.includes('（')) {
+    // 没有变体标记，直接返回原文
+    return [text]
+  }
+
+  // 分段解析：将文本分成音节组和括号变体
+  const segments = []
+  let lastIndex = 0
+
+  // 匹配括号及其内容
+  const bracketRegex = /[（(]([^）)]+)[）)]/g
+  let match
+
+  while ((match = bracketRegex.exec(text)) !== null) {
+    // 获取括号前的文本
+    const beforeText = text.substring(lastIndex, match.index).trim()
+    const variantContent = match[1].trim()
+
+    if (beforeText) {
+      // 分析括号内容
+      // 如果括号内有逗号，表示单音节的多个变体
+      // 如果括号内有空格但无逗号，表示多音节组的变体
+      const hasComma = variantContent.includes(',') || variantContent.includes('，')
+      const variantSyllables = hasComma
+        ? variantContent.split(/[,，]/).map(s => s.trim()).filter(s => s)
+        : [variantContent]
+
+      // 统计变体中的音节数量（按空格分割）
+      const firstVariantSyllableCount = variantSyllables[0].split(/\s+/).length
+
+      // 分割前置文本为音节
+      const beforeSyllables = beforeText.split(/\s+/).filter(s => s)
+
+      if (beforeSyllables.length > 0) {
+        // 确定要替换的音节数量
+        const replaceCount = Math.min(firstVariantSyllableCount, beforeSyllables.length)
+
+        // 添加固定部分（不被替换的前置音节）
+        if (beforeSyllables.length > replaceCount) {
+          const fixedPart = beforeSyllables.slice(0, -replaceCount).join(' ')
+          segments.push({ type: 'fixed', value: fixedPart })
+        }
+
+        // 添加变体部分
+        const originalPart = beforeSyllables.slice(-replaceCount).join(' ')
+        const allVariants = [originalPart, ...variantSyllables]
+        // 去重
+        const uniqueVariants = [...new Set(allVariants)]
+        segments.push({ type: 'variant', options: uniqueVariants })
+      }
+    }
+
+    lastIndex = bracketRegex.lastIndex
+  }
+
+  // 添加最后剩余的文本
+  if (lastIndex < text.length) {
+    const remainingText = text.substring(lastIndex).trim()
+    if (remainingText) {
+      segments.push({ type: 'fixed', value: remainingText })
+    }
+  }
+
+  // 如果没有解析出任何有效的 segment，返回原文
+  if (segments.length === 0) {
+    return [text.replace(/[（(][^）)]*[）)]/g, '').trim()]
+  }
+
+  // 生成所有组合
+  const combinations = []
+
+  function generateCombinations(index, current) {
+    if (index >= segments.length) {
+      // 清理多余空格并添加
+      const cleaned = current.trim().replace(/\s+/g, ' ')
+      if (cleaned) combinations.push(cleaned)
+      return
+    }
+
+    const segment = segments[index]
+    const separator = current ? ' ' : ''
+
+    if (segment.type === 'fixed') {
+      generateCombinations(index + 1, current + separator + segment.value)
+    } else {
+      // variant
+      segment.options.forEach(option => {
+        generateCombinations(index + 1, current + separator + option)
+      })
+    }
+  }
+
+  generateCombinations(0, '')
+
+  // 去重并返回
+  return [...new Set(combinations)]
+}
+
+/**
  * 词典元数据
  */
 export const DICTIONARY_INFO = {
@@ -216,13 +335,24 @@ export function transformRow(row) {
   // 2. 清理词头（去除其他标记，如末尾数字等）
   const headwordInfo = cleanHeadword(headwordMarkers.cleanedHeadword)
 
-  // 3. 处理粤拼（已是转换后的格式）
-  const jyutpingArray = row.jyutping
-    ? row.jyutping
-        .split(/[,;/]/)
-        .map(j => j.trim())
-        .filter(Boolean)
-    : []
+  // 3. 处理粤拼（已是转换后的格式，支持变体标记）
+  let jyutpingArray = []
+  if (row.jyutping) {
+    // 先按逗号分号分割多个不同的发音
+    const jyutpingParts = row.jyutping
+      .split(/[,;/]/)
+      .map(j => j.trim())
+      .filter(Boolean)
+
+    // 对每个部分使用变体解析
+    jyutpingParts.forEach(part => {
+      const variants = parseJyutpingVariants(part)
+      jyutpingArray = jyutpingArray.concat(variants)
+    })
+
+    // 去重
+    jyutpingArray = [...new Set(jyutpingArray)]
+  }
 
   // 4. 解析释义（多义项+例句）
   const senses = parseSenses(row.definition)
