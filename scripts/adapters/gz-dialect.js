@@ -85,8 +85,8 @@ function parseSenses(definition) {
     mainText = text.substring(0, noteMatch.index).trim()
   }
   
-  // 检查是否包含 ① ② ③ 等标记
-  const sensePattern = /[①②③④⑤⑥⑦⑧⑨⑩]/g
+  // 检查是否包含 ❶❷❸❹❺❻❼❽❾❿ 或 ①②③④⑤⑥⑦⑧⑨⑩ 等标记
+  const sensePattern = /[❶❷❸❹❺❻❼❽❾❿①②③④⑤⑥⑦⑧⑨⑩]/g
   const matches = [...mainText.matchAll(sensePattern)]
   
   if (matches.length === 0) {
