@@ -125,7 +125,7 @@
       "author": "饶秉才、欧阳觉亚、周无忌",
       "publisher": "广东人民出版社",
       "year": 2020,
-      "version": "2026-01-19",
+      "version": "2026-01-20",
       "description": "系统收录广州话词汇，包含释义、读音与用例。",
       "source": "scanned_from_internet",
       "license": "Copyrighted. For technical demonstration only.",
@@ -133,6 +133,6 @@
       "usage_restriction": "此词表内容受版权保护，来源于互联网公开扫描资源，仅用于本项目原型验证和技术演示，不得用于商业用途或二次分发。"
     }
   ],
-  "last_updated": "2026-01-20T02:21:05.781Z",
+  "last_updated": "2026-01-20T02:30:49.783Z",
   "schema_version": "1.0.0"
 }

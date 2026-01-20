@@ -18,6 +18,39 @@
 import { generateKeywords, cleanHeadword } from '../utils/text-processor.js'
 
 /**
+ * 提取释义中的作者备注（〖...〗），并从正文中移除
+ * @param {string} definition
+ * @returns {{ mainText: string, notes: string|null }}
+ */
+function extractAuthorNotesFromDefinition(definition) {
+  if (!definition || !definition.trim()) {
+    return { mainText: '', notes: null }
+  }
+
+  const text = definition.trim()
+  const notes = []
+
+  // 备注通常以 〖...〗 出现；可能出现多段
+  const noteRegex = /〖([^〗]+)〗/g
+  let match
+  while ((match = noteRegex.exec(text)) !== null) {
+    const note = (match[1] || '').trim()
+    if (note) notes.push(note)
+  }
+
+  // 移除备注片段，并清理多余空白
+  const mainText = text
+    .replace(noteRegex, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+
+  return {
+    mainText,
+    notes: notes.length > 0 ? notes.join('\n') : null
+  }
+}
+
+/**
  * 解析粤拼字符串中的变体标记，生成所有可能的发音组合
  * @param {string} jyutping - 原始粤拼字符串
  * @returns {Array<string>} 所有可能的发音组合
@@ -354,8 +387,10 @@ export function transformRow(row) {
     jyutpingArray = [...new Set(jyutpingArray)]
   }
 
-  // 4. 解析释义（多义项+例句）
-  const senses = parseSenses(row.definition)
+  // 4. 提取作者备注（〖...〗），并解析释义（多义项+例句）
+  const { mainText: mainDefinitionText, notes: authorNotes } =
+    extractAuthorNotesFromDefinition(row.definition)
+  const senses = parseSenses(mainDefinitionText)
 
   // 5. 构建标准词条
   const entry = {
@@ -386,7 +421,9 @@ export function transformRow(row) {
       // 外来语标记（星号表示）
       is_loanword: headwordMarkers.isLoanword || false,
       // 同形异义标记（数字前缀）
-      variant_number: headwordMarkers.variantNumber || null
+      variant_number: headwordMarkers.variantNumber || null,
+      // 作者备注（从释义中提取的 〖...〗 内容）
+      notes: authorNotes || undefined
       // 注：entry_type, source_file 字段按要求忽略，不写入 metadata
     },
 
@@ -431,7 +468,7 @@ export const FIELD_NOTES = {
   headword: '词头，主词条',
   pronunciation: '原书拼音标注（保存到 phonetic.original）',
   jyutping: '转换后的粤拼（保存到 phonetic.jyutping，用于词典展示和搜索优化）',
-  definition: '释义，可能包含多义项（❶❷❸ 或 ①②③）与例句；例句翻译常用〔〕表示',
+  definition: '释义，可能包含多义项（❶❷❸ 或 ①②③）与例句；例句翻译常用〔〕表示。释义中的 〖...〗 会被提取为作者备注，存入 meta.notes',
   page: '词典页码',
   entry_type: '已忽略（不写入 metadata）',
   source_file: '已忽略（不写入 metadata）'
