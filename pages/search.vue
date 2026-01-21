@@ -506,13 +506,13 @@
       <div class="container mx-auto px-4 text-center text-gray-600 text-sm">
         <p class="mb-2">
           {{ t('common.footerCopyright') }}
-          <NuxtLink to="/about" class="text-blue-600 hover:underline">
-            {{ t('common.aboutProject') }}
-          </NuxtLink>
-          · 
           <a href="https://github.com/jyutjyucom/jyutjyu" class="text-blue-600 hover:underline" target="_blank">
             {{ t('common.github') }}
           </a>
+          · 
+          <NuxtLink to="/about" class="text-blue-600 hover:underline">
+            {{ t('common.aboutProject') }}
+          </NuxtLink>
         </p>
         <p class="text-xs text-gray-500">
           收录内容遵循不同授权协议 · 

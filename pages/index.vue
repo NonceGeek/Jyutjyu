@@ -96,7 +96,7 @@
 
               <div class="w-16 h-0.5 bg-blue-100 my-4"></div>
 
-              <p class="text-gray-600 text-lg leading-relaxed line-clamp-3 mb-6">
+              <p class="text-gray-600 text-base leading-relaxed line-clamp-3 mb-6">
                 {{ entry.senses[0]?.definition || t('common.noDefinition') }}
               </p>
 
