@@ -63,7 +63,7 @@ export default defineNuxtConfig({
   // App 配置
   app: {
     head: {
-      title: '粵語辭叢 | The Cantonese Dictionary Collection',
+      title: '粵語辭叢 | The Yue Dictionary Collection',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
@@ -75,7 +75,7 @@ export default defineNuxtConfig({
         { name: 'keywords', content: '粵語,廣州話,詞典,粵拼,Cantonese,Jyutping' },
         { name: 'author', content: 'Jyut Collection' },
         // Open Graph
-        { property: 'og:title', content: '粵語辭叢 | The Cantonese Dictionary Collection' },
+        { property: 'og:title', content: '粵語辭叢 | The Yue Dictionary Collection' },
         { property: 'og:description', content: '開放粵語詞典聚合平台，多詞典統一搜尋查詢、粵拼搜索，粵語學習同研究者嘅便捷工具。 The Open Platform for Cantonese Dictionaries' },
         { property: 'og:type', content: 'website' },
         { property: 'og:url', content: 'https://jyutjyu.com' },

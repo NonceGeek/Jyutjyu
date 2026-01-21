@@ -1,8 +1,8 @@
-# 粤语辞丛 Open Cantonese Dictionary Collection Platform
+# 粤语辞丛 Open Yue Dictionary Collection Platform
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> 开放的粤语词典聚合平台 | An Open Platform for Cantonese Dictionaries
+> 开放的粤语词典聚合平台 | An Open Platform for Yue Dictionaries
 
 ## 项目简介
 
