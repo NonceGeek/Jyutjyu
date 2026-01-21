@@ -23,7 +23,7 @@ import {
  */
 export const DICTIONARY_INFO = {
   id: 'wiktionary-cantonese',
-  name: 'Wiktionary粤语词条',
+  name: 'Wiktionary',
   dialect: {
     name: '粤语',
     region_code: 'YUE'

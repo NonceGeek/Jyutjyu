@@ -288,6 +288,9 @@
             class="px-6 py-3 border-2 border-gray-900 text-gray-900 rounded-lg hover:bg-gray-50 transition-colors">
             {{ t('common.contributeData') }}
           </a>
+          <FeedbackButton
+            button-class="px-6 py-3 border-2 border-amber-600 text-amber-600 rounded-lg hover:bg-amber-50 transition-colors"
+          />
           <NuxtLink to="/about"
             class="px-6 py-3 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors">
             {{ t('common.aboutProject') }}

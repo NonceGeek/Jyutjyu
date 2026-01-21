@@ -34,7 +34,7 @@
     },
     {
       "id": "hk-cantowords",
-      "name": "粵典",
+      "name": "粵典 (words.hk)",
       "dialect": "香港话",
       "file": "hk-cantowords.json",
       "entries_count": 59019,
@@ -53,7 +53,7 @@
     },
     {
       "id": "wiktionary-cantonese",
-      "name": "Wiktionary Cantonese",
+      "name": "Wiktionary",
       "dialect": "粤语",
       "file": "wiktionary-cantonese.json",
       "entries_count": 102195,

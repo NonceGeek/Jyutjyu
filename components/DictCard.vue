@@ -62,7 +62,7 @@
           </p>
         </div>
 
-        <!-- 标签：来源、分类等（大屏幕右上角，移动端下方） -->
+        <!-- 右侧：标签（反馈放在最后一个） -->
         <div class="flex flex-wrap gap-2 md:justify-end md:mt-0 md:ml-4 md:max-w-[40%]">
           <!-- 来源词典: ID -->
           <span class="px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-sm whitespace-nowrap">
@@ -94,6 +94,17 @@
           >
             {{ entry.meta.category }}
           </span>
+
+          <!-- 反馈按钮（SVG 图标，放在最后） -->
+          <FeedbackButton
+            :entry-data="{
+              word: entry.headword.display,
+              source: entry.source_book
+            }"
+            :icon-only="true"
+            initial-type="entry-error"
+            button-class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200"
+          />
         </div>
       </div>
     </div>
