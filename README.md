@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> 開放粵語詞典聚合平台 | The Open Platform for Cantonese Dictionaries
+> 開放粵語詞典聚合平台 | Open Yue Dictionary Collection Platform
 
 ## 項目簡介
 
