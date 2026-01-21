@@ -223,8 +223,40 @@
                 · {{ t('common.showFirstPrefix') }} {{ displayedResults.length }} {{ t('common.showFirstSuffix') }}
               </span>
             </p>
-            <!-- 视图切换（桌面端，仅在有结果时显示） -->
-            <div v-if="displayedResults.length > 0" class="hidden md:flex">
+            
+            <div class="flex items-center gap-4">
+              <!-- 排序下拉菜单 -->
+              <div class="relative">
+                <button
+                  class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors bg-white border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
+                  @click.stop="showSortDropdown = !showSortDropdown"
+                >
+                  <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                  </svg>
+                  <span>{{ getSortLabel(sortBy) }}</span>
+                  <svg class="w-4 h-4 transition-transform" :class="showSortDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                <div
+                  v-if="showSortDropdown"
+                  class="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl py-1 z-30 min-w-[140px]"
+                >
+                  <button
+                    v-for="sort in ['relevance', 'jyutping', 'headword', 'dictionary']"
+                    :key="sort"
+                    class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
+                    :class="sortBy === sort ? 'text-blue-600 font-semibold bg-blue-50' : 'text-gray-700'"
+                    @click="selectSort(sort as any)"
+                  >
+                    {{ getSortLabel(sort) }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- 视图切换 (桌面端) -->
+              <div v-if="displayedResults.length > 0" class="hidden md:flex">
               <div class="inline-flex rounded-lg border border-gray-300">
                 <button
                   class="px-4 py-2 text-sm font-medium transition-colors"
@@ -254,6 +286,7 @@
             </div>
           </div>
         </div>
+      </div>
 
       <!-- No Results -->
       <div v-if="!loading && isSearchComplete && actualSearchQuery && allResults.length === 0" class="text-center py-16">
@@ -281,34 +314,43 @@
         <div v-if="viewMode === 'card'" class="space-y-4">
           <!-- 完全匹配的结果（仅文字搜索时显示） -->
           <template v-if="isTextSearch && displayedGroupedResults.exactMatches.length > 0">
-            <div class="mb-2">
-              <div class="flex items-center gap-2 mb-3">
-                <span class="text-green-800">
-                  → {{ t('common.exactMatchLabel') }} <span class="font-semibold">{{ groupedResults.exactMatches.length }}</span> {{ t('common.remainingSuffix') }}
-                </span>
-              </div>
+            <div class="mb-6 p-3 border-l-4 bg-green-50 border-green-400 rounded-r-lg flex items-center gap-2 shadow-sm">
+              <svg class="w-4 h-4 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span class="text-green-800 text-sm font-semibold">
+                {{ t('common.exactMatchLabel') }} <span class="ml-1 px-1.5 py-0.5 bg-green-100 rounded text-green-900">{{ groupedResults.exactMatches.length }}</span> {{ t('common.remainingSuffix') }}
+              </span>
             </div>
-            <DictCard
-              v-for="entry in displayedGroupedResults.exactMatches"
-              :key="entry.id"
-              :entry="entry"
-            />
+            <div class="space-y-4">
+              <DictCard
+                v-for="entry in displayedGroupedResults.exactMatches"
+                :key="entry.id"
+                :entry="entry"
+              />
+            </div>
           </template>
           
           <!-- 其他相关结果 -->
           <template v-if="displayedGroupedResults.otherResults.length > 0">
-            <div class="mb-2" :class="{ 'mt-6': isTextSearch && displayedGroupedResults.exactMatches.length > 0 }">
-              <div class="flex items-center gap-2 mb-3">
-                <span v-if="isTextSearch" class="text-blue-800">
-                  → {{ t('common.otherResultsLabel') }} <span class="font-semibold">{{ groupedResults.otherResults.length }}</span> {{ t('common.remainingSuffix') }}
-                </span>
-              </div>
+            <div class="mb-6 p-3 border-l-4 bg-blue-50 border-blue-400 rounded-r-lg flex items-center gap-2 shadow-sm" :class="{ 'mt-12': isTextSearch && displayedGroupedResults.exactMatches.length > 0 }">
+              <svg class="w-4 h-4 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span v-if="isTextSearch && sortBy === 'relevance'" class="text-blue-800 text-sm font-semibold">
+                {{ t('common.otherResultsLabel') }} <span class="ml-1 px-1.5 py-0.5 bg-blue-100 rounded text-blue-900">{{ groupedResults.otherResults.length }}</span> {{ t('common.remainingSuffix') }}
+              </span>
+              <span v-else class="text-blue-800 text-sm font-semibold">
+                {{ t('common.searchHeader') }} <span class="font-bold ml-1 px-1.5 py-0.5 bg-blue-100 rounded text-blue-900">{{ groupedResults.otherResults.length }}</span> {{ t('common.remainingSuffix') }}
+              </span>
             </div>
-            <DictCard
-              v-for="entry in displayedGroupedResults.otherResults"
-              :key="entry.id"
-              :entry="entry"
-            />
+            <div class="space-y-4">
+              <DictCard
+                v-for="entry in displayedGroupedResults.otherResults"
+                :key="entry.id"
+                :entry="entry"
+              />
+            </div>
           </template>
           
           <!-- 加载更多按钮 -->
@@ -328,12 +370,13 @@
         <div v-else class="space-y-4">
           <!-- 完全匹配的结果（仅文字搜索时显示） -->
           <template v-if="isTextSearch && displayedGroupedResults.exactMatches.length > 0">
-            <div class="mb-2">
-              <div class="flex items-center gap-2 mb-3">
-                <span class="text-green-800">
-                  → {{ t('common.exactMatchLabel') }} <span class="font-semibold">{{ groupedResults.exactMatches.length }}</span> {{ t('common.remainingSuffix') }}
-                </span>
-              </div>
+            <div class="mb-6 p-3 border-l-4 bg-green-50 border-green-400 rounded-r-lg flex items-center gap-2 shadow-sm">
+              <svg class="w-4 h-4 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span class="text-green-800 text-sm font-semibold">
+                {{ t('common.exactMatchLabel') }} <span class="ml-1 px-1.5 py-0.5 bg-green-100 rounded text-green-900">{{ groupedResults.exactMatches.length }}</span> {{ t('common.remainingSuffix') }}
+              </span>
             </div>
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
               <div class="overflow-x-auto">
@@ -396,12 +439,16 @@
           
           <!-- 其他相关结果 -->
           <template v-if="displayedGroupedResults.otherResults.length > 0">
-            <div class="mb-2" :class="{ 'mt-6': isTextSearch && displayedGroupedResults.exactMatches.length > 0 }">
-              <div class="flex items-center gap-2 mb-3">
-                <span v-if="isTextSearch" class="text-blue-800">
-                  → {{ t('common.otherResultsLabel') }} <span class="font-semibold">{{ groupedResults.otherResults.length }}</span> {{ t('common.remainingSuffix') }}
-                </span>
-              </div>
+            <div class="mb-6 p-3 border-l-4 bg-blue-50 border-blue-400 rounded-r-lg flex items-center gap-2 shadow-sm" :class="{ 'mt-12': isTextSearch && displayedGroupedResults.exactMatches.length > 0 }">
+              <svg class="w-4 h-4 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span v-if="isTextSearch && sortBy === 'relevance'" class="text-blue-800 text-sm font-semibold">
+                {{ t('common.otherResultsLabel') }} <span class="ml-1 px-1.5 py-0.5 bg-blue-100 rounded text-blue-900">{{ groupedResults.otherResults.length }}</span> {{ t('common.remainingSuffix') }}
+              </span>
+              <span v-else class="text-blue-800 text-sm font-semibold">
+                {{ t('common.searchHeader') }} <span class="ml-1 px-1.5 py-0.5 bg-blue-100 rounded text-blue-900">{{ groupedResults.otherResults.length }}</span> {{ t('common.remainingSuffix') }}
+              </span>
             </div>
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
               <div class="overflow-x-auto">
@@ -531,7 +578,7 @@ import type { DictionaryEntry } from '~/types/dictionary'
 const route = useRoute()
 const router = useRouter()
 const { searchBasic, getSuggestions, getMode } = useSearch()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const { getAllVariants, ensureInitialized } = useChineseConverter()
 
 // 开发时显示当前模式
@@ -558,9 +605,11 @@ const isSearchComplete = ref(true) // 搜索是否完成（流式搜索中用）
 const selectedDict = ref<string | null>(null) // 选中的词典
 const selectedDialect = ref<string | null>(null) // 选中的方言点
 const selectedType = ref<string | null>(null) // 选中的类型 (character|word|phrase)
+const sortBy = ref<'relevance' | 'jyutping' | 'headword' | 'dictionary'>('relevance') // 排序方式
 const showDictDropdown = ref(false) // 词典下拉菜单显示状态
 const showDialectDropdown = ref(false) // 方言下拉菜单显示状态
 const showTypeDropdown = ref(false) // 类型下拉菜单显示状态
+const showSortDropdown = ref(false) // 排序下拉菜单显示状态
 
 // 分页配置
 const PAGE_SIZE = 10 // 每页显示10条
@@ -591,10 +640,18 @@ const selectType = (type: string | null) => {
   updateDisplayedResults()
 }
 
+const selectSort = (sort: 'relevance' | 'jyutping' | 'headword' | 'dictionary') => {
+  sortBy.value = sort
+  showSortDropdown.value = false
+  currentPage.value = 1
+  updateDisplayedResults()
+}
+
 const clearFilters = () => {
   selectedDict.value = null
   selectedDialect.value = null
   selectedType.value = null
+  sortBy.value = 'relevance'
   currentPage.value = 1
   updateDisplayedResults()
 }
@@ -663,6 +720,16 @@ const getTypeName = (type: string) => {
   }
 }
 
+const getSortLabel = (sort: string) => {
+  switch (sort) {
+    case 'relevance': return t('common.sortByRelevance')
+    case 'jyutping': return t('common.sortByJyutping')
+    case 'headword': return t('common.sortByHeadword')
+    case 'dictionary': return t('common.sortByDictionary')
+    default: return sort
+  }
+}
+
 // 筛选后的结果
 const filteredResults = computed(() => {
   let results = allResults.value
@@ -676,6 +743,38 @@ const filteredResults = computed(() => {
     results = results.filter(e => e.entry_type === selectedType.value)
   }
   return results
+})
+
+// 排序后的结果
+const sortedResults = computed(() => {
+  const results = [...filteredResults.value]
+  
+  if (sortBy.value === 'relevance') {
+    // 保持原样 (allResults 已经是按相关度排序的)
+    return results
+  }
+  
+  return results.sort((a, b) => {
+    switch (sortBy.value) {
+      case 'jyutping': {
+        const ja = a.phonetic.jyutping[0] || ''
+        const jb = b.phonetic.jyutping[0] || ''
+        return ja.localeCompare(jb)
+      }
+      case 'headword': {
+        const ha = a.headword.normalized || a.headword.display || ''
+        const hb = b.headword.normalized || b.headword.display || ''
+        return ha.localeCompare(hb, locale.value || undefined)
+      }
+      case 'dictionary': {
+        const da = a.source_book || ''
+        const db = b.source_book || ''
+        return da.localeCompare(db, locale.value || undefined)
+      }
+      default:
+        return 0
+    }
+  })
 })
 
 // 判断查询是否是粤拼查询（只包含字母、数字和空格，不包含中文字符）
@@ -726,11 +825,11 @@ const isTextSearch = computed(() => {
 
 // 将结果分为完全匹配和其他结果（仅文字搜索时）
 const groupedResults = computed(() => {
-  // 反查、粤拼搜索或没有查询词时，不分组
-  if (!isTextSearch.value) {
+  // 反查、粤拼搜索、非默认排序或没有查询词时，不分组
+  if (!isTextSearch.value || sortBy.value !== 'relevance') {
     return {
       exactMatches: [] as DictionaryEntry[],
-      otherResults: filteredResults.value
+      otherResults: sortedResults.value
     }
   }
   
@@ -738,7 +837,7 @@ const groupedResults = computed(() => {
   const otherResults: DictionaryEntry[] = []
   
   // 按照后端返回的顺序遍历，保持顺序
-  for (const entry of filteredResults.value) {
+  for (const entry of sortedResults.value) {
     if (isExactMatch(entry, actualSearchQuery.value)) {
       exactMatches.push(entry)
     } else {

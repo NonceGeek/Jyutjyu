@@ -25,10 +25,10 @@
       <div class="max-w-3xl mx-auto mb-12">
         <div class="relative">
           <input v-model="searchQuery" type="text" :placeholder="t('common.searchPlaceholder')"
-            class="w-full px-6 py-4 text-lg border-2 border-gray-300 rounded-full focus:outline-none focus:border-blue-500 shadow-lg"
+            class="w-full px-6 py-4 text-lg border-2 border-blue-200 rounded-md focus:outline-none focus:border-blue-500"
             @keyup.enter="handleSearch">
           <button
-            class="absolute right-3 top-1/2 -translate-y-1/2 px-6 py-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors"
+            class="absolute right-3 top-1/2 -translate-y-1/2 px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
             @click="handleSearch">
             {{ t('common.searchButton') }}
           </button>

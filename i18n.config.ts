@@ -83,7 +83,11 @@ export default defineI18nConfig(() => ({
         langYueHans: '简体粤文',
         langYueHant: '粵文',
         exactMatchLabel: '完全匹配',
-        otherResultsLabel: '其他相关结果'
+        otherResultsLabel: '其他相关结果',
+        sortByRelevance: '相关度',
+        sortByJyutping: '粤拼',
+        sortByHeadword: '词头',
+        sortByDictionary: '词典'
       },
       dictCard: {
         placeholderWord: '有音无字',
@@ -277,7 +281,11 @@ export default defineI18nConfig(() => ({
         langYueHans: '簡體粵文',
         langYueHant: '粵文',
         exactMatchLabel: '完全匹配',
-        otherResultsLabel: '其他相關結果'
+        otherResultsLabel: '其他相關結果',
+        sortByRelevance: '相關度',
+        sortByJyutping: '粵拼',
+        sortByHeadword: '詞頭',
+        sortByDictionary: '詞典'
       },
       dictCard: {
         placeholderWord: '有音無字',
@@ -471,7 +479,11 @@ export default defineI18nConfig(() => ({
         langYueHans: '简体粤文',
         langYueHant: '粤文',
         exactMatchLabel: '完全匹配',
-        otherResultsLabel: '其他相关结果'
+        otherResultsLabel: '其他相关结果',
+        sortByRelevance: '相关度',
+        sortByJyutping: '粤拼',
+        sortByHeadword: '词头',
+        sortByDictionary: '词典'
       },
       dictCard: {
         placeholderWord: '有音无字',
@@ -664,7 +676,11 @@ export default defineI18nConfig(() => ({
         langYueHans: '簡體粵文',
         langYueHant: '粵文',
         exactMatchLabel: '完全匹配',
-        otherResultsLabel: '其他相關結果'
+        otherResultsLabel: '其他相關結果',
+        sortByRelevance: '相關度',
+        sortByJyutping: '粵拼',
+        sortByHeadword: '詞頭',
+        sortByDictionary: '詞典'
       },
       dictCard: {
         placeholderWord: '有音無字',
