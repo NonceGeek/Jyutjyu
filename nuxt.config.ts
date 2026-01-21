@@ -129,6 +129,15 @@ export default defineNuxtConfig({
       hmr: {
         port: 24679
       }
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'opencc': ['opencc-js']
+          }
+        }
+      }
     }
   }
 })
