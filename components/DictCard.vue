@@ -394,8 +394,10 @@ const entryFeedbackDescription = computed(() => {
     e.headword.normalized && e.headword.normalized !== e.headword.display
       ? `參考詞頭：${e.headword.normalized}`
       : '',
-    `粵拼：${(e.phonetic.jyutping || []).join(' / ')}`,
-    e.phonetic.original ? `原書注音：${e.phonetic.original}` : '',
+    `粵拼：${(e.phonetic.jyutping || []).join(':')}`,
+    e.phonetic.original &&
+    e.phonetic.original !== (e.phonetic.jyutping || []).join(':')
+      ? `原書注音：${e.phonetic.original}` : '',
     (e.meta?.headword_variants && e.meta.headword_variants.length > 0)
       ? `異形詞：${e.meta.headword_variants.join('、')}`
       : '',
