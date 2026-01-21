@@ -3,7 +3,7 @@
     {
       "id": "gz-practical-classified",
       "name": "实用广州话分类词典",
-      "dialect": "广州话",
+      "dialect": "广州",
       "entries_count": 7549,
       "author": "麦耘、谭步云",
       "publisher": "广东人民出版社",
@@ -20,7 +20,7 @@
     {
       "id": "gz-colloquialisms",
       "name": "广州话俗语词典",
-      "dialect": "广州话",
+      "dialect": "广州",
       "entries_count": 2516,
       "author": "欧阳觉亚、周无忌、饶秉才",
       "publisher": "广东人民出版社",
@@ -37,7 +37,7 @@
     {
       "id": "hk-cantowords",
       "name": "粵典",
-      "dialect": "香港话",
+      "dialect": "香港",
       "file": "hk-cantowords.json",
       "entries_count": 59019,
       "author": "words.hk contributors",
@@ -75,7 +75,7 @@
     {
       "id": "gz-word-origins",
       "name": "粵語辭源",
-      "dialect": "广州话",
+      "dialect": "广州",
       "file": "gz-word-origins.json",
       "entries_count": 3951,
       "author": "谭步云",
@@ -92,7 +92,7 @@
     {
       "id": "gz-dialect",
       "name": "廣州方言詞典",
-      "dialect": "广州话",
+      "dialect": "广州",
       "file": "gz-dialect.json",
       "entries_count": 7476,
       "author": "白宛如",
@@ -109,7 +109,7 @@
     {
       "id": "gz-modern",
       "name": "现代粤语词典",
-      "dialect": "广州话",
+      "dialect": "广州",
       "file": "gz-modern.json",
       "entries_count": 16347,
       "author": "范俊军、范兰德等",
@@ -126,7 +126,7 @@
     {
       "id": "gz-dict",
       "name": "广州话词典（第2版）",
-      "dialect": "广州话",
+      "dialect": "广州",
       "file": "gz-dict.json",
       "entries_count": 10823,
       "author": "饶秉才、欧阳觉亚、周无忌",

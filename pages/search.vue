@@ -99,7 +99,7 @@
                 :class="selectedDialect ? 'bg-green-50 border-green-300 text-green-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'"
                 @click="showDialectDropdown = !showDialectDropdown"
               >
-                <span>{{ selectedDialect || t('common.allDialects') }}</span>
+                <span>{{ selectedDialect ? getDialectLabel(selectedDialect) : t('common.allDialects') }}</span>
                 <svg class="w-4 h-4" :class="showDialectDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
@@ -123,7 +123,7 @@
                   :class="selectedDialect === dialect ? 'text-green-600 bg-green-50' : 'text-gray-700'"
                   @click="selectDialect(dialect)"
                 >
-                  {{ dialect }}
+                  {{ getDialectLabel(dialect) }}
                   <span class="text-gray-400 text-xs ml-1">({{ getDialectCount(dialect) }})</span>
                 </button>
               </div>
@@ -618,10 +618,29 @@ const availableDicts = computed(() => {
 const availableDialects = computed(() => {
   const dialects = new Set<string>()
   allResults.value.forEach(entry => {
-    if (entry.dialect?.name) dialects.add(entry.dialect.name)
+    const code = entry.dialect?.region_code?.toUpperCase()
+    if (code) dialects.add(code)
   })
-  return Array.from(dialects).sort()
+  // 优先固定顺序，剩余按字母排序
+  const preferredOrder = ['YUE', 'HK', 'GZ']
+  return Array.from(dialects).sort((a, b) => {
+    const ai = preferredOrder.indexOf(a)
+    const bi = preferredOrder.indexOf(b)
+    if (ai !== -1 || bi !== -1) {
+      return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi)
+    }
+    return a.localeCompare(b)
+  })
 })
+
+// 方言显示名：使用地区代码映射（便于 i18n）
+const getDialectLabel = (code: string) => {
+  const normalized = code?.toUpperCase()
+  if (normalized === 'GZ' || normalized === 'HK' || normalized === 'YUE') {
+    return t(`dictCard.dialect.${normalized}`)
+  }
+  return normalized || code
+}
 
 const availableTypes = computed(() => {
   const types = new Set<string>()
@@ -651,7 +670,7 @@ const filteredResults = computed(() => {
     results = results.filter(e => e.source_book === selectedDict.value)
   }
   if (selectedDialect.value) {
-    results = results.filter(e => e.dialect?.name === selectedDialect.value)
+    results = results.filter(e => e.dialect?.region_code?.toUpperCase() === selectedDialect.value)
   }
   if (selectedType.value) {
     results = results.filter(e => e.entry_type === selectedType.value)
@@ -769,7 +788,7 @@ const displayedGroupedResults = computed(() => {
 const getDictCount = (dict: string): number => {
   let results = allResults.value
   if (selectedDialect.value) {
-    results = results.filter(e => e.dialect?.name === selectedDialect.value)
+    results = results.filter(e => e.dialect?.region_code?.toUpperCase() === selectedDialect.value)
   }
   return results.filter(e => e.source_book === dict).length
 }
@@ -782,7 +801,8 @@ const getDialectCount = (dialect: string): number => {
   if (selectedType.value) {
     results = results.filter(e => e.entry_type === selectedType.value)
   }
-  return results.filter(e => e.dialect?.name === dialect).length
+  const code = dialect?.toUpperCase()
+  return results.filter(e => e.dialect?.region_code?.toUpperCase() === code).length
 }
 
 const getTypeCount = (type: string): number => {
@@ -791,7 +811,7 @@ const getTypeCount = (type: string): number => {
     results = results.filter(e => e.source_book === selectedDict.value)
   }
   if (selectedDialect.value) {
-    results = results.filter(e => e.dialect?.name === selectedDialect.value)
+    results = results.filter(e => e.dialect?.region_code?.toUpperCase() === selectedDialect.value)
   }
   return results.filter(e => e.entry_type === type).length
 }
