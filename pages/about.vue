@@ -130,7 +130,7 @@
             <!-- 粵典 -->
             <div class="bg-white rounded-lg p-4 mb-4">
               <h4 class="font-semibold text-gray-900 mb-2">
-                📚 {{ t('about.community.wordsTitle') }}
+                📚 {{ t('about.community.wordsTitle', { count: wordsCountDisplay }) }}
               </h4>
               <p class="text-sm text-gray-700 mb-3">
                 {{ t('about.community.wordsDesc') }}
@@ -166,7 +166,7 @@
             <!-- Wiktionary -->
             <div class="bg-white rounded-lg p-4 mb-4">
               <h4 class="font-semibold text-gray-900 mb-2">
-                📖 {{ t('about.community.wiktTitle') }}
+                📖 {{ t('about.community.wiktTitle', { count: wiktCountDisplay }) }}
               </h4>
               <p class="text-sm text-gray-700 mb-3">
                 {{ t('about.community.wiktDesc') }}
@@ -252,7 +252,7 @@
             <!-- 欽州粵拼 -->
             <div class="bg-white rounded-lg p-4 mb-4">
               <h4 class="font-semibold text-gray-900 mb-2">
-                📚 {{ t('about.original.qzTitle') }}
+                📚 {{ t('about.original.qzTitle', { count: qzCountDisplay }) }}
               </h4>
               <p class="text-sm text-gray-700 mb-3">
                 {{ t('about.original.qzDesc') }}
@@ -387,6 +387,33 @@
 
 <script setup lang="ts">
 const { t } = useI18n()
+
+// 词典词条数量（用于 about 页面展示 {count}）
+// 复用与 index.vue 相同的 key，共享数据缓存
+const { data: dictionariesData } = await useAsyncData('dictionaries-index', () =>
+  queryContent('/dictionaries').findOne()
+)
+
+const wordsCountDisplay = computed(() => {
+  const data = dictionariesData.value as any
+  if (!data?.dictionaries) return '0'
+  const dict = data.dictionaries.find((d: any) => d.id === 'hk-cantowords')
+  return (dict?.entries_count || 0).toLocaleString()
+})
+
+const wiktCountDisplay = computed(() => {
+  const data = dictionariesData.value as any
+  if (!data?.dictionaries) return '0'
+  const dict = data.dictionaries.find((d: any) => d.id === 'wiktionary-cantonese')
+  return (dict?.entries_count || 0).toLocaleString()
+})
+
+const qzCountDisplay = computed(() => {
+  const data = dictionariesData.value as any
+  if (!data?.dictionaries) return '0'
+  const dict = data.dictionaries.find((d: any) => d.id === 'qz-jyutping')
+  return (dict?.entries_count || 0).toLocaleString()
+})
 
 // SEO
 useHead({
