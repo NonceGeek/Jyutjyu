@@ -98,6 +98,7 @@ export default defineI18nConfig(() => ({
           GZ: '广州',
           HK: '香港',
           QZ: '钦州',
+          KP: '开平',
           YUE: '粤语'
         },
         entryTypeCharacter: '字',
@@ -353,6 +354,7 @@ export default defineI18nConfig(() => ({
           GZ: '廣州',
           HK: '香港',
           QZ: '欽州',
+          KP: '開平',
           YUE: '粵語'
         },
         entryTypeCharacter: '字',
@@ -608,6 +610,7 @@ export default defineI18nConfig(() => ({
           GZ: '广州',
           HK: '香港',
           QZ: '钦州',
+          KP: '开平',
           YUE: '粤语'
         },
         entryTypeCharacter: '字',
@@ -862,6 +865,7 @@ export default defineI18nConfig(() => ({
           GZ: '廣州',
           HK: '香港',
           QZ: '欽州',
+          KP: '開平',
           YUE: '粵語'
         },
         entryTypeCharacter: '字',

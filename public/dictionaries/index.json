@@ -157,8 +157,25 @@
       "attribution": "欽州粵拼，Lai Joengzit等，2020年。爱好者原创作品。",
       "usage_restriction": "此词典数据遵循 GPL-3.0 许可证，使用本数据时请遵守相应的许可证要求。",
       "cover": "/qz-jyutping.jpg"
+    },
+    {
+      "id": "kp-dialect",
+      "name": "开平方言",
+      "dialect": "开平",
+      "file": "kp-dialect.json",
+      "entries_count": 3745,
+      "author": "邓钧",
+      "publisher": "湖南电子音像出版社",
+      "year": 2000,
+      "version": "2026-01-22",
+      "description": "收录开平话词汇，包含国际音标、粤拼及普通话释义，是研究开平方言的重要工具书",
+      "source": "scanned_from_internet",
+      "license": "Copyrighted. For technical demonstration only.",
+      "attribution": "《开平方言》，邓钧编，湖南电子音像出版社，2000年版",
+      "usage_restriction": "此词表内容受版权保护，来源于互联网公开扫描资源，仅用于本项目原型验证和技术演示，不得用于商业用途或二次分发。",
+      "cover": "/kp-dialect.jpg"
     }
   ],
-  "last_updated": "2026-01-22T09:30:26.336Z",
+  "last_updated": "2026-01-22T13:32:05.759Z",
   "schema_version": "1.0.0"
 }

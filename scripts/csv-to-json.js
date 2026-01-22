@@ -25,6 +25,7 @@ const ADAPTERS = {
   'gz-dict': () => import('./adapters/gz-dict.js'),
   'hk-cantowords': () => import('./adapters/hk-cantowords.js'),
   'qz-jyutping': () => import('./adapters/qz-jyutping.js'),
+  'kp-dialect': () => import('./adapters/kp-dialect.js'),
   // 未来可以添加更多词典
 }
 
@@ -248,6 +249,7 @@ function updateDictionaryIndex(dictInfo, entryCount) {
   dictEntry.license_url = dictInfo.license_url
   dictEntry.attribution = dictInfo.attribution
   dictEntry.usage_restriction = dictInfo.usage_restriction
+  dictEntry.cover = dictInfo.cover
 
   // 分片配置（如果启用）
   if (dictInfo.enable_chunking) {
@@ -291,6 +293,8 @@ CSV 转 JSON 工具
   - gz-modern                  现代粤语词典
   - gz-dict                    广州话词典（第2版）
   - hk-cantowords              粵典 (words.hk)
+  - qz-jyutping                欽州粵拼
+  - kp-dialect                 开平方言
 
 示例:
   # 转换实用广州话分类词典
