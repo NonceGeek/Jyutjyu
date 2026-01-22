@@ -693,7 +693,7 @@ const availableDialects = computed(() => {
 // 方言显示名：使用地区代码映射（便于 i18n）
 const getDialectLabel = (code: string) => {
   const normalized = code?.toUpperCase()
-  if (normalized === 'GZ' || normalized === 'HK' || normalized === 'YUE') {
+  if (normalized === 'GZ' || normalized === 'HK' || normalized === 'YUE' || normalized === 'QZ') {
     return t(`dictCard.dialect.${normalized}`)
   }
   return normalized || code
