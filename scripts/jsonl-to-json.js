@@ -332,10 +332,10 @@ JSONL 转 JSON 工具
   -h, --help             显示帮助信息
 
 可用的词典适配器:
-  - wiktionary-cantonese    Wiktionary粤语词条
+  - wiktionary-cantonese   維基辭典
 
 示例:
-  # 转换 Wiktionary Cantonese
+  # 转换 維基辭典
   node scripts/jsonl-to-json.js \\
     --dict wiktionary-cantonese \\
     --input data/processed/wiktionary_cantonese_entries.jsonl

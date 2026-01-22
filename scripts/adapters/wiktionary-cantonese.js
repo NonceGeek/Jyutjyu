@@ -1,5 +1,5 @@
 /**
- * Wiktionary Cantonese数据适配器
+ * 維基辭典数据适配器
  * 
  * 原始数据格式: JSONL (每行一个JSON对象)
  * 数据源: Wiktionary Chinese entries with Cantonese content
@@ -23,19 +23,19 @@ import {
  */
 export const DICTIONARY_INFO = {
   id: 'wiktionary-cantonese',
-  name: 'Wiktionary',
+  name: '維基辭典',
   dialect: {
     name: '粤语',
     region_code: 'YUE'
   },
-  source_book: 'Wiktionary',
-  author: 'Wiktionary contributors',
-  publisher: 'Wikimedia Foundation',
+  source_book: '維基辭典',
+  author: '維基辭典貢獻者',
+  publisher: '維基媒體基金會',
   year: 2026,
   source: 'community_contributed',
   license: 'CC BY-SA 4.0',
   license_url: 'https://creativecommons.org/licenses/by-sa/4.0/',
-  attribution: 'Wiktionary contributors',
+  attribution: '維基辭典貢獻者',
   usage_restriction: '需遵循CC BY-SA 4.0协议',
   
   // 启用自动分片（大型词典优化）
@@ -74,7 +74,7 @@ const POS_MAP = {
 
 /**
  * 提取粤语发音配对（Jyutping + IPA）
- * 注意：Wiktionary中Jyutping和IPA通常在不同的sound对象中
+ * 注意：維基辭典中Jyutping和IPA通常在不同的sound对象中
  * @param {Array} sounds - 发音数组
  * @returns {Array<{jyutping: string, ipa: string|null}>} 发音配对数组
  */
@@ -180,7 +180,7 @@ function extractVariants(forms) {
 
 /**
  * 检查是否为粤语相关词条
- * @param {Object} entry - Wiktionary词条对象
+ * @param {Object} entry - 維基辭典词条对象
  * @returns {boolean} 是否为粤语词条
  */
 function isCantoneseEntry(entry) {
@@ -262,7 +262,7 @@ function extractRegister(tags) {
 
 /**
  * 处理释义数组
- * @param {Array} senses - Wiktionary释义数组
+ * @param {Array} senses - 維基辭典释义数组
  * @returns {Array<Object>} 标准化的释义数组
  * 注意：地区信息不在这里处理，会在 transformEntry 中提取到 dialect 字段
  */
@@ -287,7 +287,7 @@ function processSenses(senses) {
     const label = null
     
     // 提取例句（如果有）
-    // 注意：Wiktionary 的例句经常有简繁体两个版本，我们只保留繁体版本以节省约50%空间
+    // 注意：維基辭典 的例句经常有简繁体两个版本，我们只保留繁体版本以节省约50%空间
     // 策略：
     // 1. 明确标记为简体的直接跳过：tags 包含 "Simplified-Chinese"
     // 2. 使用 ref + roman 去重（同一引用和罗马音对应繁简体对）
@@ -740,7 +740,7 @@ export async function postProcess(entries, outputPath) {
     // 执行分片
     await splitModule.splitDictionary(outputPath, chunkDir)
     
-    console.log('✅ Wiktionary 数据分片完成！')
+    console.log('✅ 維基辭典 数据分片完成！')
     console.log('💡 前端将自动按需加载分片，大幅提升性能')
     
     // 分片成功后删除完整文件

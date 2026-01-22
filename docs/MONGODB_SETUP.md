@@ -135,7 +135,7 @@ npm run db:import:help
 | `gz-colloquialisms` | 广州话俗语词典 |
 | `gz-word-origins` | 粵語辭源 |
 | `hk-cantowords` | 粵典 (words.hk) |
-| `wiktionary-cantonese` | Wiktionary Cantonese |
+| `wiktionary-cantonese` | 維基辭典 |
 
 ### 导入完成后
 
@@ -148,7 +148,7 @@ npm run db:import:help
    新增: 567 条（仅 upsert 模式）
 
 📊 数据库统计 (共 175230 条):
-   Wiktionary Cantonese: 102195 条
+   維基辭典: 102195 条
    粵典 (words.hk): 59019 条
    实用广州话分类词典: 7549 条
    粵語辭源: 3951 条

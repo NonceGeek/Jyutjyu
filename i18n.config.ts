@@ -153,15 +153,15 @@ export default defineI18nConfig(() => ({
           allowed2: '必须保留署名和版权告示',
           commercialTitle: '商业使用',
           commercialDesc: '需获得授权（收入低于地区中位数 3 倍的小型个人业务可豁免）',
-          wordsCopyright: '版权持有人：Hong Kong Lexicography Limited（香港辞书有限公司）',
-          wiktTitle: 'Wiktionary Cantonese - 102,195 词条',
+          wordsCopyright: '版权持有人：香港辞书有限公司',
+          wiktTitle: '维基词典 - 102,195 词条',
           wiktDesc: '来自维基词典的粤语词条，由全球志愿者协作编写，内容丰富全面。',
           wiktAllowed1: '商业使用：允许用于商业目的',
           wiktAllowed2: '复制与分发：可以自由复制、分发、传播',
           wiktAllowed3: '修改与演绎：可以修改、混合、转换或基于该作品创作',
           wiktCond1: '署名：必须给予适当的署名，提供指向许可协议的链接',
           wiktCond2: '相同方式共享：如对本作品进行修改，必须以相同许可协议分发',
-          wiktCopyright: '版权持有人：Wikimedia Foundation & Wiktionary contributors'
+          wiktCopyright: '版权持有人：维基媒体基金会 & 维基词典贡献者'
         },
         original: {
           title: '社区原创词表',
@@ -399,15 +399,15 @@ export default defineI18nConfig(() => ({
           allowed2: '必須保留署名和版權告示',
           commercialTitle: '商業使用',
           commercialDesc: '需獲得授權（收入低於地區中位數 3 倍的小型個人業務可豁免）',
-          wordsCopyright: '版權持有人：Hong Kong Lexicography Limited（香港辭書有限公司）',
-          wiktTitle: 'Wiktionary Cantonese - 102,195 詞條',
+          wordsCopyright: '版權持有人：香港辭書有限公司',
+          wiktTitle: '維基辭典 - 102,195 詞條',
           wiktDesc: '來自維基詞典的粵語詞條，由全球志願者協作編寫，內容豐富全面。',
           wiktAllowed1: '商業使用：允許用於商業目的',
           wiktAllowed2: '複製與分發：可以自由複製、分發、傳播',
           wiktAllowed3: '修改與演繹：可以修改、混合、轉換或基於該作品創作',
           wiktCond1: '署名：必須給予適當的署名，提供指向許可協議的鏈接',
           wiktCond2: '相同方式共享：如對本作品進行修改，必須以相同許可協議分發',
-          wiktCopyright: '版權持有人：Wikimedia Foundation & Wiktionary contributors'
+          wiktCopyright: '版權持有人：維基媒體基金會 & 維基辭典貢獻者'
         },
         original: {
           title: '社羣原創詞表',
@@ -645,15 +645,15 @@ export default defineI18nConfig(() => ({
           allowed2: '必须保留署名同版权告示',
           commercialTitle: '商业使用',
           commercialDesc: '需要另外攞授权（收入低过地区中位数 3 倍嘅小型个人业务可以豁免）',
-          wordsCopyright: '版权持有人：Hong Kong Lexicography Limited（香港辞书有限公司）',
-          wiktTitle: 'Wiktionary Cantonese - 102,195 词条',
+          wordsCopyright: '版权持有人：香港辞书有限公司',
+          wiktTitle: '维基辞典 - 102,195 詞條',
           wiktDesc: '来自维基词典嘅粤语词条，由全球志愿者协作编写，内容丰富全面。',
           wiktAllowed1: '商业使用：允许用于商业目的',
           wiktAllowed2: '复制与分发：可以自由复制、分发、传播',
           wiktAllowed3: '修改与演绎：可以修改、混合、转换或者基于呢啲内容再创作',
           wiktCond1: '署名：必须畀出适当嘅署名，并且提供指向许可协议嘅链接',
           wiktCond2: '相同方式共享：如果对作品作出修改，必须以相同许可协议再分发',
-          wiktCopyright: '版权持有人：Wikimedia Foundation & Wiktionary contributors'
+          wiktCopyright: '版权持有人：维基媒体基金会 & 维基词典贡献者'
         },
         original: {
           title: '社区原创词表',
@@ -890,15 +890,15 @@ export default defineI18nConfig(() => ({
           allowed2: '必須保留署名同版權告示',
           commercialTitle: '商業使用',
           commercialDesc: '需要另外攞授權（收入低過地區中位數 3 倍嘅小型個人業務可以豁免）',
-          wordsCopyright: '版權持有人：Hong Kong Lexicography Limited（香港辭書有限公司）',
-          wiktTitle: 'Wiktionary Cantonese - 102,195 詞條',
+          wordsCopyright: '版權持有人：香港辭書有限公司',
+          wiktTitle: '維基辭典 - 102,195 詞條',
           wiktDesc: '來自維基詞典嘅粵語詞條，由全球志願者協作編寫，內容豐富全面。',
           wiktAllowed1: '商業使用：允許用於商業目的',
           wiktAllowed2: '複製與分發：可以自由複製、分發、傳播',
           wiktAllowed3: '修改與演繹：可以修改、混合、轉換或者基於呢啲內容再創作',
           wiktCond1: '署名：必須畀出適當署名，並且提供指向許可協議嘅鏈接',
           wiktCond2: '相同方式共享：如果對作品作出修改，必須以相同許可協議再分發',
-          wiktCopyright: '版權持有人：Wikimedia Foundation & Wiktionary contributors'
+          wiktCopyright: '版權持有人：維基媒體基金會 & 維基辭典貢獻者'
         },
         original: {
           title: '社羣原創詞表',
