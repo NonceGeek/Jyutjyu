@@ -147,7 +147,7 @@
       "name": "欽州粵拼",
       "dialect": "钦州",
       "file": "qz-jyutping.json",
-      "entries_count": 13915,
+      "entries_count": 12657,
       "author": "Lai Joengzit等",
       "year": 2020,
       "version": "201026",
@@ -159,6 +159,6 @@
       "cover": "/qz-jyutping.jpg"
     }
   ],
-  "last_updated": "2026-01-22T06:26:29.255Z",
+  "last_updated": "2026-01-22T09:30:26.336Z",
   "schema_version": "1.0.0"
 }

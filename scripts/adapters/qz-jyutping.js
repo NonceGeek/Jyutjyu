@@ -142,6 +142,91 @@ export function transformRow(row) {
 }
 
 /**
+ * 聚合相同词头的多个读音
+ * 将同一个词头的多个读音合并到一个条目中，分行展示
+ * @param {Array<Object>} entries - 词条数组
+ * @returns {Array<Object>} 聚合后的词条数组
+ */
+export function aggregateEntries(entries) {
+  // 按词头分组
+  const grouped = new Map()
+  
+  entries.forEach(entry => {
+    const key = entry.headword.normalized
+    
+    if (!grouped.has(key)) {
+      grouped.set(key, [])
+    }
+    grouped.get(key).push(entry)
+  })
+  
+  const aggregated = []
+  
+  grouped.forEach((group, key) => {
+    if (group.length === 1) {
+      // 单个词条，直接使用
+      aggregated.push(group[0])
+    } else {
+      // 多个词条，需要合并读音
+      // 按 source_id 排序，使用最小的索引作为基础词条
+      group.sort((a, b) => {
+        const idA = parseInt(a.source_id) || 0
+        const idB = parseInt(b.source_id) || 0
+        return idA - idB
+      })
+      
+      // 以第一个（最小索引）词条为基础
+      const baseEntry = { ...group[0] }
+      
+      // 收集所有粤拼读音（去重）
+      const allJyutping = new Set()
+      
+      group.forEach(entry => {
+        // 收集所有 jyutping
+        if (Array.isArray(entry.phonetic.jyutping)) {
+          entry.phonetic.jyutping.forEach(jp => {
+            if (jp && jp.trim()) {
+              allJyutping.add(jp.trim())
+            }
+          })
+        } else if (entry.phonetic.jyutping) {
+          allJyutping.add(entry.phonetic.jyutping.trim())
+        }
+      })
+      
+      // 转换为数组并排序（保持一致性）
+      const mergedJyutping = Array.from(allJyutping).sort()
+      
+      // 更新 phonetic 字段
+      baseEntry.phonetic.jyutping = mergedJyutping
+      // 对 qz-jyutping 来说，“原文注音”就是粤拼本身。
+      // 聚合后把 original 设为与 jyutping 一一对应的数组，避免前端把“另一个读音”
+      // 误显示成“原文注音”（仅仅因为字符串不相等）。
+      baseEntry.phonetic.original = mergedJyutping
+      
+      // 合并 source_id（保留所有原始索引，用逗号分隔）
+      const sourceIds = group.map(e => e.source_id).filter(Boolean)
+      if (sourceIds.length > 1) {
+        baseEntry.source_id = sourceIds.join(',')
+      }
+      
+      // 合并关键词（去重）
+      const allKeywords = new Set()
+      group.forEach(entry => {
+        if (Array.isArray(entry.keywords)) {
+          entry.keywords.forEach(kw => allKeywords.add(kw))
+        }
+      })
+      baseEntry.keywords = Array.from(allKeywords)
+      
+      aggregated.push(baseEntry)
+    }
+  })
+  
+  return aggregated
+}
+
+/**
  * 批量转换
  * @param {Array<Object>} rows - CSV 行数组
  * @returns {Object} { entries, errors, filteredCount }
@@ -172,8 +257,11 @@ export function transformAll(rows) {
     }
   }
   
+  // 聚合相同词头的多个读音
+  const aggregatedEntries = aggregateEntries(entries)
+  
   return {
-    entries,
+    entries: aggregatedEntries,
     errors: errors.length > 0 ? errors : undefined,
     filteredCount
   }
