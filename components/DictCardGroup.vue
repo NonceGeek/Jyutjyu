@@ -54,44 +54,47 @@
         class="mt-4 pt-4 first:mt-0 first:pt-0 border-t first:border-t-0 border-gray-200"
       >
         <!-- 词典标签区 -->
-        <div class="flex flex-wrap gap-2 items-center">
-          <span class="px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-sm whitespace-nowrap">
-            {{ entry.source_book }}<template v-if="entry.source_id">: {{ entry.source_id }}</template>
-          </span>
+        <div class="flex items-start gap-3">
+          <div class="flex flex-wrap gap-2 items-center flex-1 min-w-0">
+            <span class="px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-sm whitespace-nowrap">
+              {{ entry.source_book }}<template v-if="entry.source_id">: {{ entry.source_id }}</template>
+            </span>
 
-          <span class="px-3 py-1 bg-green-50 text-green-700 rounded-lg text-sm whitespace-nowrap">
-            {{ getDialectLabel(entry) }}
-          </span>
+            <span class="px-3 py-1 bg-green-50 text-green-700 rounded-lg text-sm whitespace-nowrap">
+              {{ getDialectLabel(entry) }}
+            </span>
 
-          <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg text-sm whitespace-nowrap">
-            {{ getEntryTypeLabel(entry) }}
-          </span>
+            <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg text-sm whitespace-nowrap">
+              {{ getEntryTypeLabel(entry) }}
+            </span>
 
-          <span
-            v-if="entry.meta?.register"
-            class="px-3 py-1 bg-orange-50 text-orange-700 rounded-lg text-sm whitespace-nowrap"
-          >
-            {{ entry.meta.register }}
-          </span>
+            <span
+              v-if="entry.meta?.register"
+              class="px-3 py-1 bg-orange-50 text-orange-700 rounded-lg text-sm whitespace-nowrap"
+            >
+              {{ entry.meta.register }}
+            </span>
 
-          <span
-            v-if="entry.meta?.category"
-            class="px-3 py-1 bg-purple-50 text-purple-700 rounded-lg text-sm break-words max-w-full"
-          >
-            {{ entry.meta.category }}
-          </span>
+            <span
+              v-if="entry.meta?.category"
+              class="px-3 py-1 bg-purple-50 text-purple-700 rounded-lg text-sm break-words max-w-full"
+            >
+              {{ entry.meta.category }}
+            </span>
+          </div>
 
-          <FeedbackButton
-            :entry-data="{
-              word: entry.headword.display,
-              source: entry.source_book,
-              id: entry.id
-            }"
-            :initial-description="getEntryFeedbackDescription(entry)"
-            :icon-only="true"
-            initial-type="entry-error"
-            button-class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200"
-          />
+          <div class="flex-shrink-0">
+            <FeedbackButton
+              :entry-data="{
+                word: entry.headword.display,
+                source: entry.source_book,
+                id: entry.id
+              }"
+              :initial-description="getEntryFeedbackDescription(entry)"
+              initial-type="entry-error"
+              button-class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 text-sm whitespace-nowrap"
+            />
+          </div>
         </div>
 
         <!-- 仅当该词典粤拼与主词条不同才显示 -->

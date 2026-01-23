@@ -3,7 +3,7 @@
     <!-- Header with Search Bar -->
     <header class="bg-white shadow-sm sticky top-0 z-10">
       <div class="container mx-auto px-4 py-4">
-        <div class="flex items-center gap-4">
+        <div class="flex flex-wrap items-center gap-4">
           <NuxtLink to="/" class="text-xl font-bold text-blue-600 whitespace-nowrap">
             {{ t('common.siteName') }}
           </NuxtLink>
@@ -46,6 +46,9 @@
             >
             <span class="text-sm text-gray-600">{{ t('common.reverseSearchShort') }}</span>
           </label>
+          <div class="flex-shrink-0">
+            <LanguageSwitcher />
+          </div>
         </div>
       </div>
       

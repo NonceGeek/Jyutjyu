@@ -214,6 +214,7 @@ export default defineI18nConfig(() => ({
         title: '反馈',
         subtitle: '帮助我们改进粤语辞丛',
         buttonTitle: '提交反馈',
+        buttonShort: '反馈',
         type: {
           label: '反馈类型',
           bug: '网站BUG',
@@ -471,6 +472,7 @@ export default defineI18nConfig(() => ({
         title: '反饋',
         subtitle: '幫助我們改進粵語辭叢',
         buttonTitle: '提交反饋',
+        buttonShort: '反饋',
         type: {
           label: '反饋類型',
           bug: '網站BUG',
@@ -728,6 +730,7 @@ export default defineI18nConfig(() => ({
         title: '反馈',
         subtitle: '帮助我哋改进粤语辞丛',
         buttonTitle: '提交反馈',
+        buttonShort: '反馈',
         type: {
           label: '反馈类型',
           bug: '网站BUG',
@@ -984,6 +987,7 @@ export default defineI18nConfig(() => ({
         title: '反饋',
         subtitle: '幫助我哋改進粵語辭叢',
         buttonTitle: '提交反饋',
+        buttonShort: '反饋',
         type: {
           label: '反饋類型',
           bug: '網站BUG',

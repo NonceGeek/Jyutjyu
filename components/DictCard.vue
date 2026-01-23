@@ -103,9 +103,8 @@
               id: entry.id
             }"
             :initial-description="entryFeedbackDescription"
-            :icon-only="true"
             initial-type="entry-error"
-            button-class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200"
+            button-class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-sm whitespace-nowrap"
           />
         </div>
       </div>
@@ -625,4 +624,3 @@ const getOriginalPhonetic = (entry: any, idx: number): string | null => {
   }
 }
 </style>
-
