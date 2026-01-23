@@ -678,7 +678,23 @@ const clearFilters = () => {
 const getAggregationKey = (entry: DictionaryEntry): string => {
   const headwordDisplay = entry.headword.display?.trim() || ''
   const headwordNormalized = entry.headword.normalized?.trim() || ''
-  return [headwordDisplay, headwordNormalized].join('||')
+  const jyutpingKey = getEntryJyutpingKey(entry)
+  return [headwordDisplay, headwordNormalized, jyutpingKey].join('||')
+}
+
+const getEntryJyutpingKey = (entry: DictionaryEntry): string => {
+  const seen = new Set<string>()
+  const result: string[] = []
+  const jps = entry.phonetic?.jyutping || []
+  jps.forEach(jp => {
+    const value = jp?.trim()
+    if (!value) return
+    if (!seen.has(value)) {
+      seen.add(value)
+      result.push(value)
+    }
+  })
+  return result.join('; ')
 }
 
 const aggregateEntries = (entries: DictionaryEntry[]): AggregatedEntry[] => {
