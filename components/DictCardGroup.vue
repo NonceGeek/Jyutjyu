@@ -1,0 +1,564 @@
+<template>
+  <div v-if="entries.length > 0" class="dict-card bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
+    <!-- 头部：词头 + 粤拼（共享信息） -->
+    <div class="card-header px-6 py-4 border-b border-gray-100">
+      <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">
+        <div class="flex-1 min-w-0">
+          <h3 class="text-2xl font-bold text-gray-900 mb-1 break-words">
+            {{ primary.headword.display }}
+            <span
+              v-if="primary.headword.is_placeholder"
+              class="ml-2 text-sm text-orange-600 font-normal"
+              :title="t('dictCard.placeholderWord')"
+            >
+              {{ t('dictCard.placeholderWord') }}
+            </span>
+            <sup
+              v-if="primary.meta?.variant_number"
+              class="ml-1 text-sm text-gray-500"
+            >
+              {{ primary.meta.variant_number }}
+            </sup>
+          </h3>
+
+          <div class="mt-2">
+            <div
+              v-for="(jp, idx) in primary.phonetic.jyutping"
+              :key="idx"
+              class="flex items-center gap-1.5 flex-wrap"
+            >
+              <div class="font-mono text-lg text-blue-600 font-semibold break-words">
+                {{ jp }}
+              </div>
+              <div
+                v-if="getOriginalPhonetic(primary, idx)"
+                class="text-sm text-gray-500 break-words"
+              >
+                <span class="text-gray-400">{{ t('dictCard.originalPhonetic') }}</span>{{ getOriginalPhonetic(primary, idx) }}
+              </div>
+            </div>
+          </div>
+
+          <p
+            v-if="primary.meta?.headword_variants && primary.meta.headword_variants.length > 0"
+            class="text-sm text-gray-600 break-words mt-2"
+          >
+            {{ t('dictCard.variantWords') }}{{ primary.meta.headword_variants.join('、') }}
+          </p>
+          <p
+            v-if="primary.headword.display !== primary.headword.normalized"
+            class="text-sm text-gray-500 break-words mt-1"
+          >
+            {{ t('dictCard.standardWriting') }}{{ primary.headword.normalized }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 内容：按词典分段 -->
+    <div class="card-body px-6 py-4">
+      <div
+        v-for="entry in entries"
+        :key="entry.id"
+        class="mt-4 pt-4 first:mt-0 first:pt-0 border-t first:border-t-0 border-gray-200"
+      >
+        <!-- 词典标签区 -->
+        <div class="flex flex-wrap gap-2 items-center">
+          <span class="px-3 py-1 bg-blue-50 text-blue-700 rounded-lg text-sm whitespace-nowrap">
+            {{ entry.source_book }}<template v-if="entry.source_id">: {{ entry.source_id }}</template>
+          </span>
+
+          <span class="px-3 py-1 bg-green-50 text-green-700 rounded-lg text-sm whitespace-nowrap">
+            {{ getDialectLabel(entry) }}
+          </span>
+
+          <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-lg text-sm whitespace-nowrap">
+            {{ getEntryTypeLabel(entry) }}
+          </span>
+
+          <span
+            v-if="entry.meta?.register"
+            class="px-3 py-1 bg-orange-50 text-orange-700 rounded-lg text-sm whitespace-nowrap"
+          >
+            {{ entry.meta.register }}
+          </span>
+
+          <span
+            v-if="entry.meta?.category"
+            class="px-3 py-1 bg-purple-50 text-purple-700 rounded-lg text-sm break-words max-w-full"
+          >
+            {{ entry.meta.category }}
+          </span>
+
+          <FeedbackButton
+            :entry-data="{
+              word: entry.headword.display,
+              source: entry.source_book,
+              id: entry.id
+            }"
+            :initial-description="getEntryFeedbackDescription(entry)"
+            :icon-only="true"
+            initial-type="entry-error"
+            button-class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200"
+          />
+        </div>
+
+        <!-- 仅当该词典粤拼与主词条不同才显示 -->
+        <div v-if="shouldShowEntryJyutping(entry)" class="mt-3 text-sm">
+          <span class="text-sm text-gray-500 mr-2">{{ t('common.jyutpingColumn') }}:</span>
+          <span class="font-mono text-blue-600 font-semibold">{{ getEntryJyutping(entry) }}</span>
+        </div>
+
+        <!-- 释义 -->
+        <div class="mt-4">
+          <div
+            v-for="(sense, senseIdx) in entry.senses"
+            :key="senseIdx"
+            class="mb-4 last:mb-0"
+          >
+            <div class="flex items-start gap-3">
+              <span
+                v-if="entry.senses.length > 1"
+                class="flex-shrink-0 w-6 h-6 rounded-full bg-gray-100 text-gray-700 text-sm flex items-center justify-center font-semibold"
+              >
+                {{ senseIdx + 1 }}
+              </span>
+
+              <div class="flex-1">
+                <span
+                  v-if="sense.label"
+                  class="inline-block text-sm text-gray-500 mb-1"
+                >
+                  {{ sense.label }}
+                </span>
+
+                <p
+                  v-if="isCantoDict(entry)"
+                  class="text-gray-800 text-base leading-relaxed mb-2"
+                  v-html="formatDefinitionWithLinks(sense.definition)"
+                ></p>
+                <p
+                  v-else
+                  class="text-gray-800 text-base leading-relaxed mb-2"
+                >
+                  {{ sense.definition }}
+                </p>
+
+                <div
+                  v-if="sense.sub_senses && sense.sub_senses.length > 0"
+                  class="space-y-3 mt-3"
+                >
+                  <div
+                    v-for="(subSense, subIdx) in sense.sub_senses"
+                    :key="subIdx"
+                    class="pl-4 border-l-2 border-blue-200"
+                  >
+                    <div class="mb-2">
+                      <span class="inline-block font-semibold text-blue-700 mr-2">
+                        {{ subSense.label }})
+                      </span>
+                      <span class="text-gray-800">
+                        {{ subSense.definition }}
+                      </span>
+                    </div>
+                    <div
+                      v-if="subSense.examples && subSense.examples.length > 0"
+                      class="space-y-2"
+                    >
+                      <div
+                        v-for="(example, exIdx) in subSense.examples"
+                        :key="exIdx"
+                        class="pl-4 border-l-2 border-gray-200"
+                      >
+                        <p
+                          v-if="isCantoDict(entry)"
+                          class="text-gray-700 text-base"
+                          v-html="formatDefinitionWithLinks(example.text)"
+                        ></p>
+                        <p
+                          v-else
+                          class="text-gray-700 text-base"
+                        >
+                          {{ example.text }}
+                        </p>
+                        <p
+                          v-if="example.jyutping"
+                          class="text-sm text-blue-600 font-mono mt-1"
+                        >
+                          {{ example.jyutping }}
+                        </p>
+                        <p
+                          v-if="example.translation"
+                          class="text-base text-gray-500 mt-1"
+                        >
+                          → {{ example.translation }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  v-if="(!sense.sub_senses || sense.sub_senses.length === 0) && sense.examples && sense.examples.length > 0"
+                  class="space-y-2"
+                >
+                  <div
+                    v-for="(example, exIdx) in sense.examples"
+                    :key="exIdx"
+                    class="pl-4 border-l-2 border-gray-200"
+                  >
+                    <p
+                      v-if="isCantoDict(entry)"
+                      class="text-gray-700 text-base"
+                      v-html="formatDefinitionWithLinks(example.text)"
+                    ></p>
+                    <p
+                      v-else
+                      class="text-gray-700 text-base"
+                    >
+                      {{ example.text }}
+                    </p>
+                    <p
+                      v-if="example.jyutping"
+                      class="text-sm text-blue-600 font-mono mt-1"
+                    >
+                      {{ example.jyutping }}
+                    </p>
+                    <p
+                      v-if="example.translation"
+                      class="text-base text-gray-500 mt-1"
+                    >
+                      → {{ example.translation }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            v-if="entry.meta?.notes"
+            class="mt-4 p-3 border-l-4 text-sm"
+            :class="entry.meta?.note_type === 'proofreader' 
+              ? 'bg-blue-50 border-blue-400 text-gray-700' 
+              : 'bg-yellow-50 border-yellow-400 text-gray-700'"
+          >
+            <span 
+              class="font-semibold"
+              :class="entry.meta?.note_type === 'proofreader' ? 'text-blue-700' : 'text-yellow-700'"
+            >
+              {{ entry.meta?.note_type === 'proofreader' ? t('dictCard.proofreaderNote') : t('dictCard.note') }}
+            </span>
+            {{ entry.meta.notes }}
+          </div>
+
+          <div
+            v-if="entry.meta?.etymology && typeof entry.meta.etymology === 'string'"
+            class="mt-4 p-3 border-l-4 bg-purple-50 border-purple-400 text-sm text-gray-700"
+          >
+            <span class="font-semibold text-purple-700">{{ t('dictCard.etymology') }}</span>
+            {{ entry.meta.etymology }}
+          </div>
+
+          <div
+            v-if="entry.meta?.references && entry.meta.references.length > 0"
+            class="mt-4 p-3 border-l-4 bg-amber-50 border-amber-400 text-sm text-gray-700"
+          >
+            <span class="font-semibold text-amber-700">{{ t('dictCard.references') }}</span>
+            <ul class="mt-2 space-y-2">
+              <li
+                v-for="(ref, refIdx) in entry.meta.references"
+                :key="refIdx"
+              >
+                <span v-if="ref.author" class="font-medium">{{ ref.author }}</span>
+                <span v-if="ref.work">《{{ ref.work }}》</span>
+                <span v-if="ref.author || ref.work">：</span>
+                <span v-if="ref.quote">{{ ref.quote }}</span>
+                <span v-if="ref.source" class="text-gray-500">（{{ ref.source }}）</span>
+              </li>
+            </ul>
+          </div>
+
+          <div
+            v-if="entry.refs && entry.refs.length > 0"
+            class="mt-4 text-sm"
+          >
+            <span class="text-gray-500">{{ t('dictCard.seeAlso') }}</span>
+            <span
+              v-for="(ref, refIdx) in entry.refs"
+              :key="refIdx"
+              class="ml-2"
+            >
+              <NuxtLink
+                v-if="ref.type === 'word'"
+                :to="`/search?q=${encodeURIComponent(ref.target)}`"
+                class="text-blue-600 hover:underline"
+              >
+                {{ ref.target }}
+              </NuxtLink>
+              <span
+                v-else
+                class="text-gray-600"
+              >
+                {{ ref.target }}
+              </span>
+              <span
+                v-if="refIdx < entry.refs.length - 1"
+                class="text-gray-400"
+              >
+                、
+              </span>
+            </span>
+          </div>
+
+          <div
+            v-if="showDetails && entry.meta?.usage"
+            class="mt-4 text-sm text-gray-600"
+          >
+            <span class="font-semibold">{{ t('dictCard.usage') }}</span> {{ entry.meta.usage }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import type { DictionaryEntry } from '~/types/dictionary'
+
+const { t } = useI18n()
+
+interface Props {
+  entries: DictionaryEntry[]
+  showDetails?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  showDetails: true
+})
+
+const entries = computed(() => props.entries || [])
+const primary = computed(() => entries.value[0] as DictionaryEntry)
+const primaryJyutpingSet = computed(() => {
+  const set = new Set<string>()
+  const jps = primary.value?.phonetic?.jyutping || []
+  jps.forEach(jp => {
+    const value = jp?.trim()
+    if (value) set.add(value)
+  })
+  return set
+})
+
+const getEntryTypeLabel = (entry: DictionaryEntry) => {
+  const labels = {
+    character: t('dictCard.entryTypeCharacter'),
+    word: t('dictCard.entryTypeWord'),
+    phrase: t('dictCard.entryTypePhrase')
+  }
+  return labels[entry.entry_type] || entry.entry_type
+}
+
+const getDialectLabel = (entry: DictionaryEntry) => {
+  const code = entry.dialect?.region_code?.toUpperCase()
+  if (code === 'GZ' || code === 'HK' || code === 'YUE' || code === 'QZ' || code === 'KP') {
+    return t(`dictCard.dialect.${code}`)
+  }
+  return entry.dialect?.name || ''
+}
+
+const isCantoDict = (entry: DictionaryEntry) => {
+  return entry.source_book === '粵典 (words.hk)' || entry.source_book === '粵典'
+}
+
+const formatDefinitionWithLinks = (definition: string): string => {
+  if (!definition) return ''
+  const regex = /#([^\u0000-\u007F\u3000-\u303F\uFF00-\uFFEF\s]+)/g
+  return definition.replace(regex, (match, word) => {
+    const searchUrl = `/search?q=${encodeURIComponent(word)}`
+    return `<a href="${searchUrl}" class="text-blue-600 hover:text-blue-800 hover:underline font-medium" onclick="event.stopPropagation()">${match}</a>`
+  })
+}
+
+const getEntryJyutpingList = (entry: DictionaryEntry): string[] => {
+  const seen = new Set<string>()
+  const result: string[] = []
+  const jps = entry.phonetic?.jyutping || []
+  jps.forEach(jp => {
+    const value = jp?.trim()
+    if (!value) return
+    if (!seen.has(value)) {
+      seen.add(value)
+      result.push(value)
+    }
+  })
+  return result
+}
+
+const getEntryJyutping = (entry: DictionaryEntry): string => {
+  return getEntryJyutpingList(entry).join('; ')
+}
+
+const shouldShowEntryJyutping = (entry: DictionaryEntry): boolean => {
+  if (!entry || entry.id === primary.value?.id) return false
+  const entryJps = getEntryJyutpingList(entry)
+  if (entryJps.length === 0) return false
+  const primarySet = primaryJyutpingSet.value
+  return entryJps.some(jp => !primarySet.has(jp))
+}
+
+const getEntryFeedbackDescription = (entry: DictionaryEntry): string => {
+  const headerLines: string[] = [
+    '【當前詞條信息，請喺呢度直接修改有問題嘅部分】',
+    '',
+    `詞頭：${entry.headword.display}`,
+    entry.headword.normalized && entry.headword.normalized !== entry.headword.display
+      ? `參考詞頭：${entry.headword.normalized}`
+      : '',
+    `粵拼：${(entry.phonetic.jyutping || []).join(':')}`,
+    entry.phonetic.original &&
+    entry.phonetic.original !== (entry.phonetic.jyutping || []).join(':')
+      ? `原書注音：${entry.phonetic.original}` : '',
+    (entry.meta?.headword_variants && entry.meta.headword_variants.length > 0)
+      ? `異形詞：${entry.meta.headword_variants.join('、')}`
+      : '',
+    entry.entry_type ? `類型：${entry.entry_type}` : '',
+    ''
+  ].filter(Boolean)
+
+  const senseLines: string[] = []
+  entry.senses.forEach((sense, idx) => {
+    const indexLabel = entry.senses.length > 1 ? `【義項 ${idx + 1}】` : '【義項】'
+    senseLines.push(indexLabel)
+    if (sense.label) {
+      senseLines.push(`詞性：${sense.label}`)
+    }
+    senseLines.push(`釋義：${sense.definition}`)
+
+    if (sense.sub_senses && sense.sub_senses.length > 0) {
+      sense.sub_senses.forEach((sub) => {
+        senseLines.push(`- 子義項 ${sub.label}）：${sub.definition}`)
+        if (sub.examples && sub.examples.length > 0) {
+          sub.examples.forEach((ex) => {
+            senseLines.push(`  · 例句：${ex.text}`)
+            if (ex.jyutping) senseLines.push(`    粵拼：${ex.jyutping}`)
+            if (ex.translation) senseLines.push(`    翻譯：${ex.translation}`)
+          })
+        }
+      })
+    } else if (sense.examples && sense.examples.length > 0) {
+      sense.examples.forEach((ex) => {
+        senseLines.push(`- 例句：${ex.text}`)
+        if (ex.jyutping) senseLines.push(`  粵拼：${ex.jyutping}`)
+        if (ex.translation) senseLines.push(`  翻譯：${ex.translation}`)
+      })
+    }
+
+    senseLines.push('')
+  })
+
+  if (entry.meta?.notes) {
+    headerLines.push('備註：' + entry.meta.notes, '')
+  }
+
+  if (entry.meta?.etymology && typeof entry.meta.etymology === 'string') {
+    headerLines.push('詞源：' + entry.meta.etymology, '')
+  }
+
+  if (entry.meta?.references && entry.meta.references.length > 0) {
+    headerLines.push('參考文獻：')
+    entry.meta.references.forEach((ref) => {
+      const parts: string[] = []
+      if (ref.author) parts.push(ref.author)
+      if (ref.work) parts.push(`《${ref.work}》`)
+      if (ref.quote) parts.push(ref.quote)
+      if (ref.source) parts.push(`（${ref.source}）`)
+      headerLines.push('- ' + parts.join('：'))
+    })
+    headerLines.push('')
+  }
+
+  if (entry.refs && entry.refs.length > 0) {
+    headerLines.push('參見：' + entry.refs.map((r) => r.target).join('、'), '')
+  }
+
+  return [...headerLines, ...senseLines].join('\n')
+}
+
+const getOriginalPhonetic = (entry: DictionaryEntry, idx: number): string | null => {
+  const original = entry.phonetic.original
+  const jyutpingArray = entry.phonetic.jyutping || []
+  const currentJyutping = jyutpingArray[idx]
+
+  if (!original || (Array.isArray(original) && original.length === 0)) {
+    return null
+  }
+
+  if (Array.isArray(original)) {
+    if (original.length === 1) {
+      if (idx === 0) {
+        const singleOriginal = original[0]
+        if (singleOriginal === currentJyutping) return null
+        return singleOriginal
+      }
+      return null
+    }
+    const matchedOriginal = original[idx]
+    if (matchedOriginal && matchedOriginal !== currentJyutping) {
+      return matchedOriginal
+    }
+    return null
+  }
+
+  if (idx === 0) {
+    if (original === currentJyutping) return null
+
+    if (original.includes(':')) {
+      const originalParts = original.split(':').map((p: string) => p.trim())
+      const jyutpingSet = new Set(jyutpingArray)
+      if (originalParts.every((part: string) => jyutpingSet.has(part))) {
+        return null
+      }
+    }
+
+    if (original.includes('(') || original.includes('（')) {
+      const cleanedOriginal = original
+        .replace(/[（(]/g, ' ')
+        .replace(/[）)]/g, ' ')
+        .replace(/[,，]/g, ' ')
+      const allSyllables = cleanedOriginal.split(/\s+/).filter((s: string) => s.trim())
+      const syllableSet = new Set(allSyllables)
+      const allSyllablesInJyutping = allSyllables.every((s: string) =>
+        jyutpingArray.includes(s) || jyutpingArray.some((jp: string) => jp.includes(s))
+      )
+      const allJyutpingFromSyllables = jyutpingArray.every((jp: string) => {
+        const jpSyllables = jp.split(/\s+/)
+        return jpSyllables.every((s: string) => syllableSet.has(s))
+      })
+      if (allSyllablesInJyutping || allJyutpingFromSyllables) {
+        return null
+      }
+    }
+
+    return original
+  }
+
+  return null
+}
+</script>
+
+<style scoped>
+.dict-card {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+</style>

@@ -192,7 +192,7 @@
               </span>
               <span>
                 {{ t('common.searchHeader') }}
-                <span class="font-semibold">{{ allResults.length }}</span>
+                <span class="font-semibold">{{ allAggregatedCount }}</span>
                 {{ t('common.remainingSuffix') }}
               </span>
               <!-- 筛选状态 -->
@@ -200,7 +200,7 @@
                 <span class="text-gray-400">→</span>
                 <span class="text-blue-600">
                   {{ t('common.filterLabel') }}
-                  <span class="font-semibold">{{ filteredResults.length }}</span>
+                  <span class="font-semibold">{{ totalCount }}</span>
                   {{ t('common.remainingSuffix') }}
                 </span>
                 <button
@@ -323,10 +323,10 @@
               </span>
             </div>
             <div class="space-y-4">
-              <DictCard
-                v-for="entry in displayedGroupedResults.exactMatches"
-                :key="entry.id"
-                :entry="entry"
+              <DictCardGroup
+                v-for="group in displayedGroupedResults.exactMatches"
+                :key="group.key"
+                :entries="group.entries"
               />
             </div>
           </template>
@@ -345,10 +345,10 @@
               </span>
             </div>
             <div class="space-y-4">
-              <DictCard
-                v-for="entry in displayedGroupedResults.otherResults"
-                :key="entry.id"
-                :entry="entry"
+              <DictCardGroup
+                v-for="group in displayedGroupedResults.otherResults"
+                :key="group.key"
+                :entries="group.entries"
               />
             </div>
           </template>
@@ -381,53 +381,59 @@
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
               <div class="overflow-x-auto">
                 <table class="w-full">
-                  <thead class="bg-gray-50 border-b border-gray-200">
+                  <thead class="bg-gray-50 border-b border-gray-400">
                     <tr>
-                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6 sm:py-3">
+                      <th class="px-3 py-2 text-left text-sm font-medium uppercase tracking-wider sm:px-6 sm:py-3">
                         {{ t('common.wordColumn') }}
                       </th>
-                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6 sm:py-3">
+                      <th class="px-3 py-2 text-left text-sm font-medium uppercase tracking-wider sm:px-6 sm:py-3">
                         {{ t('common.jyutpingColumn') }}
                       </th>
-                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6 sm:py-3">
+                      <th class="px-3 py-2 text-left text-sm font-medium uppercase tracking-wider sm:px-6 sm:py-3">
                         {{ t('common.definitionColumn') }}
                       </th>
-                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6 sm:py-3">
+                      <th class="px-3 py-2 text-left text-sm font-medium uppercase tracking-wider sm:px-6 sm:py-3">
                         {{ t('common.sourceColumn') }}
                       </th>
                     </tr>
                   </thead>
                   <tbody class="bg-white divide-y divide-gray-200">
-                    <template v-for="entry in displayedGroupedResults.exactMatches" :key="entry.id">
+                    <template v-for="group in displayedGroupedResults.exactMatches" :key="group.key">
                       <tr
                         class="hover:bg-gray-50 cursor-pointer transition-colors"
-                        @click="expandedRow = expandedRow === entry.id ? null : entry.id"
+                        @click="expandedRow = expandedRow === group.key ? null : group.key"
                       >
                         <td class="px-3 py-2 whitespace-nowrap sm:px-6 sm:py-4">
                           <div class="text-sm font-semibold text-gray-900">
-                            {{ entry.headword.display }}
+                            {{ group.primary.headword.display }}
                           </div>
                         </td>
                         <td class="px-3 py-2 whitespace-nowrap sm:px-6 sm:py-4">
-                          <div class="text-sm font-mono text-blue-600">
-                            {{ entry.phonetic.jyutping[0] }}
+                          <div class="text-sm font-mono font-semibold text-blue-600">
+                            {{ getGroupJyutping(group) || '-' }}
                           </div>
                         </td>
                         <td class="px-3 py-2 sm:px-6 sm:py-4">
                           <div class="text-sm text-gray-700 line-clamp-2">
-                            {{ entry.senses[0]?.definition }}
+                            {{ getGroupDefinitions(group) || '-' }}
                           </div>
                         </td>
                         <td class="px-3 py-2 whitespace-nowrap sm:px-6 sm:py-4">
-                          <span class="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded-full">
-                            {{ entry.source_book }}
-                          </span>
+                          <div class="flex flex-wrap gap-1">
+                            <span
+                              v-for="source in getGroupSources(group)"
+                              :key="source"
+                              class="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded-full"
+                            >
+                              {{ source }}
+                            </span>
+                          </div>
                         </td>
                       </tr>
                       <!-- 展开详情 -->
-                      <tr v-if="expandedRow === entry.id" :key="`${entry.id}-detail`">
+                      <tr v-if="expandedRow === group.key" :key="`${group.key}-detail`">
                         <td colspan="4" class="px-3 py-3 sm:px-6 sm:py-4 bg-gray-50">
-                          <DictCard :entry="entry" :show-details="false" />
+                          <DictCardGroup :entries="group.entries" :show-details="false" />
                         </td>
                       </tr>
                     </template>
@@ -453,53 +459,59 @@
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
               <div class="overflow-x-auto">
                 <table class="w-full">
-                  <thead class="bg-gray-50 border-b border-gray-200">
+                  <thead class="bg-gray-50 border-b border-gray-400">
                     <tr>
-                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6 sm:py-3">
+                      <th class="px-3 py-2 text-left text-sm font-medium uppercase tracking-wider sm:px-6 sm:py-3">
                         {{ t('common.wordColumn') }}
                       </th>
-                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6 sm:py-3">
+                      <th class="px-3 py-2 text-left text-sm font-medium uppercase tracking-wider sm:px-6 sm:py-3">
                         {{ t('common.jyutpingColumn') }}
                       </th>
-                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6 sm:py-3">
+                      <th class="px-3 py-2 text-left text-sm font-medium uppercase tracking-wider sm:px-6 sm:py-3">
                         {{ t('common.definitionColumn') }}
                       </th>
-                      <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sm:px-6 sm:py-3">
+                      <th class="px-3 py-2 text-left text-sm font-medium uppercase tracking-wider sm:px-6 sm:py-3">
                         {{ t('common.sourceColumn') }}
                       </th>
                     </tr>
                   </thead>
-                  <tbody class="bg-white divide-y divide-gray-200">
-                    <template v-for="entry in displayedGroupedResults.otherResults" :key="entry.id">
+                  <tbody class="bg-white divide-y divide-gray-200 ">
+                    <template v-for="group in displayedGroupedResults.otherResults" :key="group.key">
                       <tr
                         class="hover:bg-gray-50 cursor-pointer transition-colors"
-                        @click="expandedRow = expandedRow === entry.id ? null : entry.id"
+                        @click="expandedRow = expandedRow === group.key ? null : group.key"
                       >
                         <td class="px-3 py-2 whitespace-nowrap sm:px-6 sm:py-4">
                           <div class="text-sm font-semibold text-gray-900">
-                            {{ entry.headword.display }}
+                            {{ group.primary.headword.display }}
                           </div>
                         </td>
                         <td class="px-3 py-2 whitespace-nowrap sm:px-6 sm:py-4">
-                          <div class="text-sm font-mono text-blue-600">
-                            {{ entry.phonetic.jyutping[0] }}
+                          <div class="text-sm font-mono font-semibold text-blue-600">
+                            {{ getGroupJyutping(group) || '-' }}
                           </div>
                         </td>
                         <td class="px-3 py-2 sm:px-6 sm:py-4">
                           <div class="text-sm text-gray-700 line-clamp-2">
-                            {{ entry.senses[0]?.definition }}
+                            {{ getGroupDefinitions(group) || '-' }}
                           </div>
                         </td>
                         <td class="px-3 py-2 whitespace-nowrap sm:px-6 sm:py-4">
-                          <span class="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded-full">
-                            {{ entry.source_book }}
-                          </span>
+                          <div class="flex flex-wrap gap-1">
+                            <span
+                              v-for="source in getGroupSources(group)"
+                              :key="source"
+                              class="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded-full"
+                            >
+                              {{ source }}
+                            </span>
+                          </div>
                         </td>
                       </tr>
                       <!-- 展开详情 -->
-                      <tr v-if="expandedRow === entry.id" :key="`${entry.id}-detail`">
+                      <tr v-if="expandedRow === group.key" :key="`${group.key}-detail`">
                         <td colspan="4" class="px-3 py-3 sm:px-6 sm:py-4 bg-gray-50">
-                          <DictCard :entry="entry" :show-details="false" />
+                          <DictCardGroup :entries="group.entries" :show-details="false" />
                         </td>
                       </tr>
                     </template>
@@ -575,6 +587,12 @@
 <script setup lang="ts">
 import type { DictionaryEntry } from '~/types/dictionary'
 
+interface AggregatedEntry {
+  key: string
+  primary: DictionaryEntry
+  entries: DictionaryEntry[]
+}
+
 const route = useRoute()
 const router = useRouter()
 const { searchBasic, getSuggestions, getMode } = useSearch()
@@ -590,7 +608,7 @@ if (process.dev) {
 const searchQuery = ref(route.query.q as string || '') // 输入框中的查询词
 const actualSearchQuery = ref(route.query.q as string || '') // 实际已搜索的查询词
 const allResults = ref<DictionaryEntry[]>([]) // 所有搜索结果
-const displayedResults = ref<DictionaryEntry[]>([]) // 当前显示的结果
+const displayedResults = ref<AggregatedEntry[]>([]) // 当前显示的结果（聚合后）
 const loading = ref(false)
 const loadingMore = ref(false)
 const searchTime = ref(0)
@@ -654,6 +672,85 @@ const clearFilters = () => {
   sortBy.value = 'relevance'
   currentPage.value = 1
   updateDisplayedResults()
+}
+
+// 聚合：将相同词头（display + normalized）的结果合并展示
+const getAggregationKey = (entry: DictionaryEntry): string => {
+  const headwordDisplay = entry.headword.display?.trim() || ''
+  const headwordNormalized = entry.headword.normalized?.trim() || ''
+  return [headwordDisplay, headwordNormalized].join('||')
+}
+
+const aggregateEntries = (entries: DictionaryEntry[]): AggregatedEntry[] => {
+  const keyInfo = new Map<string, DictionaryEntry[]>()
+
+  for (const entry of entries) {
+    const key = getAggregationKey(entry)
+    const list = keyInfo.get(key) || []
+    list.push(entry)
+    keyInfo.set(key, list)
+  }
+
+  const results: AggregatedEntry[] = []
+  const seenKeys = new Set<string>()
+
+  for (const entry of entries) {
+    const key = getAggregationKey(entry)
+    const grouped = keyInfo.get(key)
+    if (!grouped) continue
+    if (!seenKeys.has(key)) {
+      seenKeys.add(key)
+      results.push({
+        key,
+        primary: grouped[0],
+        entries: grouped
+      })
+    }
+  }
+
+  return results
+}
+
+const getGroupSources = (group: AggregatedEntry): string[] => {
+  const sources = new Set<string>()
+  group.entries.forEach(entry => {
+    if (entry.source_book) sources.add(entry.source_book)
+  })
+  return Array.from(sources)
+}
+
+const getGroupJyutping = (group: AggregatedEntry): string => {
+  const seen = new Set<string>()
+  const result: string[] = []
+  group.entries.forEach(entry => {
+    const jps = entry.phonetic?.jyutping || []
+    jps.forEach(jp => {
+      const value = jp?.trim()
+      if (!value) return
+      if (!seen.has(value)) {
+        seen.add(value)
+        result.push(value)
+      }
+    })
+  })
+  return result.join('; ')
+}
+
+const getGroupDefinitions = (group: AggregatedEntry): string => {
+  const seen = new Set<string>()
+  const result: string[] = []
+  group.entries.forEach(entry => {
+    const senses = entry.senses || []
+    senses.forEach(sense => {
+      const value = sense?.definition?.trim()
+      if (!value) return
+      if (!seen.has(value)) {
+        seen.add(value)
+        result.push(value)
+      }
+    })
+  })
+  return result.join('; ')
 }
 
 // 更新显示结果（基于筛选）
@@ -730,8 +827,8 @@ const getSortLabel = (sort: string) => {
   }
 }
 
-// 筛选后的结果
-const filteredResults = computed(() => {
+// 筛选后的原始结果（未聚合）
+const filteredEntries = computed(() => {
   let results = allResults.value
   if (selectedDict.value) {
     results = results.filter(e => e.source_book === selectedDict.value)
@@ -745,9 +842,9 @@ const filteredResults = computed(() => {
   return results
 })
 
-// 排序后的结果
-const sortedResults = computed(() => {
-  const results = [...filteredResults.value]
+// 排序后的原始结果
+const sortedEntries = computed(() => {
+  const results = [...filteredEntries.value]
   
   if (sortBy.value === 'relevance') {
     // 保持原样 (allResults 已经是按相关度排序的)
@@ -776,6 +873,12 @@ const sortedResults = computed(() => {
     }
   })
 })
+
+// 聚合后的结果（用于展示）
+const aggregatedResults = computed(() => aggregateEntries(sortedEntries.value))
+
+// 未筛选的聚合总数（用于顶部总数显示）
+const allAggregatedCount = computed(() => aggregateEntries(allResults.value).length)
 
 // 判断查询是否是粤拼查询（只包含字母、数字和空格，不包含中文字符）
 const isJyutpingQuery = (query: string): boolean => {
@@ -828,20 +931,20 @@ const groupedResults = computed(() => {
   // 反查、粤拼搜索、非默认排序或没有查询词时，不分组
   if (!isTextSearch.value || sortBy.value !== 'relevance') {
     return {
-      exactMatches: [] as DictionaryEntry[],
-      otherResults: sortedResults.value
+      exactMatches: [] as AggregatedEntry[],
+      otherResults: aggregatedResults.value
     }
   }
   
-  const exactMatches: DictionaryEntry[] = []
-  const otherResults: DictionaryEntry[] = []
+  const exactMatches: AggregatedEntry[] = []
+  const otherResults: AggregatedEntry[] = []
   
   // 按照后端返回的顺序遍历，保持顺序
-  for (const entry of sortedResults.value) {
-    if (isExactMatch(entry, actualSearchQuery.value)) {
-      exactMatches.push(entry)
+  for (const group of aggregatedResults.value) {
+    if (isExactMatch(group.primary, actualSearchQuery.value)) {
+      exactMatches.push(group)
     } else {
-      otherResults.push(entry)
+      otherResults.push(group)
     }
   }
   
@@ -865,7 +968,7 @@ const displayedGroupedResults = computed(() => {
   if (allExactDisplayed.length >= targetDisplayCount) {
     return {
       exactMatches: allExactDisplayed.slice(0, targetDisplayCount),
-      otherResults: [] as DictionaryEntry[],
+      otherResults: [] as AggregatedEntry[],
       hasMoreExact: allExactDisplayed.length > targetDisplayCount,
       hasMoreOther: otherResults.length > 0
     }
@@ -918,9 +1021,9 @@ const getTypeCount = (type: string): number => {
 // 基于筛选结果的分页
 const hasMore = computed(() => {
   const totalDisplayed = displayedGroupedResults.value.exactMatches.length + displayedGroupedResults.value.otherResults.length
-  return totalDisplayed < filteredResults.value.length
+  return totalDisplayed < aggregatedResults.value.length
 })
-const totalCount = computed(() => filteredResults.value.length)
+const totalCount = computed(() => aggregatedResults.value.length)
 
 // 执行搜索
 const performSearch = async (query: string) => {
@@ -964,7 +1067,7 @@ const performSearch = async (query: string) => {
         // 更新结果
         allResults.value = entries
         // 重新计算显示的结果（保持当前页数，使用筛选后的结果）
-        // 新搜索时筛选已重置，所以 filteredResults 等于 allResults
+        // 新搜索时筛选已重置，所以 filteredEntries 等于 allResults
         updateDisplayedResults()
         
         // 首次收到结果时关闭 loading

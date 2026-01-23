@@ -88,7 +88,7 @@
                   {{ entry.headword.display }}
                 </h4>
 
-                <p class="text-base font-mono text-blue-600 font-medium">
+                <p class="text-base font-mono text-blue-600 font-semibold">
                   {{ entry.phonetic.jyutping[0] }}
                 </p>
 
@@ -145,7 +145,7 @@
             <div class="border-t border-gray-50">
               <button @click="nextMobileEntry"
                 class="w-full px-7 py-4 flex justify-between items-center active:bg-blue-50 transition-colors">
-                <span class="text-xs text-gray-400 font-medium">{{ randomEntries[mobileIndex].source_book }}</span>
+                <span class="text-sm text-gray-400 font-medium">{{ randomEntries[mobileIndex].source_book }}</span>
                 <span class="text-blue-500 font-medium flex items-center gap-1 text-sm">
                   {{ t('common.next') }}
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -232,7 +232,7 @@
                   <p class="text-sm font-medium text-gray-700 mb-0.5 truncate">
                     {{ dict.author }}
                   </p>
-                  <p class="text-xs text-gray-500 truncate">
+                  <p class="text-sm text-gray-500 truncate">
                     {{ dict.publisher }} · {{ dict.year }}
                   </p>
                 </div>
@@ -251,7 +251,7 @@
                       d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <div class="flex-1">
-                    <p class="text-xs text-gray-500">
+                    <p class="text-sm text-gray-500">
                       {{ dict.license }}
                     </p>
                   </div>
