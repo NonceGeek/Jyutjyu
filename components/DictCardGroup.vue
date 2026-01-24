@@ -103,7 +103,7 @@
           <span class="font-mono text-blue-600 font-semibold">{{ getEntryJyutping(entry) }}</span>
         </div>
 
-        <div v-if="getEntryOriginalPhonetic(entry)" class="mt-2 text-sm">
+        <div v-if="shouldShowEntryOriginalPhonetic(entry)" class="mt-2 text-sm">
           <span class="text-sm text-gray-500 mr-2">{{ t('dictCard.originalPhonetic') }}</span>
           <span class="text-gray-700 break-words">{{ getEntryOriginalPhonetic(entry) }}</span>
         </div>
@@ -416,20 +416,44 @@ const getEntryOriginalPhonetic = (entry: DictionaryEntry): string => {
   const original = entry.phonetic?.original as string | string[] | undefined | null
   if (!original) return ''
   if (Array.isArray(original)) {
-    const seen = new Set<string>()
-    const result: string[] = []
-    original.forEach((item: string) => {
-      const value = item?.trim()
-      if (!value) return
-      if (!seen.has(value)) {
-        seen.add(value)
-        result.push(value)
-      }
-    })
-    return result.join('; ')
+    return getEntryOriginalPhoneticList(entry).join('; ')
   }
   const value = original.trim()
   return value
+}
+
+const getEntryOriginalPhoneticList = (entry: DictionaryEntry): string[] => {
+  const original = entry.phonetic?.original as string | string[] | undefined | null
+  if (!original) return []
+  const seen = new Set<string>()
+  const result: string[] = []
+  const addValue = (value: string) => {
+    const trimmed = value?.trim()
+    if (!trimmed) return
+    if (!seen.has(trimmed)) {
+      seen.add(trimmed)
+      result.push(trimmed)
+    }
+  }
+  const splitParts = (value: string) => value.split(/[，,;；、]+/).map(part => part.trim()).filter(Boolean)
+  if (Array.isArray(original)) {
+    original.forEach((item: string) => {
+      const parts = splitParts(item)
+      if (parts.length > 0) {
+        parts.forEach(addValue)
+      } else {
+        addValue(item)
+      }
+    })
+    return result
+  }
+  const parts = splitParts(original)
+  if (parts.length > 0) {
+    parts.forEach(addValue)
+  } else {
+    addValue(original)
+  }
+  return result
 }
 
 const shouldShowEntryJyutping = (entry: DictionaryEntry): boolean => {
@@ -438,6 +462,15 @@ const shouldShowEntryJyutping = (entry: DictionaryEntry): boolean => {
   if (entryJps.length === 0) return false
   const primarySet = primaryJyutpingSet.value
   return entryJps.some(jp => !primarySet.has(jp))
+}
+
+const shouldShowEntryOriginalPhonetic = (entry: DictionaryEntry): boolean => {
+  const originalList = getEntryOriginalPhoneticList(entry)
+  if (originalList.length === 0) return false
+  const primarySet = primaryJyutpingSet.value
+  if (primarySet.size === 0) return true
+  if (originalList.length !== primarySet.size) return true
+  return originalList.some(value => !primarySet.has(value))
 }
 
 const getEntryFeedbackDescription = (entry: DictionaryEntry): string => {

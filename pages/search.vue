@@ -3,129 +3,103 @@
     <!-- Header with Search Bar -->
     <header class="bg-white shadow-sm sticky top-0 z-10">
       <div class="container mx-auto px-4 py-4">
-        <div class="flex flex-wrap items-center gap-4">
-          <NuxtLink to="/" class="text-xl font-bold text-blue-600 whitespace-nowrap">
-            {{ t('common.siteName') }}
-          </NuxtLink>
-          <div class="flex-1 max-w-2xl relative">
-            <input
-              v-model="searchQuery"
-              type="text"
-              :placeholder="t('common.searchPlaceholder')"
-              class="w-full px-4 py-2 pr-20 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-              @keyup.enter="handleSearch"
-              @input="handleInput"
-            >
-            <button
-              class="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
-              @click="handleSearch"
-            >
-              {{ t('common.searchButton') }}
-            </button>
-            <!-- 搜索建议 -->
-            <div
-              v-if="suggestions.length > 0 && showSuggestions"
-              class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto z-20"
-            >
+        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div class="flex flex-wrap items-center gap-4 flex-1 min-w-0">
+            <NuxtLink to="/" class="text-xl font-bold text-blue-600 whitespace-nowrap">
+              {{ t('common.siteName') }}
+            </NuxtLink>
+            <div class="flex-1 max-w-2xl min-w-[240px] relative">
+              <input v-model="searchQuery" type="text" :placeholder="t('common.searchPlaceholder')"
+                class="w-full px-4 py-2 pr-20 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                @keyup.enter="handleSearch" @input="handleInput">
               <button
-                v-for="(suggestion, idx) in suggestions"
-                :key="idx"
-                class="w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors"
-                @click="selectSuggestion(suggestion)"
-              >
-                {{ suggestion }}
+                class="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
+                @click="handleSearch">
+                {{ t('common.searchButton') }}
               </button>
+              <!-- 搜索建议 -->
+              <div v-if="suggestions.length > 0 && showSuggestions"
+                class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto z-20">
+                <button v-for="(suggestion, idx) in suggestions" :key="idx"
+                  class="w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors"
+                  @click="selectSuggestion(suggestion)">
+                  {{ suggestion }}
+                </button>
+              </div>
+            </div>
+            <!-- 反查开关 -->
+            <label class="flex items-center gap-2 cursor-pointer whitespace-nowrap select-none" title="反查：从释义中搜索词语">
+              <input v-model="enableReverseSearch" type="checkbox"
+                class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
+              <span class="text-sm text-gray-600">{{ t('common.reverseSearchShort') }}</span>
+            </label>
+            <div class="md:hidden">
+              <LanguageSwitcher />
             </div>
           </div>
-          <!-- 反查开关 -->
-          <label class="flex items-center gap-2 cursor-pointer whitespace-nowrap select-none" title="反查：从释义中搜索词语">
-            <input
-              v-model="enableReverseSearch"
-              type="checkbox"
-              class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-            >
-            <span class="text-sm text-gray-600">{{ t('common.reverseSearchShort') }}</span>
-          </label>
-          <div class="flex-shrink-0">
+          <div class="hidden md:flex flex-shrink-0">
             <LanguageSwitcher />
           </div>
         </div>
       </div>
-      
+
       <!-- 筛选栏 -->
       <div v-if="actualSearchQuery && allResults.length > 0" class="border-t border-gray-100 bg-gray-50/80">
         <div class="container mx-auto px-4 py-3">
           <div class="flex flex-wrap items-center gap-3">
             <span class="text-sm text-gray-500 font-medium">{{ t('common.filterLabel') }}</span>
-            
+
             <!-- 词典筛选 -->
             <div class="relative">
-              <button
-                class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors"
+              <button class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors"
                 :class="selectedDict ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'"
-                @click="showDictDropdown = !showDictDropdown"
-              >
+                @click="showDictDropdown = !showDictDropdown">
                 <span>{{ selectedDict || t('common.allDictionaries') }}</span>
-                <svg class="w-4 h-4" :class="showDictDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4" :class="showDictDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
               <!-- 下拉菜单 -->
-              <div
-                v-if="showDictDropdown"
-                class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-30 min-w-[180px]"
-              >
-                <button
-                  class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
-                  :class="!selectedDict ? 'text-blue-600 bg-blue-50' : 'text-gray-700'"
-                  @click="selectDict(null)"
-                >
+              <div v-if="showDictDropdown"
+                class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-30 min-w-[180px]">
+                <button class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
+                  :class="!selectedDict ? 'text-blue-600 bg-blue-50' : 'text-gray-700'" @click="selectDict(null)">
                   {{ t('common.allDictionaries') }}
                 </button>
-                <button
-                  v-for="dict in availableDicts"
-                  :key="dict"
+                <button v-for="dict in availableDicts" :key="dict"
                   class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
                   :class="selectedDict === dict ? 'text-blue-600 bg-blue-50' : 'text-gray-700'"
-                  @click="selectDict(dict)"
-                >
+                  @click="selectDict(dict)">
                   {{ dict }}
                   <span class="text-gray-400 text-xs ml-1">({{ getDictCount(dict) }})</span>
                 </button>
               </div>
             </div>
-            
+
             <!-- 方言点筛选 -->
             <div class="relative">
-              <button
-                class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors"
+              <button class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors"
                 :class="selectedDialect ? 'bg-green-50 border-green-300 text-green-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'"
-                @click="showDialectDropdown = !showDialectDropdown"
-              >
+                @click="showDialectDropdown = !showDialectDropdown">
                 <span>{{ selectedDialect ? getDialectLabel(selectedDialect) : t('common.allDialects') }}</span>
-                <svg class="w-4 h-4" :class="showDialectDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4" :class="showDialectDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
               <!-- 下拉菜单 -->
-              <div
-                v-if="showDialectDropdown"
-                class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-30 min-w-[140px]"
-              >
-                <button
-                  class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
+              <div v-if="showDialectDropdown"
+                class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-30 min-w-[140px]">
+                <button class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
                   :class="!selectedDialect ? 'text-green-600 bg-green-50' : 'text-gray-700'"
-                  @click="selectDialect(null)"
-                >
+                  @click="selectDialect(null)">
                   {{ t('common.allDialects') }}
                 </button>
-                <button
-                  v-for="dialect in availableDialects"
-                  :key="dialect"
+                <button v-for="dialect in availableDialects" :key="dialect"
                   class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
                   :class="selectedDialect === dialect ? 'text-green-600 bg-green-50' : 'text-gray-700'"
-                  @click="selectDialect(dialect)"
-                >
+                  @click="selectDialect(dialect)">
                   {{ getDialectLabel(dialect) }}
                   <span class="text-gray-400 text-xs ml-1">({{ getDialectCount(dialect) }})</span>
                 </button>
@@ -134,35 +108,26 @@
 
             <!-- 类型筛选 (字/词/短语) -->
             <div class="relative">
-              <button
-                class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors"
+              <button class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors"
                 :class="selectedType ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'"
-                @click="showTypeDropdown = !showTypeDropdown"
-              >
+                @click="showTypeDropdown = !showTypeDropdown">
                 <span>{{ selectedType ? getTypeName(selectedType) : t('common.allTypes') }}</span>
-                <svg class="w-4 h-4" :class="showTypeDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4" :class="showTypeDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
               <!-- 下拉菜单 -->
-              <div
-                v-if="showTypeDropdown"
-                class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-30 min-w-[120px]"
-              >
-                <button
-                  class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
-                  :class="!selectedType ? 'text-amber-600 bg-amber-50' : 'text-gray-700'"
-                  @click="selectType(null)"
-                >
+              <div v-if="showTypeDropdown"
+                class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-30 min-w-[120px]">
+                <button class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
+                  :class="!selectedType ? 'text-amber-600 bg-amber-50' : 'text-gray-700'" @click="selectType(null)">
                   {{ t('common.allTypes') }}
                 </button>
-                <button
-                  v-for="type in availableTypes"
-                  :key="type"
+                <button v-for="type in availableTypes" :key="type"
                   class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
                   :class="selectedType === type ? 'text-amber-600 bg-amber-50' : 'text-gray-700'"
-                  @click="selectType(type)"
-                >
+                  @click="selectType(type)">
                   {{ getTypeName(type) }}
                   <span class="text-gray-400 text-xs ml-1">({{ getTypeCount(type) }})</span>
                 </button>
@@ -208,8 +173,7 @@
                 </span>
                 <button
                   class="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs text-gray-500 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-                  @click="clearFilters"
-                >
+                  @click="clearFilters">
                   <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -226,33 +190,29 @@
                 · {{ t('common.showFirstPrefix') }} {{ displayedResults.length }} {{ t('common.showFirstSuffix') }}
               </span>
             </p>
-            
+
             <div class="flex flex-wrap items-center gap-4">
               <!-- 排序下拉菜单 -->
               <div class="relative">
                 <button
                   class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors bg-white border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
-                  @click.stop="showSortDropdown = !showSortDropdown"
-                >
+                  @click.stop="showSortDropdown = !showSortDropdown">
                   <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
                   </svg>
                   <span>{{ getSortLabel(sortBy) }}</span>
-                  <svg class="w-4 h-4 transition-transform" :class="showSortDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg class="w-4 h-4 transition-transform" :class="showSortDropdown ? 'rotate-180' : ''" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
-                <div
-                  v-if="showSortDropdown"
-                  class="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl py-1 z-30 min-w-[140px]"
-                >
-                  <button
-                    v-for="sort in ['relevance', 'jyutping', 'headword', 'dictionary']"
-                    :key="sort"
+                <div v-if="showSortDropdown"
+                  class="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl py-1 z-30 min-w-[140px]">
+                  <button v-for="sort in ['relevance', 'jyutping', 'headword', 'dictionary']" :key="sort"
                     class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
                     :class="sortBy === sort ? 'text-blue-600 font-semibold bg-blue-50' : 'text-gray-700'"
-                    @click="selectSort(sort as any)"
-                  >
+                    @click="selectSort(sort as any)">
                     {{ getSortLabel(sort) }}
                   </button>
                 </div>
@@ -260,306 +220,304 @@
 
               <!-- 视图切换 (桌面端) -->
               <div v-if="displayedResults.length > 0" class="flex">
-              <div class="inline-flex rounded-lg border border-gray-300">
-                <button
-                  class="px-4 py-2 text-sm font-medium transition-colors"
-                  :class="viewMode === 'card' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
-                  @click="viewMode = 'card'"
-                >
-                  <span class="flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                    </svg>
-                    {{ t('common.cardView') }}
-                  </span>
-                </button>
-                <button
-                  class="px-4 py-2 text-sm font-medium transition-colors border-l border-gray-300"
-                  :class="viewMode === 'list' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
-                  @click="viewMode = 'list'"
-                >
-                  <span class="flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                    {{ t('common.listView') }}
-                  </span>
-                </button>
+                <div class="inline-flex rounded-lg border border-gray-300">
+                  <button class="px-4 py-2 text-sm font-medium transition-colors"
+                    :class="viewMode === 'card' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
+                    @click="viewMode = 'card'">
+                    <span class="flex items-center gap-2">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                      </svg>
+                      {{ t('common.cardView') }}
+                    </span>
+                  </button>
+                  <button class="px-4 py-2 text-sm font-medium transition-colors border-l border-gray-300"
+                    :class="viewMode === 'list' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
+                    @click="viewMode = 'list'">
+                    <span class="flex items-center gap-2">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 6h16M4 12h16M4 18h16" />
+                      </svg>
+                      {{ t('common.listView') }}
+                    </span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- No Results -->
-      <div v-if="!loading && isSearchComplete && actualSearchQuery && allResults.length === 0" class="text-center py-16">
-        <div class="text-6xl mb-4">🔍</div>
-        <h3 class="text-2xl font-semibold text-gray-900 mb-2">
-          {{ t('common.noResultsTitle') }}
-        </h3>
-        <p class="text-gray-600 mb-6">
-          {{ t('common.noResultsDescription') }}
-        </p>
-        <div class="text-sm text-gray-500">
-          <p class="font-semibold mb-2">{{ t('common.noResultsTipsTitle') }}</p>
-          <ul class="space-y-1">
-            <li>• {{ t('common.noResultsTip1') }}</li>
-            <li>• {{ t('common.noResultsTip2') }}</li>
-            <li>• {{ t('common.noResultsTip3') }}</li>
-            <li>• {{ t('common.noResultsTip4') }}</li>
-          </ul>
+        <!-- No Results -->
+        <div v-if="!loading && isSearchComplete && actualSearchQuery && allResults.length === 0"
+          class="text-center py-16">
+          <div class="text-6xl mb-4">🔍</div>
+          <h3 class="text-2xl font-semibold text-gray-900 mb-2">
+            {{ t('common.noResultsTitle') }}
+          </h3>
+          <p class="text-gray-600 mb-6">
+            {{ t('common.noResultsDescription') }}
+          </p>
+          <div class="text-sm text-gray-500">
+            <p class="font-semibold mb-2">{{ t('common.noResultsTipsTitle') }}</p>
+            <ul class="space-y-1">
+              <li>• {{ t('common.noResultsTip1') }}</li>
+              <li>• {{ t('common.noResultsTip2') }}</li>
+              <li>• {{ t('common.noResultsTip3') }}</li>
+              <li>• {{ t('common.noResultsTip4') }}</li>
+            </ul>
+          </div>
         </div>
-      </div>
 
-      <!-- Results -->
-      <div v-else-if="!loading && displayedResults.length > 0" class="space-y-4">
-        <!-- 卡片视图 -->
-        <div v-if="viewMode === 'card'" class="space-y-4">
-          <!-- 完全匹配的结果（仅文字搜索时显示） -->
-          <template v-if="isTextSearch && displayedGroupedResults.exactMatches.length > 0">
-            <div class="mb-6 p-3 border-l-4 bg-green-50 border-green-400 rounded-r-lg flex items-center gap-2 shadow-sm">
-              <svg class="w-4 h-4 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span class="text-green-800 text-sm font-semibold">
-                {{ t('common.exactMatchLabel') }} <span class="ml-1 px-1.5 py-0.5 bg-green-100 rounded text-green-900">{{ groupedResults.exactMatches.length }}</span> {{ t('common.remainingSuffix') }}
-              </span>
+        <!-- Results -->
+        <div v-else-if="!loading && displayedResults.length > 0" class="space-y-4">
+          <!-- 卡片视图 -->
+          <div v-if="viewMode === 'card'" class="space-y-4">
+            <!-- 完全匹配的结果（仅文字搜索时显示） -->
+            <template v-if="isTextSearch && displayedGroupedResults.exactMatches.length > 0">
+              <div
+                class="mb-6 p-3 border-l-4 bg-green-50 border-green-400 rounded-r-lg flex items-center gap-2 shadow-sm">
+                <svg class="w-4 h-4 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="text-green-800 text-sm font-semibold">
+                  {{ t('common.exactMatchLabel') }} <span
+                    class="ml-1 px-1.5 py-0.5 bg-green-100 rounded text-green-900">{{ groupedResults.exactMatches.length
+                    }}</span> {{ t('common.remainingSuffix') }}
+                </span>
+              </div>
+              <div class="space-y-4">
+                <DictCardGroup v-for="group in displayedGroupedResults.exactMatches" :key="group.key"
+                  :entries="group.entries" />
+              </div>
+            </template>
+
+            <!-- 其他相关结果 -->
+            <template v-if="displayedGroupedResults.otherResults.length > 0">
+              <div class="mb-6 p-3 border-l-4 bg-blue-50 border-blue-400 rounded-r-lg flex items-center gap-2 shadow-sm"
+                :class="{ 'mt-12': isTextSearch && displayedGroupedResults.exactMatches.length > 0 }">
+                <svg class="w-4 h-4 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span v-if="isTextSearch && sortBy === 'relevance'" class="text-blue-800 text-sm font-semibold">
+                  {{ t('common.otherResultsLabel') }} <span
+                    class="ml-1 px-1.5 py-0.5 bg-blue-100 rounded text-blue-900">{{ groupedResults.otherResults.length
+                    }}</span> {{ t('common.remainingSuffix') }}
+                </span>
+                <span v-else class="text-blue-800 text-sm font-semibold">
+                  {{ t('common.searchHeader') }} <span
+                    class="font-bold ml-1 px-1.5 py-0.5 bg-blue-100 rounded text-blue-900">{{
+                      groupedResults.otherResults.length }}</span> {{ t('common.remainingSuffix') }}
+                </span>
+              </div>
+              <div class="space-y-4">
+                <DictCardGroup v-for="group in displayedGroupedResults.otherResults" :key="group.key"
+                  :entries="group.entries" />
+              </div>
+            </template>
+
+            <!-- 加载更多按钮 -->
+            <div v-if="hasMore" class="flex justify-center py-8">
+              <button
+                class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                :disabled="loadingMore" @click="loadMore">
+                <span v-if="loadingMore">{{ t('common.loadingMore') }}</span>
+                <span v-else>{{ t('common.loadMore') }} ({{ totalCount - displayedResults.length }} {{
+                  t('common.remainingSuffix') }})</span>
+              </button>
             </div>
-            <div class="space-y-4">
-              <DictCardGroup
-                v-for="group in displayedGroupedResults.exactMatches"
-                :key="group.key"
-                :entries="group.entries"
-              />
+          </div>
+
+          <!-- 列表视图（简洁） -->
+          <div v-else class="space-y-4">
+            <!-- 完全匹配的结果（仅文字搜索时显示） -->
+            <template v-if="isTextSearch && displayedGroupedResults.exactMatches.length > 0">
+              <div
+                class="mb-6 p-3 border-l-4 bg-green-50 border-green-400 rounded-r-lg flex items-center gap-2 shadow-sm">
+                <svg class="w-4 h-4 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="text-green-800 text-sm font-semibold">
+                  {{ t('common.exactMatchLabel') }} <span
+                    class="ml-1 px-1.5 py-0.5 bg-green-100 rounded text-green-900">{{ groupedResults.exactMatches.length
+                    }}</span> {{ t('common.remainingSuffix') }}
+                </span>
+              </div>
+              <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="overflow-x-auto">
+                  <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-400">
+                      <tr>
+                        <th class="px-3 text-left text-base font-medium uppercase tracking-wider py-2">
+                          {{ t('common.wordColumn') }}
+                        </th>
+                        <th class="px-3 text-left text-base font-medium uppercase tracking-wider py-2">
+                          {{ t('common.jyutpingColumn') }}
+                        </th>
+                        <th class="px-3 text-left text-base font-medium uppercase tracking-wider py-2">
+                          {{ t('common.definitionColumn') }}
+                        </th>
+                        <th class="px-3 text-left text-base font-medium uppercase tracking-wider py-2">
+                          {{ t('common.sourceColumn') }}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                      <template v-for="group in displayedGroupedResults.exactMatches" :key="group.key">
+                        <tr class="hover:bg-gray-50 cursor-pointer transition-colors"
+                          @click="expandedRow = expandedRow === group.key ? null : group.key">
+                          <td class="px-3 whitespace-nowrap py-2">
+                            <div class="text-base font-semibold text-gray-900">
+                              {{ group.primary.headword.display }}
+                            </div>
+                          </td>
+                          <td class="px-3 whitespace-nowrap py-2">
+                            <div class="text-base font-mono font-semibold text-blue-600">
+                              {{ getGroupJyutping(group) || '-' }}
+                            </div>
+                          </td>
+                          <td class="px-3 py-2">
+                            <div class="text-base text-gray-700 line-clamp-2">
+                              {{ getGroupDefinitions(group) || '-' }}
+                            </div>
+                          </td>
+                          <td class="px-3 whitespace-nowrap py-2">
+                            <div class="flex flex-wrap gap-1">
+                              <span v-for="source in getGroupSources(group)" :key="source"
+                                class="px-2 py-1 text-sm bg-blue-50 text-blue-700 rounded-full">
+                                {{ source }}
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                        <!-- 展开详情 -->
+                        <tr v-if="expandedRow === group.key" :key="`${group.key}-detail`">
+                          <td colspan="4" class="px-3 py-3 py-2 bg-gray-50">
+                            <DictCardGroup :entries="group.entries" :show-details="false" />
+                          </td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </template>
+
+            <!-- 其他相关结果 -->
+            <template v-if="displayedGroupedResults.otherResults.length > 0">
+              <div class="mb-6 p-3 border-l-4 bg-blue-50 border-blue-400 rounded-r-lg flex items-center gap-2 shadow-sm"
+                :class="{ 'mt-12': isTextSearch && displayedGroupedResults.exactMatches.length > 0 }">
+                <svg class="w-4 h-4 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span v-if="isTextSearch && sortBy === 'relevance'" class="text-blue-800 text-sm font-semibold">
+                  {{ t('common.otherResultsLabel') }} <span
+                    class="ml-1 px-1.5 py-0.5 bg-blue-100 rounded text-blue-900">{{ groupedResults.otherResults.length
+                    }}</span> {{ t('common.remainingSuffix') }}
+                </span>
+                <span v-else class="text-blue-800 text-sm font-semibold">
+                  {{ t('common.searchHeader') }} <span class="ml-1 px-1.5 py-0.5 bg-blue-100 rounded text-blue-900">{{
+                    groupedResults.otherResults.length }}</span> {{ t('common.remainingSuffix') }}
+                </span>
+              </div>
+              <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="overflow-x-auto">
+                  <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-400">
+                      <tr>
+                        <th class="px-3 text-left text-base font-medium uppercase tracking-wider py-2">
+                          {{ t('common.wordColumn') }}
+                        </th>
+                        <th class="px-3 text-left text-base font-medium uppercase tracking-wider py-2">
+                          {{ t('common.jyutpingColumn') }}
+                        </th>
+                        <th class="px-3 text-left text-base font-medium uppercase tracking-wider py-2">
+                          {{ t('common.definitionColumn') }}
+                        </th>
+                        <th class="px-3 text-left text-base font-medium uppercase tracking-wider py-2">
+                          {{ t('common.sourceColumn') }}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200 ">
+                      <template v-for="group in displayedGroupedResults.otherResults" :key="group.key">
+                        <tr class="hover:bg-gray-50 cursor-pointer transition-colors"
+                          @click="expandedRow = expandedRow === group.key ? null : group.key">
+                          <td class="px-3 whitespace-nowrap py-2">
+                            <div class="text-base font-semibold text-gray-900">
+                              {{ group.primary.headword.display }}
+                            </div>
+                          </td>
+                          <td class="px-3 whitespace-nowrap py-2">
+                            <div class="text-base font-mono font-semibold text-blue-600">
+                              {{ getGroupJyutping(group) || '-' }}
+                            </div>
+                          </td>
+                          <td class="px-3 py-2">
+                            <div class="text-base text-gray-700 line-clamp-2">
+                              {{ getGroupDefinitions(group) || '-' }}
+                            </div>
+                          </td>
+                          <td class="px-3 whitespace-nowrap py-2">
+                            <div class="flex flex-wrap gap-1">
+                              <span v-for="source in getGroupSources(group)" :key="source"
+                                class="px-2 py-1 text-sm bg-blue-50 text-blue-700 rounded-full">
+                                {{ source }}
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                        <!-- 展开详情 -->
+                        <tr v-if="expandedRow === group.key" :key="`${group.key}-detail`">
+                          <td colspan="4" class="px-3 py-3 py-2 bg-gray-50">
+                            <DictCardGroup :entries="group.entries" :show-details="false" />
+                          </td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </template>
+
+            <!-- 加载更多按钮 -->
+            <div v-if="hasMore" class="flex justify-center py-8">
+              <button
+                class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                :disabled="loadingMore" @click="loadMore">
+                <span v-if="loadingMore">{{ t('common.loadingMore') }}</span>
+                <span v-else>{{ t('common.loadMore') }} ({{ totalCount - displayedResults.length }} {{
+                  t('common.remainingSuffix')
+                  }})</span>
+              </button>
             </div>
-          </template>
-          
-          <!-- 其他相关结果 -->
-          <template v-if="displayedGroupedResults.otherResults.length > 0">
-            <div class="mb-6 p-3 border-l-4 bg-blue-50 border-blue-400 rounded-r-lg flex items-center gap-2 shadow-sm" :class="{ 'mt-12': isTextSearch && displayedGroupedResults.exactMatches.length > 0 }">
-              <svg class="w-4 h-4 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span v-if="isTextSearch && sortBy === 'relevance'" class="text-blue-800 text-sm font-semibold">
-                {{ t('common.otherResultsLabel') }} <span class="ml-1 px-1.5 py-0.5 bg-blue-100 rounded text-blue-900">{{ groupedResults.otherResults.length }}</span> {{ t('common.remainingSuffix') }}
-              </span>
-              <span v-else class="text-blue-800 text-sm font-semibold">
-                {{ t('common.searchHeader') }} <span class="font-bold ml-1 px-1.5 py-0.5 bg-blue-100 rounded text-blue-900">{{ groupedResults.otherResults.length }}</span> {{ t('common.remainingSuffix') }}
-              </span>
-            </div>
-            <div class="space-y-4">
-              <DictCardGroup
-                v-for="group in displayedGroupedResults.otherResults"
-                :key="group.key"
-                :entries="group.entries"
-              />
-            </div>
-          </template>
-          
-          <!-- 加载更多按钮 -->
-          <div v-if="hasMore" class="flex justify-center py-8">
-            <button
-              class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-              :disabled="loadingMore"
-              @click="loadMore"
-            >
-              <span v-if="loadingMore">{{ t('common.loadingMore') }}</span>
-              <span v-else>{{ t('common.loadMore') }} ({{ totalCount - displayedResults.length }} {{ t('common.remainingSuffix') }})</span>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div v-else-if="!loading" class="text-center py-16">
+          <div class="text-6xl mb-4">📚</div>
+          <h3 class="text-2xl font-semibold text-gray-900 mb-2">
+            {{ t('common.startSearchTitle') }}
+          </h3>
+          <p class="text-gray-600 mb-6">
+            {{ t('common.startSearchDescription') }}
+          </p>
+          <!-- 示例搜索 -->
+          <div class="flex flex-wrap gap-2 justify-center">
+            <span class="text-sm text-gray-500">{{ t('common.exampleSearchPrefix') }}</span>
+            <button v-for="example in exampleSearches" :key="example"
+              class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors"
+              @click="searchExample(example)">
+              {{ example }}
             </button>
           </div>
         </div>
-
-        <!-- 列表视图（简洁） -->
-        <div v-else class="space-y-4">
-          <!-- 完全匹配的结果（仅文字搜索时显示） -->
-          <template v-if="isTextSearch && displayedGroupedResults.exactMatches.length > 0">
-            <div class="mb-6 p-3 border-l-4 bg-green-50 border-green-400 rounded-r-lg flex items-center gap-2 shadow-sm">
-              <svg class="w-4 h-4 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span class="text-green-800 text-sm font-semibold">
-                {{ t('common.exactMatchLabel') }} <span class="ml-1 px-1.5 py-0.5 bg-green-100 rounded text-green-900">{{ groupedResults.exactMatches.length }}</span> {{ t('common.remainingSuffix') }}
-              </span>
-            </div>
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-              <div class="overflow-x-auto">
-                <table class="w-full">
-                  <thead class="bg-gray-50 border-b border-gray-400">
-                    <tr>
-                      <th class="px-3 text-left text-base font-medium uppercase tracking-wider py-2">
-                        {{ t('common.wordColumn') }}
-                      </th>
-                      <th class="px-3 text-left text-base font-medium uppercase tracking-wider py-2">
-                        {{ t('common.jyutpingColumn') }}
-                      </th>
-                      <th class="px-3 text-left text-base font-medium uppercase tracking-wider py-2">
-                        {{ t('common.definitionColumn') }}
-                      </th>
-                      <th class="px-3 text-left text-base font-medium uppercase tracking-wider py-2">
-                        {{ t('common.sourceColumn') }}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody class="bg-white divide-y divide-gray-200">
-                    <template v-for="group in displayedGroupedResults.exactMatches" :key="group.key">
-                      <tr
-                        class="hover:bg-gray-50 cursor-pointer transition-colors"
-                        @click="expandedRow = expandedRow === group.key ? null : group.key"
-                      >
-                        <td class="px-3 whitespace-nowrap py-2">
-                          <div class="text-base font-semibold text-gray-900">
-                            {{ group.primary.headword.display }}
-                          </div>
-                        </td>
-                        <td class="px-3 whitespace-nowrap py-2">
-                          <div class="text-base font-mono font-semibold text-blue-600">
-                            {{ getGroupJyutping(group) || '-' }}
-                          </div>
-                        </td>
-                        <td class="px-3 py-2">
-                          <div class="text-base text-gray-700 line-clamp-2">
-                            {{ getGroupDefinitions(group) || '-' }}
-                          </div>
-                        </td>
-                        <td class="px-3 whitespace-nowrap py-2">
-                          <div class="flex flex-wrap gap-1">
-                            <span
-                              v-for="source in getGroupSources(group)"
-                              :key="source"
-                              class="px-2 py-1 text-sm bg-blue-50 text-blue-700 rounded-full"
-                            >
-                              {{ source }}
-                            </span>
-                          </div>
-                        </td>
-                      </tr>
-                      <!-- 展开详情 -->
-                      <tr v-if="expandedRow === group.key" :key="`${group.key}-detail`">
-                        <td colspan="4" class="px-3 py-3 py-2 bg-gray-50">
-                          <DictCardGroup :entries="group.entries" :show-details="false" />
-                        </td>
-                      </tr>
-                    </template>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </template>
-          
-          <!-- 其他相关结果 -->
-          <template v-if="displayedGroupedResults.otherResults.length > 0">
-            <div class="mb-6 p-3 border-l-4 bg-blue-50 border-blue-400 rounded-r-lg flex items-center gap-2 shadow-sm" :class="{ 'mt-12': isTextSearch && displayedGroupedResults.exactMatches.length > 0 }">
-              <svg class="w-4 h-4 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span v-if="isTextSearch && sortBy === 'relevance'" class="text-blue-800 text-sm font-semibold">
-                {{ t('common.otherResultsLabel') }} <span class="ml-1 px-1.5 py-0.5 bg-blue-100 rounded text-blue-900">{{ groupedResults.otherResults.length }}</span> {{ t('common.remainingSuffix') }}
-              </span>
-              <span v-else class="text-blue-800 text-sm font-semibold">
-                {{ t('common.searchHeader') }} <span class="ml-1 px-1.5 py-0.5 bg-blue-100 rounded text-blue-900">{{ groupedResults.otherResults.length }}</span> {{ t('common.remainingSuffix') }}
-              </span>
-            </div>
-            <div class="bg-white rounded-lg shadow-md overflow-hidden">
-              <div class="overflow-x-auto">
-                <table class="w-full">
-                  <thead class="bg-gray-50 border-b border-gray-400">
-                    <tr>
-                      <th class="px-3 text-left text-base font-medium uppercase tracking-wider py-2">
-                        {{ t('common.wordColumn') }}
-                      </th>
-                      <th class="px-3 text-left text-base font-medium uppercase tracking-wider py-2">
-                        {{ t('common.jyutpingColumn') }}
-                      </th>
-                      <th class="px-3 text-left text-base font-medium uppercase tracking-wider py-2">
-                        {{ t('common.definitionColumn') }}
-                      </th>
-                      <th class="px-3 text-left text-base font-medium uppercase tracking-wider py-2">
-                        {{ t('common.sourceColumn') }}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody class="bg-white divide-y divide-gray-200 ">
-                    <template v-for="group in displayedGroupedResults.otherResults" :key="group.key">
-                      <tr
-                        class="hover:bg-gray-50 cursor-pointer transition-colors"
-                        @click="expandedRow = expandedRow === group.key ? null : group.key"
-                      >
-                        <td class="px-3 whitespace-nowrap py-2">
-                          <div class="text-base font-semibold text-gray-900">
-                            {{ group.primary.headword.display }}
-                          </div>
-                        </td>
-                        <td class="px-3 whitespace-nowrap py-2">
-                          <div class="text-base font-mono font-semibold text-blue-600">
-                            {{ getGroupJyutping(group) || '-' }}
-                          </div>
-                        </td>
-                        <td class="px-3 py-2">
-                          <div class="text-base text-gray-700 line-clamp-2">
-                            {{ getGroupDefinitions(group) || '-' }}
-                          </div>
-                        </td>
-                        <td class="px-3 whitespace-nowrap py-2">
-                          <div class="flex flex-wrap gap-1">
-                            <span
-                              v-for="source in getGroupSources(group)"
-                              :key="source"
-                              class="px-2 py-1 text-sm bg-blue-50 text-blue-700 rounded-full"
-                            >
-                              {{ source }}
-                            </span>
-                          </div>
-                        </td>
-                      </tr>
-                      <!-- 展开详情 -->
-                      <tr v-if="expandedRow === group.key" :key="`${group.key}-detail`">
-                        <td colspan="4" class="px-3 py-3 py-2 bg-gray-50">
-                          <DictCardGroup :entries="group.entries" :show-details="false" />
-                        </td>
-                      </tr>
-                    </template>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </template>
-          
-          <!-- 加载更多按钮 -->
-          <div v-if="hasMore" class="flex justify-center py-8">
-            <button
-              class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-              :disabled="loadingMore"
-              @click="loadMore"
-            >
-              <span v-if="loadingMore">{{ t('common.loadingMore') }}</span>
-              <span v-else>{{ t('common.loadMore') }} ({{ totalCount - displayedResults.length }} {{ t('common.remainingSuffix') }})</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Empty State -->
-      <div v-else-if="!loading" class="text-center py-16">
-        <div class="text-6xl mb-4">📚</div>
-        <h3 class="text-2xl font-semibold text-gray-900 mb-2">
-          {{ t('common.startSearchTitle') }}
-        </h3>
-        <p class="text-gray-600 mb-6">
-          {{ t('common.startSearchDescription') }}
-        </p>
-        <!-- 示例搜索 -->
-        <div class="flex flex-wrap gap-2 justify-center">
-          <span class="text-sm text-gray-500">{{ t('common.exampleSearchPrefix') }}</span>
-          <button
-            v-for="example in exampleSearches"
-            :key="example"
-            class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors"
-            @click="searchExample(example)"
-          >
-            {{ example }}
-          </button>
-        </div>
-      </div>
       </ClientOnly>
     </main>
 
@@ -571,13 +529,13 @@
           <a href="https://github.com/jyutjyucom/jyutjyu" class="text-blue-600 hover:underline" target="_blank">
             {{ t('common.github') }}
           </a>
-          · 
+          ·
           <NuxtLink to="/about" class="text-blue-600 hover:underline">
             {{ t('common.aboutProject') }}
           </NuxtLink>
         </p>
         <p class="text-xs text-gray-500">
-          收录内容遵循不同授权协议 · 
+          收录内容遵循不同授权协议 ·
           <NuxtLink to="/about#license" class="text-blue-600 hover:underline">
             {{ t('common.licenseDetails') }}
           </NuxtLink>
@@ -864,12 +822,12 @@ const filteredEntries = computed(() => {
 // 排序后的原始结果
 const sortedEntries = computed(() => {
   const results = [...filteredEntries.value]
-  
+
   if (sortBy.value === 'relevance') {
     // 保持原样 (allResults 已经是按相关度排序的)
     return results
   }
-  
+
   return results.sort((a, b) => {
     switch (sortBy.value) {
       case 'jyutping': {
@@ -915,18 +873,18 @@ const isExactMatch = (entry: DictionaryEntry, query: string): boolean => {
   }
   const queryTrimmed = query.trim()
   if (!queryTrimmed) return false
-  
+
   try {
     // 获取查询词的所有变体（原文、简体、繁体），并转换为小写
     const queryVariants = getAllVariants(queryTrimmed).map(v => v.toLowerCase())
-    
+
     // 获取词头的所有变体（原文、简体、繁体），并转换为小写
     const displayVariants = getAllVariants(entry.headword.display || '').map(v => v.toLowerCase())
     const normalizedVariants = getAllVariants(entry.headword.normalized || '').map(v => v.toLowerCase())
-    
+
     // 合并所有词头变体
     const allHeadwordVariants = new Set([...displayVariants, ...normalizedVariants])
-    
+
     // 检查是否有任何查询变体与词头变体完全匹配
     return queryVariants.some(qv => allHeadwordVariants.has(qv))
   } catch (error) {
@@ -954,10 +912,10 @@ const groupedResults = computed(() => {
       otherResults: aggregatedResults.value
     }
   }
-  
+
   const exactMatches: AggregatedEntry[] = []
   const otherResults: AggregatedEntry[] = []
-  
+
   // 按照后端返回的顺序遍历，保持顺序
   for (const group of aggregatedResults.value) {
     if (isExactMatch(group.primary, actualSearchQuery.value)) {
@@ -966,7 +924,7 @@ const groupedResults = computed(() => {
       otherResults.push(group)
     }
   }
-  
+
   return {
     exactMatches,
     otherResults
@@ -976,13 +934,13 @@ const groupedResults = computed(() => {
 // 用于显示的合并结果（完全匹配在前，其他结果在后）
 const displayedGroupedResults = computed(() => {
   const { exactMatches, otherResults } = groupedResults.value
-  
+
   // 先显示所有完全匹配的结果
   const allExactDisplayed = exactMatches
-  
+
   // 计算当前页应该显示的其他结果数量
   const targetDisplayCount = currentPage.value * PAGE_SIZE
-  
+
   // 如果完全匹配的结果已经超过当前页限制，只显示部分完全匹配
   if (allExactDisplayed.length >= targetDisplayCount) {
     return {
@@ -992,11 +950,11 @@ const displayedGroupedResults = computed(() => {
       hasMoreOther: otherResults.length > 0
     }
   }
-  
+
   // 否则显示所有完全匹配，再加上部分其他结果
   const remainingSlots = targetDisplayCount - allExactDisplayed.length
   const otherDisplayed = otherResults.slice(0, remainingSlots)
-  
+
   return {
     exactMatches: allExactDisplayed,
     otherResults: otherDisplayed,
@@ -1066,15 +1024,15 @@ const performSearch = async (query: string) => {
 
   // 更新实际搜索的查询词
   actualSearchQuery.value = query.trim()
-  
+
   // 重置筛选状态
   selectedDict.value = null
   selectedDialect.value = null
   selectedType.value = null
-  
+
   // 确保转换器已初始化（用于完全匹配判断）
   await ensureInitialized()
-  
+
   const startTime = Date.now()
 
   try {
@@ -1088,12 +1046,12 @@ const performSearch = async (query: string) => {
         // 重新计算显示的结果（保持当前页数，使用筛选后的结果）
         // 新搜索时筛选已重置，所以 filteredEntries 等于 allResults
         updateDisplayedResults()
-        
+
         // 首次收到结果时关闭 loading
         if (loading.value && entries.length > 0) {
           loading.value = false
         }
-        
+
         // 更新搜索耗时
         if (complete) {
           searchTime.value = Date.now() - startTime
@@ -1119,7 +1077,7 @@ const loadMore = () => {
   }
 
   loadingMore.value = true
-  
+
   setTimeout(() => {
     currentPage.value++
     updateDisplayedResults()
@@ -1200,7 +1158,7 @@ watch(enableReverseSearch, (newValue) => {
 onMounted(async () => {
   // 确保转换器已初始化（用于完全匹配判断）
   await ensureInitialized()
-  
+
   const handleClickOutside = (e: MouseEvent) => {
     const target = e.target as HTMLElement
     if (!target.closest('.relative')) {
@@ -1211,7 +1169,7 @@ onMounted(async () => {
     }
   }
   document.addEventListener('click', handleClickOutside)
-  
+
   onUnmounted(() => {
     document.removeEventListener('click', handleClickOutside)
   })
@@ -1219,8 +1177,8 @@ onMounted(async () => {
 
 // SEO
 useHead({
-  title: computed(() => actualSearchQuery.value 
-    ? `${actualSearchQuery.value} - ${t('common.searchHeader')} | ${t('common.siteName')}` 
+  title: computed(() => actualSearchQuery.value
+    ? `${actualSearchQuery.value} - ${t('common.searchHeader')} | ${t('common.siteName')}`
     : `${t('common.searchHeader')} | ${t('common.siteName')}`
   )
 })
