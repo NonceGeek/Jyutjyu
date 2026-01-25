@@ -8,130 +8,135 @@
             <NuxtLink to="/" class="text-xl font-bold text-blue-600 whitespace-nowrap">
               {{ t('common.siteName') }}
             </NuxtLink>
-            <div class="flex-1 max-w-2xl min-w-[240px] relative">
-              <input v-model="searchQuery" type="text" :placeholder="t('common.searchPlaceholder')"
-                class="w-full px-4 py-2 pr-20 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                @keyup.enter="handleSearch" @input="handleInput">
-              <button
-                class="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
-                @click="handleSearch">
-                {{ t('common.searchButton') }}
-              </button>
-              <!-- 搜索建议 -->
-              <div v-if="suggestions.length > 0 && showSuggestions"
-                class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto z-20">
-                <button v-for="(suggestion, idx) in suggestions" :key="idx"
-                  class="w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors"
-                  @click="selectSuggestion(suggestion)">
-                  {{ suggestion }}
+            <!-- 搜索框与选项按钮同一行不换行 -->
+            <div class="flex flex-nowrap items-center gap-2 flex-1 min-w-0">
+              <div class="flex-1 min-w-0 max-w-2xl relative">
+                <input v-model="searchQuery" type="text" :placeholder="t('common.searchPlaceholder')"
+                  class="w-full px-4 py-2 pr-20 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                  @keyup.enter="handleSearch" @input="handleInput">
+                <button
+                  class="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
+                  @click="handleSearch">
+                  {{ t('common.searchButton') }}
                 </button>
+                <!-- 搜索建议 -->
+                <div v-if="suggestions.length > 0 && showSuggestions"
+                  class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto z-20">
+                  <button v-for="(suggestion, idx) in suggestions" :key="idx"
+                    class="w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors"
+                    @click="selectSuggestion(suggestion)">
+                    {{ suggestion }}
+                  </button>
+                </div>
               </div>
+              <!-- 仅当筛选栏隐藏时显示（< lg）：展开/收起选项按钮 -->
+              <button type="button"
+                class="lg:hidden flex items-center justify-center w-9 h-9 rounded-lg border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-colors shrink-0"
+                :aria-label="optionsExpanded ? t('common.optionsCollapse') : t('common.optionsExpand')"
+                :aria-expanded="optionsExpanded"
+                @click="optionsExpanded = !optionsExpanded">
+                <svg class="w-4 h-4 transition-transform" :class="optionsExpanded ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
             </div>
-            <!-- 反查开关 -->
-            <label class="flex items-center gap-2 cursor-pointer whitespace-nowrap select-none" title="反查：从释义中搜索词语">
-              <input v-model="enableReverseSearch" type="checkbox"
-                class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
-              <span class="text-sm text-gray-600">{{ t('common.reverseSearchShort') }}</span>
-            </label>
-            <div class="md:hidden">
-              <LanguageSwitcher />
+            <!-- 反查（仅 lg+ 显示；较窄屏在选项面板复用） -->
+            <div class="hidden lg:flex">
+              <SearchReverseCheckbox v-model="enableReverseSearch" />
             </div>
           </div>
-          <div class="hidden md:flex flex-shrink-0">
+          <div class="hidden lg:flex flex-shrink-0">
             <LanguageSwitcher />
           </div>
         </div>
+        <!-- 较窄屏（< lg）：选项面板，筛选栏不单独占行时复用反查、LanguageSwitcher、筛选、排序、视图 -->
+        <div v-show="optionsExpanded" class="lg:hidden border-t border-gray-100 pt-3 mt-1 space-y-4">
+          <div class="flex flex-wrap items-center gap-3">
+            <SearchReverseCheckbox v-model="enableReverseSearch" />
+            <LanguageSwitcher />
+          </div>
+          <template v-if="actualSearchQuery && allResults.length > 0">
+            <SearchFilterControls
+              :selected-dict="selectedDict"
+              :selected-dialect="selectedDialect"
+              :selected-type="selectedType"
+              :show-dict-dropdown="showDictDropdown"
+              :show-dialect-dropdown="showDialectDropdown"
+              :show-type-dropdown="showTypeDropdown"
+              :available-dicts="availableDicts"
+              :available-dialects="availableDialects"
+              :available-types="availableTypes"
+              :get-dict-count="getDictCount"
+              :get-dialect-count="getDialectCount"
+              :get-type-count="getTypeCount"
+              :get-dialect-label="getDialectLabel"
+              :get-type-name="getTypeName"
+              @toggle-dict="showDictDropdown = !showDictDropdown"
+              @toggle-dialect="showDialectDropdown = !showDialectDropdown"
+              @toggle-type="showTypeDropdown = !showTypeDropdown"
+              @select-dict="selectDict"
+              @select-dialect="selectDialect"
+              @select-type="selectType"
+            />
+            <div class="flex flex-wrap items-center gap-3">
+              <SearchSortSelect
+                :sort-by="sortBy"
+                :show-sort-dropdown="showSortDropdown"
+                :get-sort-label="getSortLabel"
+                @toggle-sort="showSortDropdown = !showSortDropdown"
+                @select-sort="selectSort"
+              />
+              <SearchViewModeToggle
+                v-if="displayedResults.length > 0"
+                v-model="viewMode"
+                :compact="true"
+                :show-icons="false"
+              />
+            </div>
+          </template>
+        </div>
       </div>
 
-      <!-- 筛选栏 -->
-      <div v-if="actualSearchQuery && allResults.length > 0" class="border-t border-gray-100 bg-gray-50/80">
+      <!-- 筛选栏（仅 lg+ 且保证单行；< lg 或会换行时隐藏，改在选项面板显示） -->
+      <div v-if="actualSearchQuery && allResults.length > 0" class="hidden lg:block border-t border-gray-100 bg-gray-50/80">
         <div class="container mx-auto px-4 py-3">
-          <div class="flex flex-wrap items-center gap-3">
-            <span class="text-sm text-gray-500 font-medium">{{ t('common.filterLabel') }}</span>
-
-            <!-- 词典筛选 -->
-            <div class="relative">
-              <button class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors"
-                :class="selectedDict ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'"
-                @click="showDictDropdown = !showDictDropdown">
-                <span>{{ selectedDict || t('common.allDictionaries') }}</span>
-                <svg class="w-4 h-4" :class="showDictDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              <!-- 下拉菜单 -->
-              <div v-if="showDictDropdown"
-                class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-30 min-w-[180px]">
-                <button class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
-                  :class="!selectedDict ? 'text-blue-600 bg-blue-50' : 'text-gray-700'" @click="selectDict(null)">
-                  {{ t('common.allDictionaries') }}
-                </button>
-                <button v-for="dict in availableDicts" :key="dict"
-                  class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
-                  :class="selectedDict === dict ? 'text-blue-600 bg-blue-50' : 'text-gray-700'"
-                  @click="selectDict(dict)">
-                  {{ dict }}
-                  <span class="text-gray-400 text-xs ml-1">({{ getDictCount(dict) }})</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- 方言点筛选 -->
-            <div class="relative">
-              <button class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors"
-                :class="selectedDialect ? 'bg-green-50 border-green-300 text-green-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'"
-                @click="showDialectDropdown = !showDialectDropdown">
-                <span>{{ selectedDialect ? getDialectLabel(selectedDialect) : t('common.allDialects') }}</span>
-                <svg class="w-4 h-4" :class="showDialectDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              <!-- 下拉菜单 -->
-              <div v-if="showDialectDropdown"
-                class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-30 min-w-[140px]">
-                <button class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
-                  :class="!selectedDialect ? 'text-green-600 bg-green-50' : 'text-gray-700'"
-                  @click="selectDialect(null)">
-                  {{ t('common.allDialects') }}
-                </button>
-                <button v-for="dialect in availableDialects" :key="dialect"
-                  class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
-                  :class="selectedDialect === dialect ? 'text-green-600 bg-green-50' : 'text-gray-700'"
-                  @click="selectDialect(dialect)">
-                  {{ getDialectLabel(dialect) }}
-                  <span class="text-gray-400 text-xs ml-1">({{ getDialectCount(dialect) }})</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- 类型筛选 (字/词/短语) -->
-            <div class="relative">
-              <button class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors"
-                :class="selectedType ? 'bg-amber-50 border-amber-300 text-amber-700' : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'"
-                @click="showTypeDropdown = !showTypeDropdown">
-                <span>{{ selectedType ? getTypeName(selectedType) : t('common.allTypes') }}</span>
-                <svg class="w-4 h-4" :class="showTypeDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor"
-                  viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              <!-- 下拉菜单 -->
-              <div v-if="showTypeDropdown"
-                class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-30 min-w-[120px]">
-                <button class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
-                  :class="!selectedType ? 'text-amber-600 bg-amber-50' : 'text-gray-700'" @click="selectType(null)">
-                  {{ t('common.allTypes') }}
-                </button>
-                <button v-for="type in availableTypes" :key="type"
-                  class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
-                  :class="selectedType === type ? 'text-amber-600 bg-amber-50' : 'text-gray-700'"
-                  @click="selectType(type)">
-                  {{ getTypeName(type) }}
-                  <span class="text-gray-400 text-xs ml-1">({{ getTypeCount(type) }})</span>
-                </button>
-              </div>
+          <div class="flex flex-nowrap items-center gap-3">
+            <SearchFilterControls
+              :selected-dict="selectedDict"
+              :selected-dialect="selectedDialect"
+              :selected-type="selectedType"
+              :show-dict-dropdown="showDictDropdown"
+              :show-dialect-dropdown="showDialectDropdown"
+              :show-type-dropdown="showTypeDropdown"
+              :available-dicts="availableDicts"
+              :available-dialects="availableDialects"
+              :available-types="availableTypes"
+              :get-dict-count="getDictCount"
+              :get-dialect-count="getDialectCount"
+              :get-type-count="getTypeCount"
+              :get-dialect-label="getDialectLabel"
+              :get-type-name="getTypeName"
+              @toggle-dict="showDictDropdown = !showDictDropdown"
+              @toggle-dialect="showDialectDropdown = !showDialectDropdown"
+              @toggle-type="showTypeDropdown = !showTypeDropdown"
+              @select-dict="selectDict"
+              @select-dialect="selectDialect"
+              @select-type="selectType"
+            />
+            <!-- 居右：排序、卡片、列表（复用组件） -->
+            <div class="flex items-center gap-3 ml-auto shrink-0">
+              <SearchSortSelect
+                :sort-by="sortBy"
+                :show-sort-dropdown="showSortDropdown"
+                :get-sort-label="getSortLabel"
+                dropdown-align="right"
+                @toggle-sort="showSortDropdown = !showSortDropdown"
+                @select-sort="selectSort"
+              />
+              <SearchViewModeToggle
+                v-if="displayedResults.length > 0"
+                v-model="viewMode"
+              />
             </div>
           </div>
         </div>
@@ -153,7 +158,7 @@
             {{ enableReverseSearch ? t('common.reverseSearchResultsPrefix') : t('common.searchResultsPrefix') }}
             "{{ actualSearchQuery }}"
           </h2>
-          <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 justify-between">
+          <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
             <p class="text-gray-600 flex flex-wrap items-center gap-x-2 gap-y-1">
               <span v-if="enableReverseSearch" class="text-blue-500 text-sm">
                 {{ t('common.searching') }}
@@ -190,62 +195,6 @@
                 · {{ t('common.showFirstPrefix') }} {{ displayedResults.length }} {{ t('common.showFirstSuffix') }}
               </span>
             </p>
-
-            <div class="flex flex-wrap items-center gap-4">
-              <!-- 排序下拉菜单 -->
-              <div class="relative">
-                <button
-                  class="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border transition-colors bg-white border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm"
-                  @click.stop="showSortDropdown = !showSortDropdown">
-                  <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
-                  </svg>
-                  <span>{{ getSortLabel(sortBy) }}</span>
-                  <svg class="w-4 h-4 transition-transform" :class="showSortDropdown ? 'rotate-180' : ''" fill="none"
-                    stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                <div v-if="showSortDropdown"
-                  class="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl py-1 z-30 min-w-[140px]">
-                  <button v-for="sort in ['relevance', 'jyutping', 'headword', 'dictionary']" :key="sort"
-                    class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
-                    :class="sortBy === sort ? 'text-blue-600 font-semibold bg-blue-50' : 'text-gray-700'"
-                    @click="selectSort(sort as any)">
-                    {{ getSortLabel(sort) }}
-                  </button>
-                </div>
-              </div>
-
-              <!-- 视图切换 (桌面端) -->
-              <div v-if="displayedResults.length > 0" class="flex">
-                <div class="inline-flex rounded-lg border border-gray-300">
-                  <button class="px-4 py-2 text-sm font-medium transition-colors"
-                    :class="viewMode === 'card' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
-                    @click="viewMode = 'card'">
-                    <span class="flex items-center gap-2">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                      </svg>
-                      {{ t('common.cardView') }}
-                    </span>
-                  </button>
-                  <button class="px-4 py-2 text-sm font-medium transition-colors border-l border-gray-300"
-                    :class="viewMode === 'list' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'"
-                    @click="viewMode = 'list'">
-                    <span class="flex items-center gap-2">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M4 6h16M4 12h16M4 18h16" />
-                      </svg>
-                      {{ t('common.listView') }}
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -428,6 +377,7 @@ const showDictDropdown = ref(false) // 词典下拉菜单显示状态
 const showDialectDropdown = ref(false) // 方言下拉菜单显示状态
 const showTypeDropdown = ref(false) // 类型下拉菜单显示状态
 const showSortDropdown = ref(false) // 排序下拉菜单显示状态
+const optionsExpanded = ref(false) // 移动端：选项面板（反查/语言/筛选/排序/视图）是否展开
 
 // 分页配置
 const PAGE_SIZE = 10 // 每页显示10条
@@ -1005,6 +955,7 @@ onMounted(async () => {
       showDictDropdown.value = false
       showDialectDropdown.value = false
       showTypeDropdown.value = false
+      showSortDropdown.value = false
     }
   }
   document.addEventListener('click', handleClickOutside)

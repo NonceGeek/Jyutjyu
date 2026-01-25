@@ -43,6 +43,7 @@ export default defineI18nConfig(() => ({
         reverseSearchResultsPrefix: '反查结果:',
         searching: '搜索中...',
         filterLabel: '筛选:',
+        sortLabel: '排序:',
         allDictionaries: '全部词典',
         allDialects: '全部方言',
         allTypes: '全部词元',
@@ -87,7 +88,9 @@ export default defineI18nConfig(() => ({
         sortByRelevance: '相关度',
         sortByJyutping: '粤拼',
         sortByHeadword: '词头',
-        sortByDictionary: '词典'
+        sortByDictionary: '词典',
+        optionsExpand: '展开选项',
+        optionsCollapse: '收起选项'
       },
       dictCard: {
         placeholderWord: '有音无字',
@@ -301,6 +304,7 @@ export default defineI18nConfig(() => ({
         reverseSearchResultsPrefix: '反查結果:',
         searching: '搜尋中...',
         filterLabel: '篩選:',
+        sortLabel: '排序:',
         allDictionaries: '全部詞典',
         allDialects: '全部方言',
         allTypes: '全部词元',
@@ -345,7 +349,9 @@ export default defineI18nConfig(() => ({
         sortByRelevance: '相關度',
         sortByJyutping: '粵拼',
         sortByHeadword: '詞頭',
-        sortByDictionary: '詞典'
+        sortByDictionary: '詞典',
+        optionsExpand: '展開選項',
+        optionsCollapse: '收起選項'
       },
       dictCard: {
         placeholderWord: '有音無字',
@@ -559,6 +565,7 @@ export default defineI18nConfig(() => ({
         reverseSearchResultsPrefix: '反查结果：',
         searching: '搜寻紧...',
         filterLabel: '筛选：',
+        sortLabel: '排序：',
         allDictionaries: '全部词典',
         allDialects: '全部方言',
         allTypes: '全部词元',
@@ -603,7 +610,9 @@ export default defineI18nConfig(() => ({
         sortByRelevance: '相关度',
         sortByJyutping: '粤拼',
         sortByHeadword: '词头',
-        sortByDictionary: '词典'
+        sortByDictionary: '词典',
+        optionsExpand: '展开选项',
+        optionsCollapse: '收起选项'
       },
       dictCard: {
         placeholderWord: '有音无字',
@@ -816,6 +825,7 @@ export default defineI18nConfig(() => ({
         reverseSearchResultsPrefix: '反查結果：',
         searching: '搜尋緊...',
         filterLabel: '篩選：',
+        sortLabel: '排序：',
         allDictionaries: '全部詞典',
         allDialects: '全部方言',
         allTypes: '全部詞元',
@@ -860,7 +870,9 @@ export default defineI18nConfig(() => ({
         sortByRelevance: '相關度',
         sortByJyutping: '粵拼',
         sortByHeadword: '詞頭',
-        sortByDictionary: '詞典'
+        sortByDictionary: '詞典',
+        optionsExpand: '展開選項',
+        optionsCollapse: '收起選項'
       },
       dictCard: {
         placeholderWord: '有音無字',
