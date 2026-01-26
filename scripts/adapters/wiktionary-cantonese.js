@@ -29,15 +29,15 @@ export const DICTIONARY_INFO = {
     region_code: 'YUE'
   },
   source_book: '維基辭典',
-  author: '維基辭典貢獻者',
-  publisher: '維基媒體基金會',
+  author: '维基词典贡献者',
+  publisher: '维基媒体基金会',
   year: 2026,
   version: new Date().toISOString().slice(0, 10),
-  description: '維基辭典的粵語詞條，包含釋義、讀音、例句等。',
+  description: '维基词典的粤语词条，包含释义、读音、例句等。',
   source: 'community_contributed',
   license: 'CC BY-SA 4.0',
   license_url: 'https://creativecommons.org/licenses/by-sa/4.0/',
-  attribution: '維基辭典貢獻者',
+  attribution: '维基词典贡献者',
   usage_restriction: '需遵循CC BY-SA 4.0协议',
   
   // 启用自动分片（大型词典优化）

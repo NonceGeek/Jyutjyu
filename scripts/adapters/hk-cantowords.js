@@ -29,15 +29,15 @@ export const DICTIONARY_INFO = {
     region_code: 'HK'
   },
   source_book: '粵典 (words.hk)',
-  author: 'words.hk contributors',
-  publisher: 'Hong Kong Lexicography Limited',
+  author: '粵典贡献者',
+  publisher: '香港辞书有限公司',
   year: 2026,
   version: new Date().toISOString().slice(0, 10),
   description: '香港粤语社区词典，收录大量日常用语、俚语及现代词汇，提供香港粤语和英语双语释义',
   source: 'community_contributed',
   license: 'Non-Commercial Open Data License 1.0',
   license_url: 'https://words.hk/base/hoifong/',
-  attribution: '粵典 (words.hk) / Hong Kong Lexicography Limited',
+  attribution: '粵典 (words.hk) / 香港辞书有限公司',
   usage_restriction: '此词典采用《非商业开放资料授权协议 1.0》，允许非商业使用、复制和修改。商业使用需获得授权（小型个人业务可豁免）。详见授权协议。',
   // 启用自动分片（大型词典优化）
   enable_chunking: true,

@@ -19,6 +19,7 @@
  * - 性质: 爱好者原创
  */
 
+import { publicDecrypt } from 'crypto'
 import {
   generateKeywords,
   cleanHeadword
@@ -36,6 +37,7 @@ export const DICTIONARY_INFO = {
   },
   source_book: '欽州粵拼',
   author: 'Lai Joengzit等',
+  publisher: 'Lai Joengzit',
   year: 2020,
   version: '201026',
   description: '《钦州白话》的词头及注音部分，收录钦州话词汇及粤拼。',
