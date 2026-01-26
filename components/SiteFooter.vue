@@ -15,20 +15,24 @@
             </NuxtLink>
           </template>
         </p>
-        <p class="mb-2">
-          友情連結：
+        <p class="mb-2 text-sm text-gray-500">
+          {{ t('common.footerFriendLinks') }}
           <a href="https://jyutping.org/jyutping/" class="text-blue-600 hover:underline" target="_blank"
             rel="noopener noreferrer">
-            粵拼方案
+            {{ t('common.footerJyutping') }}
+          </a>
+          ·
+          <a href="https://www.jyutdict.org/" class="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
+            {{ t('common.footerJyutDict') }}
           </a>
           ·
           <a href="https://jyut.net/" class="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">
-            粵音資料集叢
+            {{ t('common.footerJyutNet') }}
           </a>
         </p>
-        <p v-if="showMission">{{ t('common.footerMission') }}</p>
+        <p v-if="showMission" class="text-sm text-gray-500">{{ t('common.footerMission') }}</p>
         <p v-if="showLicense" class="text-sm text-gray-500">
-          收录内容遵循不同授权协议 ·
+          {{ t('common.footerLicenseIntro') }} ·
           <NuxtLink to="/about#license" class="text-blue-600 hover:underline">
             {{ t('common.licenseDetails') }}
           </NuxtLink>
