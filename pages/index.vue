@@ -9,7 +9,7 @@
       </div>
 
       <!-- Logo & Title -->
-      <div class="text-center mb-12 font-r">
+      <div class="text-center mb-12" :class="isSimplified ? '' : 'font-r'">
         <h1 class="text-4xl md:text-6xl text-blue-600 mb-4">
           {{ t('common.siteName') }}
         </h1>
@@ -317,7 +317,12 @@
 import { Database, Github, Info } from 'lucide-vue-next'
 import type { DictionaryEntry } from '~/types/dictionary'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+
+// 判断是否为简体中文（简体中文或简体粤文）
+const isSimplified = computed(() => {
+  return locale.value === 'zh-Hans' || locale.value === 'yue-Hans'
+})
 
 const searchQuery = ref('')
 const enableReverseSearch = ref(false)
