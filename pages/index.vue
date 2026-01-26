@@ -35,17 +35,17 @@
         </div>
         <!-- 反查开关和提示 -->
         <div class="mt-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6">
-          <label class="flex items-center gap-2 cursor-pointer select-none" :title="t('common.reverseSearchTitle')">
-            <input v-model="enableReverseSearch" type="checkbox"
-              class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
-            <span class="text-sm text-gray-600">{{ t('common.reverseSearch') }}</span>
-          </label>
           <div class="text-sm text-gray-500">
             {{ t('common.examplesPrefix') }}
             <span class="text-blue-600 cursor-pointer hover:underline" @click="searchExample('阿Sir')">阿Sir</span>、
             <span class="text-blue-600 cursor-pointer hover:underline" @click="searchExample('aa3 soe4')">aa3
               soe4</span>
           </div>
+          <label class="flex items-center gap-2 cursor-pointer select-none" :title="t('common.reverseSearchTitle')">
+            <input v-model="enableReverseSearch" type="checkbox"
+              class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
+            <span class="text-sm text-gray-600">{{ t('common.reverseSearch') }}</span>
+          </label>
         </div>
       </div>
 
