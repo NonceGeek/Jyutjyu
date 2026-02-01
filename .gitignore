@@ -1,3 +1,6 @@
+# pnpm
+.pnpm*
+
 # Nuxt
 .nuxt
 .output
