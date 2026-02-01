@@ -51,7 +51,7 @@ const { locale, locales, t, setLocale } = useI18n()
 const currentLocale = computed({
   get: () => locale.value,
   set: async (value: string) => {
-    await setLocale(value)
+    await setLocale(value as any)
   }
 })
 

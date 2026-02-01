@@ -127,22 +127,22 @@
             <!-- Decorative accent -->
             <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
             <!-- Card content - clickable to search -->
-            <div @click="searchEntry(randomEntries[mobileIndex].headword.display)"
+            <div @click="searchEntry(randomEntries[mobileIndex]?.headword.display || '')"
               class="cursor-pointer p-7 active:bg-gray-50 transition-colors">
               <div class="flex flex-col h-full items-center text-center">
                 <div class="w-full">
                   <h4 class="text-2xl font-bold text-gray-900 mb-2">
-                    {{ randomEntries[mobileIndex].headword.display }}
+                    {{ randomEntries[mobileIndex]?.headword.display }}
                   </h4>
                   <p class="text-base font-mono text-blue-600 font-medium">
-                    {{ randomEntries[mobileIndex].phonetic.jyutping[0] }}
+                    {{ randomEntries[mobileIndex]?.phonetic.jyutping[0] }}
                   </p>
                 </div>
 
                 <div class="w-16 h-0.5 bg-blue-100 my-4"></div>
 
                 <p class="text-gray-600 text-base leading-relaxed line-clamp-4 mb-1">
-                  {{ randomEntries[mobileIndex].senses[0]?.definition || t('common.noDefinition') }}
+                  {{ randomEntries[mobileIndex]?.senses[0]?.definition || t('common.noDefinition') }}
                 </p>
               </div>
             </div>
@@ -151,7 +151,7 @@
             <div class="border-t border-gray-50">
               <button @click="nextMobileEntry"
                 class="w-full px-7 py-4 flex justify-between items-center active:bg-blue-50 transition-colors">
-                <span class="text-sm text-gray-400 font-medium">{{ randomEntries[mobileIndex].source_book }}</span>
+                <span class="text-sm text-gray-400 font-medium">{{ randomEntries[mobileIndex]?.source_book }}</span>
                 <span class="text-blue-500 font-medium flex items-center gap-1 text-sm">
                   {{ t('common.next') }}
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -127,11 +127,11 @@ export const useDictionary = () => {
     const normalizedQuery = query.toLowerCase().trim()
     
     if (!normalizedQuery) return []
-    
+
     const firstChar = normalizedQuery[0]
-    
+
     // 检查首字符是否为汉字
-    const isChineseFirstChar = /[\u4e00-\u9fa5]/.test(firstChar)
+    const isChineseFirstChar = firstChar && /[\u4e00-\u9fa5]/.test(firstChar)
     
     if (isChineseFirstChar) {
       // 汉字查询：使用 headwordIndex 查找对应的分片
@@ -140,14 +140,14 @@ export const useDictionary = () => {
       
       const firstCharVariants = [
         firstChar,
-        toSimplified(firstChar),
-        toTraditional(firstChar)
+        firstChar ? toSimplified(firstChar) : '',
+        firstChar ? toTraditional(firstChar) : ''
       ].filter((v, i, arr) => arr.indexOf(v) === i) // 去重
-      
+
       if (manifest.headwordIndex) {
         firstCharVariants.forEach(variant => {
-          if (manifest.headwordIndex[variant]) {
-            manifest.headwordIndex[variant].forEach((initial: string) => {
+          if (variant && manifest.headwordIndex[variant]) {
+            manifest.headwordIndex[variant]?.forEach((initial: string) => {
               chunks.add(initial)
             })
           }
@@ -168,13 +168,13 @@ export const useDictionary = () => {
       })
       return Array.from(chunks)
     }
-    
+
     // 中长度的非汉字查询（3+字符）→ 只加载首字母分片
     // 原因：拼音/英文查询的首字母对应分片文件名
-    if (manifest.chunks[firstChar]) {
+    if (firstChar && manifest.chunks[firstChar]) {
       chunks.add(firstChar)
     }
-    
+
     return Array.from(chunks)
   }
 
@@ -353,18 +353,20 @@ export const useDictionary = () => {
     // 2. 释义详细程度 (0-20分)
     if (entry.senses && entry.senses.length > 0) {
       const firstSense = entry.senses[0]
-      const definitionLength = firstSense.definition?.length || 0
-      
-      if (definitionLength > 50) {
-        score += 20
-      } else if (definitionLength > 20) {
-        score += 15
-      } else if (definitionLength > 0) {
-        score += 10
-      }
-      
-      if (firstSense.examples && firstSense.examples.length > 0) {
-        score += 5
+      if (firstSense) {
+        const definitionLength = firstSense.definition?.length || 0
+
+        if (definitionLength > 50) {
+          score += 20
+        } else if (definitionLength > 20) {
+          score += 15
+        } else if (definitionLength > 0) {
+          score += 10
+        }
+
+        if (firstSense.examples && firstSense.examples.length > 0) {
+          score += 5
+        }
       }
     }
     
