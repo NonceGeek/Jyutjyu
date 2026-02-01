@@ -460,12 +460,12 @@ const aggregateEntries = (entries: DictionaryEntry[]): AggregatedEntry[] => {
   for (const entry of entries) {
     const key = getAggregationKey(entry)
     const grouped = keyInfo.get(key)
-    if (!grouped) continue
+    if (!grouped || grouped.length === 0) continue
     if (!seenKeys.has(key)) {
       seenKeys.add(key)
       results.push({
         key,
-        primary: grouped[0],
+        primary: grouped[0]!,
         entries: grouped
       })
     }
